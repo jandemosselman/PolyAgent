@@ -213,20 +213,42 @@ Avg P&L: $${avgPnL.toFixed(2)}
 }
 
 async function fetchActivity(address: string, limit: number): Promise<Activity[]> {
-  const response = await fetch(
-    `https://gamma-api.polymarket.com/activity?user=${address}&limit=${limit}&offset=0`
-  )
+  const url = `https://gamma-api.polymarket.com/activity?user=${address}&limit=${limit}&offset=0`
+  console.log(`  Fetching activity from: ${url}`)
   
-  if (!response.ok) throw new Error(`Activity fetch failed: ${response.statusText}`)
+  const response = await fetch(url, {
+    headers: {
+      'User-Agent': 'Mozilla/5.0'
+    }
+  })
+  
+  if (!response.ok) {
+    const text = await response.text()
+    console.error(`  Activity API response: ${response.status} ${response.statusText}`)
+    console.error(`  Response body: ${text.slice(0, 200)}`)
+    throw new Error(`Activity fetch failed: ${response.statusText}`)
+  }
+  
   return response.json()
 }
 
 async function fetchClosedPositions(address: string, limit: number): Promise<ClosedPosition[]> {
-  const response = await fetch(
-    `https://gamma-api.polymarket.com/positions?user=${address}&limit=${limit}&offset=0&closed=true`
-  )
+  const url = `https://gamma-api.polymarket.com/positions?user=${address}&limit=${limit}&offset=0&closed=true`
+  console.log(`  Fetching closed positions from: ${url}`)
   
-  if (!response.ok) throw new Error(`Closed positions fetch failed: ${response.statusText}`)
+  const response = await fetch(url, {
+    headers: {
+      'User-Agent': 'Mozilla/5.0'
+    }
+  })
+  
+  if (!response.ok) {
+    const text = await response.text()
+    console.error(`  Positions API response: ${response.status} ${response.statusText}`)
+    console.error(`  Response body: ${text.slice(0, 200)}`)
+    throw new Error(`Closed positions fetch failed: ${response.statusText}`)
+  }
+  
   return response.json()
 }
 
