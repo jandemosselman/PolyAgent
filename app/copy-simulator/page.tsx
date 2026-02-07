@@ -877,11 +877,38 @@ export default function CopySimulatorPage() {
         const won = resolvedTrades.filter((t: any) => t.status === 'won').length
         const lost = resolvedTrades.filter((t: any) => t.status === 'lost').length
 
+        // Calculate total P&L from resolved trades
+        const totalPnL = resolvedTrades.reduce((sum: number, t: any) => sum + (t.pnl || 0), 0)
+
         setNotification({
           message: `${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''} resolved: ${won} won, ${lost} lost`,
           type: won > lost ? 'success' : 'warning'
         })
         setTimeout(() => setNotification(null), 5000)
+
+        // Send Telegram notification
+        try {
+          await fetch('/api/telegram', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              message: `
+🔔 *Manual Resolution Check*
+
+Config: *${copyTrade.name}*
+Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}*
+✅ Won: ${won}
+❌ Lost: ${lost}
+💰 Total P&L: $${totalPnL.toFixed(2)}
+📊 Current Budget: $${copyTrade.currentBudget.toFixed(2)}
+              `.trim()
+            })
+          })
+          console.log('✅ Telegram notification sent')
+        } catch (error) {
+          console.error('Failed to send Telegram notification:', error)
+          // Don't fail the whole operation if Telegram fails
+        }
 
         // Save updated copy trades
         const updatedCopyTrades = copyTrades.map(ct => 
