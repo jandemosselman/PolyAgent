@@ -117,6 +117,8 @@ export async function performFullCheckCycle(config: Configuration) {
     run.lastChecked = Date.now()
     updateCopyTrade(run)
     
+    console.log(`  💾 Final state: ${run.trades.length} total trades, $${run.currentBudget.toFixed(2)} budget`)
+    
     // Calculate stats
     const closedTrades = run.trades.filter(t => t.status !== 'open')
     const wins = closedTrades.filter(t => t.status === 'won').length

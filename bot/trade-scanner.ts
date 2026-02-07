@@ -22,6 +22,9 @@ export async function scanForNewTrades(
 ): Promise<{ newTrades: StoredTrade[], totalMatching: number }> {
   
   console.log(`  🔍 Scanning for new trades for ${run.name}...`)
+  console.log(`  📅 Run created at: ${new Date(run.createdAt).toISOString()}`)
+  console.log(`  💰 Current budget: $${run.currentBudget.toFixed(2)}`)
+  console.log(`  🎯 Filters: Amount >= $${run.minTriggerAmount}, Price ${run.minPrice}-${run.maxPrice}`)
   
   // Fetch trader's recent activity
   const activityUrl = `https://data-api.polymarket.com/activity?user=${run.traderAddress}&limit=2000&sortBy=TIMESTAMP&sortDirection=DESC`

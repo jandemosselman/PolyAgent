@@ -16,6 +16,8 @@ app.use((req, res, next) => {
 app.get('/api/copy-trades', (req, res) => {
   try {
     const runs = loadCopyTrades()
+    console.log(`📡 API: Serving ${runs.length} run(s)`)
+    runs.forEach(r => console.log(`   - ${r.name}: ${r.trades.length} trades, $${r.currentBudget.toFixed(2)} budget`))
     res.json({ success: true, data: runs })
   } catch (error: any) {
     console.error('Error fetching copy trades:', error)
