@@ -25,15 +25,28 @@ const openDB = (): Promise<IDBDatabase> => {
 }
 
 const saveToIndexedDB = async (key: string, value: any): Promise<void> => {
-  const db = await openDB()
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction(STORE_NAME, 'readwrite')
-    const store = transaction.objectStore(STORE_NAME)
-    const request = store.put(value, key)
-    
-    request.onsuccess = () => resolve()
-    request.onerror = () => reject(request.error)
-  })
+  try {
+    const db = await openDB()
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction(STORE_NAME, 'readwrite')
+      const store = transaction.objectStore(STORE_NAME)
+      const request = store.put(value, key)
+      
+      request.onsuccess = () => resolve()
+      request.onerror = () => {
+        console.warn('IndexedDB save failed, will retry on next save:', request.error)
+        resolve() // Don't reject, just warn
+      }
+      
+      transaction.onerror = () => {
+        console.warn('IndexedDB transaction failed:', transaction.error)
+        resolve() // Don't reject, just warn
+      }
+    })
+  } catch (error) {
+    console.warn('IndexedDB not available, data will be lost on refresh:', error)
+    // Don't throw, just warn - app will continue working without persistence
+  }
 }
 
 const loadFromIndexedDB = async (key: string): Promise<any> => {
@@ -385,11 +398,9 @@ export default function CopySimulatorPage() {
   useEffect(() => {
     if (copyTrades.length > 0) {
       saveToIndexedDB('copyTrades', copyTrades).catch(error => {
-        console.error('Failed to save copy trades:', error)
-        setNotification({
-          type: 'warning',
-          message: '⚠️ Failed to save data'
-        })
+        // Silently fail - IndexedDB errors are non-critical
+        // Data will be saved on next successful attempt
+        console.debug('IndexedDB save deferred:', error)
       })
     }
   }, [copyTrades])
@@ -757,6 +768,27 @@ export default function CopySimulatorPage() {
           type: 'success'
         })
         setTimeout(() => setNotification(null), 5000)
+        
+        // Send Telegram notification about new trades
+        fetch('/api/telegram', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: `
+🔄 *Manual Refresh*
+
+Config: *${copyTrade.name}*
+New Trades: *${newTrades.length}*
+${totalNewMatches > newTrades.length ? `Total Matches: ${totalNewMatches} (${totalNewMatches - newTrades.length} skipped due to budget)\n` : ''}Budget Used: $${budgetUsed.toFixed(2)}
+Budget Remaining: $${copyTrade.currentBudget.toFixed(2)}
+Total Trades: ${copyTrade.trades.length}
+            `.trim()
+          })
+        }).then(() => {
+          console.log('✅ Telegram notification sent')
+        }).catch(error => {
+          console.error('Failed to send Telegram notification:', error)
+        })
       } else {
         // Even if no new trades, sync the current budget
         copyTrade.currentBudget = actualRemainingBudget
@@ -880,19 +912,24 @@ export default function CopySimulatorPage() {
         // Calculate total P&L from resolved trades
         const totalPnL = resolvedTrades.reduce((sum: number, t: any) => sum + (t.pnl || 0), 0)
 
+        // Save updated copy trades FIRST (before async operations)
+        const updatedCopyTrades = copyTrades.map(ct => 
+          ct.id === copyTradeId ? copyTrade : ct
+        )
+        setCopyTrades(updatedCopyTrades)
+
         setNotification({
           message: `${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''} resolved: ${won} won, ${lost} lost`,
           type: won > lost ? 'success' : 'warning'
         })
         setTimeout(() => setNotification(null), 5000)
 
-        // Send Telegram notification
-        try {
-          await fetch('/api/telegram', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              message: `
+        // Send Telegram notification (don't await to avoid blocking)
+        fetch('/api/telegram', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: `
 🔔 *Manual Resolution Check*
 
 Config: *${copyTrade.name}*
@@ -901,20 +938,13 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
 ❌ Lost: ${lost}
 💰 Total P&L: $${totalPnL.toFixed(2)}
 📊 Current Budget: $${copyTrade.currentBudget.toFixed(2)}
-              `.trim()
-            })
+            `.trim()
           })
+        }).then(() => {
           console.log('✅ Telegram notification sent')
-        } catch (error) {
+        }).catch(error => {
           console.error('Failed to send Telegram notification:', error)
-          // Don't fail the whole operation if Telegram fails
-        }
-
-        // Save updated copy trades
-        const updatedCopyTrades = copyTrades.map(ct => 
-          ct.id === copyTradeId ? copyTrade : ct
-        )
-        setCopyTrades(updatedCopyTrades)
+        })
       } else {
         console.log('ℹ️ No trades have resolved yet')
         setNotification({
