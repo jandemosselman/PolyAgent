@@ -1,21 +1,24 @@
 import 'dotenv/config'
 import cron from 'node-cron'
-import { checkResolutionsForTrader } from './resolution-checker.js'
+import { checkResolutionsForConfig, getMonitoredConfigurations } from './resolution-checker.js'
 import { notifyBotStarted } from './telegram-notifier.js'
 
-// Load monitored traders from environment
-const MONITORED_TRADERS = process.env.MONITORED_TRADERS?.split(',').map(a => a.trim()).filter(a => a) || []
+// Load configurations
+const configurations = getMonitoredConfigurations()
 
-if (MONITORED_TRADERS.length === 0) {
-  console.error('⚠️  No traders configured!')
-  console.error('Add trader addresses to MONITORED_TRADERS in .env file (comma-separated)')
-  console.error('Example: MONITORED_TRADERS=0x1234...,0x5678...')
+if (configurations.length === 0) {
+  console.error('⚠️  No configurations found!')
+  console.error('Export your configurations from the Copy Simulator and save to configurations.json')
+  console.error('')
+  console.error('In your browser console on the Copy Simulator page, run:')
+  console.error('copy(JSON.stringify(JSON.parse(localStorage.getItem("copyTrades") || "[]")))')
+  console.error('Then paste the output into bot/configurations.json')
   process.exit(1)
 }
 
-console.log(`📊 Monitoring ${MONITORED_TRADERS.length} trader(s)`)
-MONITORED_TRADERS.forEach((addr, i) => {
-  console.log(`   ${i + 1}. ${addr.slice(0, 10)}...`)
+console.log(`📊 Monitoring ${configurations.length} configuration(s)`)
+configurations.forEach((config, i) => {
+  console.log(`   ${i + 1}. ${config.name} - ${config.traderAddress.slice(0, 10)}... (${config.minTriggerAmount >= 0 ? `$${config.minTriggerAmount}+` : 'any'} | ${(config.minPrice * 100).toFixed(0)}-${(config.maxPrice * 100).toFixed(0)}%)`)
 })
 
 // Cron schedule - Every 10 minutes (change as needed)
@@ -32,22 +35,22 @@ async function runCheck() {
   })
   console.log(`\n⏰ [${timestamp}] Running scheduled resolution check...`)
   
-  for (const trader of MONITORED_TRADERS) {
+  for (const config of configurations) {
     try {
-      await checkResolutionsForTrader(trader)
+      await checkResolutionsForConfig(config)
       
-      // Wait 3 seconds between traders to avoid rate limits
+      // Wait 3 seconds between configs to avoid rate limits
       await new Promise(resolve => setTimeout(resolve, 3000))
     } catch (error: any) {
-      console.error(`❌ Error checking trader ${trader}:`, error.message)
+      console.error(`❌ Error checking config ${config.name}:`, error.message)
     }
   }
   
-  console.log('✅ Finished checking all traders\n')
+  console.log('✅ Finished checking all configurations\n')
 }
 
 // Notify bot started
-notifyBotStarted(MONITORED_TRADERS.length)
+notifyBotStarted(configurations.length)
 
 // Run once on startup
 console.log('🚀 Running initial check...\n')

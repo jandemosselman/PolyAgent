@@ -2,8 +2,21 @@ import { sendTelegramUpdate, notifyWinRateChange, notifyNewTrades, notifyError }
 import fs from 'fs'
 import path from 'path'
 
-interface TraderStats {
-  address: string
+interface Configuration {
+  id: string
+  name: string
+  traderAddress: string
+  minTriggerAmount: number
+  minPrice: number
+  maxPrice: number
+  initialBudget: number
+  fixedBetAmount: number
+}
+
+interface ConfigStats {
+  configId: string
+  configName: string
+  traderAddress: string
   winRate: number
   totalTrades: number
   wins: number
@@ -50,9 +63,23 @@ interface Activity {
 }
 
 const STATS_FILE = path.join(process.cwd(), 'stats-cache.json')
+const CONFIG_FILE = path.join(process.cwd(), 'configurations.json')
+
+// Load configurations from localStorage export
+function loadConfigurations(): Configuration[] {
+  try {
+    if (fs.existsSync(CONFIG_FILE)) {
+      const data = fs.readFileSync(CONFIG_FILE, 'utf-8')
+      return JSON.parse(data)
+    }
+  } catch (error) {
+    console.error('Error loading configurations:', error)
+  }
+  return []
+}
 
 // Load stats from file
-function loadStats(): Map<string, TraderStats> {
+function loadStats(): Map<string, ConfigStats> {
   try {
     if (fs.existsSync(STATS_FILE)) {
       const data = fs.readFileSync(STATS_FILE, 'utf-8')
@@ -66,7 +93,7 @@ function loadStats(): Map<string, TraderStats> {
 }
 
 // Save stats to file
-function saveStats(stats: Map<string, TraderStats>) {
+function saveStats(stats: Map<string, ConfigStats>) {
   try {
     const obj = Object.fromEntries(stats)
     fs.writeFileSync(STATS_FILE, JSON.stringify(obj, null, 2))
@@ -180,7 +207,13 @@ async function fetchClosedPositions(address: string, limit: number): Promise<Clo
   return response.json()
 }
 
-function matchResolvedBuys(activity: Activity[], closedPositions: ClosedPosition[]) {
+function matchResolvedBuysWithFilters(
+  activity: Activity[], 
+  closedPositions: ClosedPosition[],
+  minTriggerAmount: number,
+  minPrice: number,
+  maxPrice: number
+) {
   // Get only BUY trades from activity
   const allBuyTrades = activity.filter(a => a.type === 'TRADE' && a.side === 'BUY')
   
@@ -201,13 +234,18 @@ function matchResolvedBuys(activity: Activity[], closedPositions: ClosedPosition
     if (pos.slug) closedMap.set(pos.slug, pos)
   })
   
-  // Match buy trades with closed positions
+  // Match buy trades with closed positions AND apply filters
   const resolvedTrades = uniqueBuyTrades
     .map(trade => {
       const closedPos = closedMap.get(trade.asset) || closedMap.get(trade.conditionId) || closedMap.get(trade.slug)
       if (!closedPos) return null
       
       const investment = trade.size * trade.price
+      
+      // Apply filters - skip trades that don't match
+      if (investment < minTriggerAmount) return null
+      if (trade.price < minPrice || trade.price > maxPrice) return null
+      
       const roi = closedPos.totalBought > 0 
         ? (closedPos.realizedPnl / (closedPos.totalBought * closedPos.avgPrice)) * 100 
         : 0

@@ -78,12 +78,23 @@ Error: ${error}
   await sendTelegramUpdate(message)
 }
 
-export async function notifyBotStarted(traderCount: number) {
+export async function notifyBotStarted(configCount: number) {
   const message = `
 🤖 *Bot Started*
 
-Monitoring ${traderCount} trader${traderCount !== 1 ? 's' : ''}
+Monitoring ${configCount} configuration${configCount !== 1 ? 's' : ''}
 Checking every 10 minutes
+  `.trim()
+  
+  await sendTelegramUpdate(message)
+}
+
+export async function notifyError(configName: string, error: string) {
+  const message = `
+❌ *Error Checking Configuration*
+
+Config: *${configName}*
+Error: ${error}
   `.trim()
   
   await sendTelegramUpdate(message)
