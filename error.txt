@@ -1,0 +1,301 @@
+2026-02-07T13:06:09.000000000Z [inf]  Starting Container
+2026-02-07T13:06:10.782962260Z [err]  
+2026-02-07T13:06:10.782973596Z [err]  Node.js v18.20.5
+2026-02-07T13:06:10.783019790Z [err]      at nextResolve (node:internal/modules/esm/hooks:864:28) {
+2026-02-07T13:06:10.783028743Z [err]    code: 'ERR_MODULE_NOT_FOUND'
+2026-02-07T13:06:10.783035034Z [err]  }
+2026-02-07T13:06:10.783325900Z [err]  npm warn config production Use `--omit=dev` instead.
+2026-02-07T13:06:10.783331330Z [inf]  
+2026-02-07T13:06:10.783335752Z [inf]  > polyagent@0.1.0 bot
+2026-02-07T13:06:10.783339904Z [inf]  > cd bot && npm start
+2026-02-07T13:06:10.783344188Z [inf]  
+2026-02-07T13:06:10.783348551Z [err]  npm warn config production Use `--omit=dev` instead.
+2026-02-07T13:06:10.783352572Z [inf]  
+2026-02-07T13:06:10.783357234Z [inf]  > polymarket-resolution-bot@1.0.0 start
+2026-02-07T13:06:10.783361335Z [inf]  > tsx index.ts
+2026-02-07T13:06:10.783365604Z [inf]  
+2026-02-07T13:06:10.783374069Z [err]  
+2026-02-07T13:06:10.783378546Z [err]  node:internal/process/esm_loader:40
+2026-02-07T13:06:10.783382296Z [err]        internalBinding('errors').triggerUncaughtException(
+2026-02-07T13:06:10.783387875Z [err]                                  ^
+2026-02-07T13:06:10.783392562Z [err]  Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'dotenv' imported from /app/bot/index.ts
+2026-02-07T13:06:10.783396767Z [err]      at new NodeError (node:internal/errors:405:5)
+2026-02-07T13:06:10.783401467Z [err]      at packageResolve (node:internal/modules/esm/resolve:916:9)
+2026-02-07T13:06:10.783405249Z [err]      at moduleResolve (node:internal/modules/esm/resolve:973:20)
+2026-02-07T13:06:10.783409532Z [err]      at defaultResolve (node:internal/modules/esm/resolve:1206:11)
+2026-02-07T13:06:10.783413531Z [err]      at nextResolve (node:internal/modules/esm/hooks:864:28)
+2026-02-07T13:06:10.783417583Z [err]      at resolveBase (file:///app/bot/node_modules/tsx/dist/esm/index.mjs?1770469570501:2:3744)
+2026-02-07T13:06:10.783421826Z [err]      at resolveDirectory (file:///app/bot/node_modules/tsx/dist/esm/index.mjs?1770469570501:2:4243)
+2026-02-07T13:06:10.783425971Z [err]      at resolveTsPaths (file:///app/bot/node_modules/tsx/dist/esm/index.mjs?1770469570501:2:4984)
+2026-02-07T13:06:10.783430121Z [err]      at resolve (file:///app/bot/node_modules/tsx/dist/esm/index.mjs?1770469570501:2:5361)
+2026-02-07T13:06:12.899222761Z [inf]  > cd bot && npm start
+2026-02-07T13:06:12.899229565Z [inf]  
+2026-02-07T13:06:12.899232545Z [inf]  
+2026-02-07T13:06:12.899237029Z [err]  npm warn config production Use `--omit=dev` instead.
+2026-02-07T13:06:12.899237426Z [err]  npm warn config production Use `--omit=dev` instead.
+2026-02-07T13:06:12.899242026Z [err]  
+2026-02-07T13:06:12.899244490Z [inf]  
+2026-02-07T13:06:12.899247653Z [inf]  
+2026-02-07T13:06:12.899251715Z [err]  node:internal/process/esm_loader:40
+2026-02-07T13:06:12.899254998Z [err]        internalBinding('errors').triggerUncaughtException(
+2026-02-07T13:06:12.899256888Z [inf]  > polyagent@0.1.0 bot
+2026-02-07T13:06:12.899261388Z [err]                                  ^
+2026-02-07T13:06:12.899267222Z [err]  Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'dotenv' imported from /app/bot/index.ts
+2026-02-07T13:06:12.899272756Z [inf]  > polymarket-resolution-bot@1.0.0 start
+2026-02-07T13:06:12.899275281Z [err]      at new NodeError (node:internal/errors:405:5)
+2026-02-07T13:06:12.899279069Z [inf]  > tsx index.ts
+2026-02-07T13:06:12.899446919Z [err]      at packageResolve (node:internal/modules/esm/resolve:916:9)
+2026-02-07T13:06:12.899454513Z [err]      at moduleResolve (node:internal/modules/esm/resolve:973:20)
+2026-02-07T13:06:12.899459211Z [err]      at defaultResolve (node:internal/modules/esm/resolve:1206:11)
+2026-02-07T13:06:12.904183297Z [err]      at nextResolve (node:internal/modules/esm/hooks:864:28)
+2026-02-07T13:06:12.904191742Z [err]      at resolveBase (file:///app/bot/node_modules/tsx/dist/esm/index.mjs?1770469572731:2:3744)
+2026-02-07T13:06:12.904196556Z [err]      at resolveDirectory (file:///app/bot/node_modules/tsx/dist/esm/index.mjs?1770469572731:2:4243)
+2026-02-07T13:06:12.904200591Z [err]      at resolveTsPaths (file:///app/bot/node_modules/tsx/dist/esm/index.mjs?1770469572731:2:4984)
+2026-02-07T13:06:12.904204365Z [err]      at resolve (file:///app/bot/node_modules/tsx/dist/esm/index.mjs?1770469572731:2:5361)
+2026-02-07T13:06:12.904392703Z [err]      at nextResolve (node:internal/modules/esm/hooks:864:28) {
+2026-02-07T13:06:12.904396950Z [err]    code: 'ERR_MODULE_NOT_FOUND'
+2026-02-07T13:06:12.904400814Z [err]  }
+2026-02-07T13:06:12.904404629Z [err]  
+2026-02-07T13:06:12.904409443Z [err]  Node.js v18.20.5
+2026-02-07T13:06:14.757846284Z [err]  npm warn config production Use `--omit=dev` instead.
+2026-02-07T13:06:14.757851196Z [inf]  
+2026-02-07T13:06:14.757855567Z [inf]  > polyagent@0.1.0 bot
+2026-02-07T13:06:14.757859650Z [inf]  > cd bot && npm start
+2026-02-07T13:06:14.757864840Z [inf]  
+2026-02-07T13:06:14.757872632Z [err]  npm warn config production Use `--omit=dev` instead.
+2026-02-07T13:06:14.757877168Z [inf]  
+2026-02-07T13:06:14.757881945Z [inf]  > polymarket-resolution-bot@1.0.0 start
+2026-02-07T13:06:14.757891984Z [inf]  > tsx index.ts
+2026-02-07T13:06:14.757896624Z [inf]  
+2026-02-07T13:06:14.916578053Z [err]  
+2026-02-07T13:06:14.916591376Z [err]  node:internal/process/esm_loader:40
+2026-02-07T13:06:14.916597084Z [err]        internalBinding('errors').triggerUncaughtException(
+2026-02-07T13:06:14.916602235Z [err]                                  ^
+2026-02-07T13:06:14.916607472Z [err]  Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'dotenv' imported from /app/bot/index.ts
+2026-02-07T13:06:14.916612762Z [err]      at new NodeError (node:internal/errors:405:5)
+2026-02-07T13:06:14.916617788Z [err]      at packageResolve (node:internal/modules/esm/resolve:916:9)
+2026-02-07T13:06:14.916622780Z [err]      at moduleResolve (node:internal/modules/esm/resolve:973:20)
+2026-02-07T13:06:14.916627245Z [err]      at defaultResolve (node:internal/modules/esm/resolve:1206:11)
+2026-02-07T13:06:14.916632161Z [err]      at nextResolve (node:internal/modules/esm/hooks:864:28)
+2026-02-07T13:06:14.916637246Z [err]      at resolveBase (file:///app/bot/node_modules/tsx/dist/esm/index.mjs?1770469574796:2:3744)
+2026-02-07T13:06:14.916641978Z [err]      at resolveDirectory (file:///app/bot/node_modules/tsx/dist/esm/index.mjs?1770469574796:2:4243)
+2026-02-07T13:06:14.916648168Z [err]      at resolveTsPaths (file:///app/bot/node_modules/tsx/dist/esm/index.mjs?1770469574796:2:4984)
+2026-02-07T13:06:14.916654980Z [err]      at resolve (file:///app/bot/node_modules/tsx/dist/esm/index.mjs?1770469574796:2:5361)
+2026-02-07T13:06:14.916659728Z [err]      at nextResolve (node:internal/modules/esm/hooks:864:28) {
+2026-02-07T13:06:14.916664529Z [err]    code: 'ERR_MODULE_NOT_FOUND'
+2026-02-07T13:06:14.916669923Z [err]  }
+2026-02-07T13:06:14.916685606Z [err]  
+2026-02-07T13:06:14.916692960Z [err]  Node.js v18.20.5
+2026-02-07T13:06:16.890557447Z [inf]  > tsx index.ts
+2026-02-07T13:06:16.890566142Z [inf]  
+2026-02-07T13:06:16.890578082Z [inf]  > polymarket-resolution-bot@1.0.0 start
+2026-02-07T13:06:16.890588980Z [err]  npm warn config production Use `--omit=dev` instead.
+2026-02-07T13:06:16.890594165Z [inf]  
+2026-02-07T13:06:16.890599640Z [err]  npm warn config production Use `--omit=dev` instead.
+2026-02-07T13:06:16.890600315Z [inf]  > polyagent@0.1.0 bot
+2026-02-07T13:06:16.890611330Z [inf]  > cd bot && npm start
+2026-02-07T13:06:16.890613935Z [inf]  
+2026-02-07T13:06:16.890617931Z [inf]  
+2026-02-07T13:06:17.099446129Z [err]  
+2026-02-07T13:06:17.099452643Z [err]  node:internal/process/esm_loader:40
+2026-02-07T13:06:17.099458942Z [err]        internalBinding('errors').triggerUncaughtException(
+2026-02-07T13:06:17.099466231Z [err]                                  ^
+2026-02-07T13:06:17.099473036Z [err]  Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'dotenv' imported from /app/bot/index.ts
+2026-02-07T13:06:17.099479262Z [err]      at new NodeError (node:internal/errors:405:5)
+2026-02-07T13:06:17.099485168Z [err]      at packageResolve (node:internal/modules/esm/resolve:916:9)
+2026-02-07T13:06:17.099491993Z [err]      at moduleResolve (node:internal/modules/esm/resolve:973:20)
+2026-02-07T13:06:17.099497679Z [err]      at defaultResolve (node:internal/modules/esm/resolve:1206:11)
+2026-02-07T13:06:17.099504717Z [err]      at nextResolve (node:internal/modules/esm/hooks:864:28)
+2026-02-07T13:06:17.099511139Z [err]      at resolveBase (file:///app/bot/node_modules/tsx/dist/esm/index.mjs?1770469576968:2:3744)
+2026-02-07T13:06:17.099517783Z [err]      at resolveDirectory (file:///app/bot/node_modules/tsx/dist/esm/index.mjs?1770469576968:2:4243)
+2026-02-07T13:06:17.099528729Z [err]      at resolveTsPaths (file:///app/bot/node_modules/tsx/dist/esm/index.mjs?1770469576968:2:4984)
+2026-02-07T13:06:17.099534619Z [err]      at resolve (file:///app/bot/node_modules/tsx/dist/esm/index.mjs?1770469576968:2:5361)
+2026-02-07T13:06:17.099540524Z [err]      at nextResolve (node:internal/modules/esm/hooks:864:28) {
+2026-02-07T13:06:17.099546303Z [err]    code: 'ERR_MODULE_NOT_FOUND'
+2026-02-07T13:06:17.099552339Z [err]  }
+2026-02-07T13:06:17.099558965Z [err]  
+2026-02-07T13:06:17.099564581Z [err]  Node.js v18.20.5
+2026-02-07T13:06:18.874956076Z [inf]  > cd bot && npm start
+2026-02-07T13:06:18.874961899Z [inf]  
+2026-02-07T13:06:18.874967553Z [err]  npm warn config production Use `--omit=dev` instead.
+2026-02-07T13:06:18.874977052Z [inf]  
+2026-02-07T13:06:18.874977802Z [err]  npm warn config production Use `--omit=dev` instead.
+2026-02-07T13:06:18.874984116Z [inf]  > tsx index.ts
+2026-02-07T13:06:18.874986093Z [inf]  > polymarket-resolution-bot@1.0.0 start
+2026-02-07T13:06:18.874992731Z [inf]  
+2026-02-07T13:06:18.874997005Z [inf]  
+2026-02-07T13:06:18.875003660Z [inf]  > polyagent@0.1.0 bot
+2026-02-07T13:06:19.033214305Z [err]  
+2026-02-07T13:06:19.033217046Z [err]  
+2026-02-07T13:06:19.033221473Z [err]  node:internal/process/esm_loader:40
+2026-02-07T13:06:19.033226784Z [err]        internalBinding('errors').triggerUncaughtException(
+2026-02-07T13:06:19.033228802Z [err]  Node.js v18.20.5
+2026-02-07T13:06:19.033231787Z [err]                                  ^
+2026-02-07T13:06:19.033235826Z [err]  Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'dotenv' imported from /app/bot/index.ts
+2026-02-07T13:06:19.033240855Z [err]      at new NodeError (node:internal/errors:405:5)
+2026-02-07T13:06:19.033246276Z [err]      at packageResolve (node:internal/modules/esm/resolve:916:9)
+2026-02-07T13:06:19.033277760Z [err]      at moduleResolve (node:internal/modules/esm/resolve:973:20)
+2026-02-07T13:06:19.033284205Z [err]      at defaultResolve (node:internal/modules/esm/resolve:1206:11)
+2026-02-07T13:06:19.033289744Z [err]      at nextResolve (node:internal/modules/esm/hooks:864:28)
+2026-02-07T13:06:19.033296676Z [err]      at resolveBase (file:///app/bot/node_modules/tsx/dist/esm/index.mjs?1770469578913:2:3744)
+2026-02-07T13:06:19.033303132Z [err]      at resolveDirectory (file:///app/bot/node_modules/tsx/dist/esm/index.mjs?1770469578913:2:4243)
+2026-02-07T13:06:19.033308268Z [err]      at resolveTsPaths (file:///app/bot/node_modules/tsx/dist/esm/index.mjs?1770469578913:2:4984)
+2026-02-07T13:06:19.033314077Z [err]      at resolve (file:///app/bot/node_modules/tsx/dist/esm/index.mjs?1770469578913:2:5361)
+2026-02-07T13:06:19.033319299Z [err]      at nextResolve (node:internal/modules/esm/hooks:864:28) {
+2026-02-07T13:06:19.033325348Z [err]    code: 'ERR_MODULE_NOT_FOUND'
+2026-02-07T13:06:19.033330846Z [err]  }
+2026-02-07T13:06:20.848168692Z [inf]  > tsx index.ts
+2026-02-07T13:06:20.848174726Z [inf]  
+2026-02-07T13:06:20.848177422Z [inf]  > cd bot && npm start
+2026-02-07T13:06:20.848188387Z [inf]  
+2026-02-07T13:06:20.848197737Z [err]  npm warn config production Use `--omit=dev` instead.
+2026-02-07T13:06:20.848200609Z [inf]  > polymarket-resolution-bot@1.0.0 start
+2026-02-07T13:06:20.848205114Z [inf]  
+2026-02-07T13:06:20.848211938Z [inf]  
+2026-02-07T13:06:20.848217412Z [inf]  > polyagent@0.1.0 bot
+2026-02-07T13:06:20.848227727Z [err]  npm warn config production Use `--omit=dev` instead.
+2026-02-07T13:06:20.904505794Z [err]      at moduleResolve (node:internal/modules/esm/resolve:973:20)
+2026-02-07T13:06:20.904508342Z [err]  }
+2026-02-07T13:06:20.904516432Z [err]      at defaultResolve (node:internal/modules/esm/resolve:1206:11)
+2026-02-07T13:06:20.904520686Z [err]  
+2026-02-07T13:06:20.904525246Z [err]      at nextResolve (node:internal/modules/esm/hooks:864:28)
+2026-02-07T13:06:20.904530131Z [err]  Node.js v18.20.5
+2026-02-07T13:06:20.904532674Z [err]  
+2026-02-07T13:06:20.904532951Z [err]      at resolveBase (file:///app/bot/node_modules/tsx/dist/esm/index.mjs?1770469580780:2:3744)
+2026-02-07T13:06:20.904538730Z [err]      at resolveDirectory (file:///app/bot/node_modules/tsx/dist/esm/index.mjs?1770469580780:2:4243)
+2026-02-07T13:06:20.904546594Z [err]      at resolveTsPaths (file:///app/bot/node_modules/tsx/dist/esm/index.mjs?1770469580780:2:4984)
+2026-02-07T13:06:20.904554059Z [err]      at resolve (file:///app/bot/node_modules/tsx/dist/esm/index.mjs?1770469580780:2:5361)
+2026-02-07T13:06:20.904555477Z [err]  node:internal/process/esm_loader:40
+2026-02-07T13:06:20.904561454Z [err]      at nextResolve (node:internal/modules/esm/hooks:864:28) {
+2026-02-07T13:06:20.904563128Z [err]        internalBinding('errors').triggerUncaughtException(
+2026-02-07T13:06:20.904569779Z [err]    code: 'ERR_MODULE_NOT_FOUND'
+2026-02-07T13:06:20.904569812Z [err]                                  ^
+2026-02-07T13:06:20.904578516Z [err]  Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'dotenv' imported from /app/bot/index.ts
+2026-02-07T13:06:20.904584554Z [err]      at new NodeError (node:internal/errors:405:5)
+2026-02-07T13:06:20.904589382Z [err]      at packageResolve (node:internal/modules/esm/resolve:916:9)
+2026-02-07T13:06:22.842993270Z [inf]  
+2026-02-07T13:06:22.843009824Z [inf]  > cd bot && npm start
+2026-02-07T13:06:22.843017741Z [inf]  
+2026-02-07T13:06:22.843024856Z [err]  npm warn config production Use `--omit=dev` instead.
+2026-02-07T13:06:22.843054112Z [inf]  
+2026-02-07T13:06:22.843065341Z [inf]  > polymarket-resolution-bot@1.0.0 start
+2026-02-07T13:06:22.843072301Z [inf]  > tsx index.ts
+2026-02-07T13:06:22.843082200Z [err]  npm warn config production Use `--omit=dev` instead.
+2026-02-07T13:06:22.843089550Z [inf]  
+2026-02-07T13:06:22.843096590Z [inf]  > polyagent@0.1.0 bot
+2026-02-07T13:06:22.879152487Z [err]  
+2026-02-07T13:06:22.879164063Z [err]  node:internal/process/esm_loader:40
+2026-02-07T13:06:22.879173088Z [err]        internalBinding('errors').triggerUncaughtException(
+2026-02-07T13:06:22.879182958Z [err]                                  ^
+2026-02-07T13:06:22.882866026Z [err]  Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'dotenv' imported from /app/bot/index.ts
+2026-02-07T13:06:22.882870702Z [err]      at new NodeError (node:internal/errors:405:5)
+2026-02-07T13:06:22.882875066Z [err]      at packageResolve (node:internal/modules/esm/resolve:916:9)
+2026-02-07T13:06:22.882879067Z [err]      at moduleResolve (node:internal/modules/esm/resolve:973:20)
+2026-02-07T13:06:22.882883281Z [err]      at defaultResolve (node:internal/modules/esm/resolve:1206:11)
+2026-02-07T13:06:22.882887361Z [err]      at nextResolve (node:internal/modules/esm/hooks:864:28)
+2026-02-07T13:06:22.882891955Z [err]      at resolveBase (file:///app/bot/node_modules/tsx/dist/esm/index.mjs?1770469582753:2:3744)
+2026-02-07T13:06:22.882896360Z [err]      at resolveDirectory (file:///app/bot/node_modules/tsx/dist/esm/index.mjs?1770469582753:2:4243)
+2026-02-07T13:06:22.882900550Z [err]      at resolveTsPaths (file:///app/bot/node_modules/tsx/dist/esm/index.mjs?1770469582753:2:4984)
+2026-02-07T13:06:22.882904859Z [err]      at resolve (file:///app/bot/node_modules/tsx/dist/esm/index.mjs?1770469582753:2:5361)
+2026-02-07T13:06:22.882908780Z [err]      at nextResolve (node:internal/modules/esm/hooks:864:28) {
+2026-02-07T13:06:22.882913383Z [err]    code: 'ERR_MODULE_NOT_FOUND'
+2026-02-07T13:06:22.882918240Z [err]  }
+2026-02-07T13:06:22.882923122Z [err]  
+2026-02-07T13:06:22.882928017Z [err]  Node.js v18.20.5
+2026-02-07T13:06:24.923974994Z [err]  npm warn config production Use `--omit=dev` instead.
+2026-02-07T13:06:24.923981180Z [inf]  
+2026-02-07T13:06:24.923986435Z [inf]  > polyagent@0.1.0 bot
+2026-02-07T13:06:24.923992012Z [inf]  > cd bot && npm start
+2026-02-07T13:06:24.923998381Z [inf]  
+2026-02-07T13:06:24.924004071Z [err]  npm warn config production Use `--omit=dev` instead.
+2026-02-07T13:06:24.924009483Z [inf]  
+2026-02-07T13:06:24.924014681Z [inf]  > polymarket-resolution-bot@1.0.0 start
+2026-02-07T13:06:24.924020384Z [inf]  > tsx index.ts
+2026-02-07T13:06:24.924025141Z [inf]  
+2026-02-07T13:06:25.082738808Z [err]  Node.js v18.20.5
+2026-02-07T13:06:25.082744457Z [err]      at moduleResolve (node:internal/modules/esm/resolve:973:20)
+2026-02-07T13:06:25.082757316Z [err]      at defaultResolve (node:internal/modules/esm/resolve:1206:11)
+2026-02-07T13:06:25.082773665Z [err]      at nextResolve (node:internal/modules/esm/hooks:864:28)
+2026-02-07T13:06:25.082783282Z [err]    code: 'ERR_MODULE_NOT_FOUND'
+2026-02-07T13:06:25.082784861Z [err]      at resolveBase (file:///app/bot/node_modules/tsx/dist/esm/index.mjs?1770469584952:2:3744)
+2026-02-07T13:06:25.082796150Z [err]      at resolveDirectory (file:///app/bot/node_modules/tsx/dist/esm/index.mjs?1770469584952:2:4243)
+2026-02-07T13:06:25.082802715Z [err]  }
+2026-02-07T13:06:25.082807272Z [err]      at resolveTsPaths (file:///app/bot/node_modules/tsx/dist/esm/index.mjs?1770469584952:2:4984)
+2026-02-07T13:06:25.082818193Z [err]  
+2026-02-07T13:06:25.082818313Z [err]  
+2026-02-07T13:06:25.082818997Z [err]      at resolve (file:///app/bot/node_modules/tsx/dist/esm/index.mjs?1770469584952:2:5361)
+2026-02-07T13:06:25.082828625Z [err]  node:internal/process/esm_loader:40
+2026-02-07T13:06:25.082832050Z [err]      at nextResolve (node:internal/modules/esm/hooks:864:28) {
+2026-02-07T13:06:25.082837268Z [err]        internalBinding('errors').triggerUncaughtException(
+2026-02-07T13:06:25.082842539Z [err]                                  ^
+2026-02-07T13:06:25.082848481Z [err]  Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'dotenv' imported from /app/bot/index.ts
+2026-02-07T13:06:25.082853206Z [err]      at new NodeError (node:internal/errors:405:5)
+2026-02-07T13:06:25.082858607Z [err]      at packageResolve (node:internal/modules/esm/resolve:916:9)
+2026-02-07T13:06:26.864781520Z [err]  npm warn config production Use `--omit=dev` instead.
+2026-02-07T13:06:26.864786467Z [inf]  
+2026-02-07T13:06:26.864793758Z [inf]  > polyagent@0.1.0 bot
+2026-02-07T13:06:26.864798463Z [inf]  > cd bot && npm start
+2026-02-07T13:06:26.864803430Z [inf]  
+2026-02-07T13:06:26.864807971Z [err]  npm warn config production Use `--omit=dev` instead.
+2026-02-07T13:06:26.864814136Z [inf]  
+2026-02-07T13:06:26.864818556Z [inf]  > polymarket-resolution-bot@1.0.0 start
+2026-02-07T13:06:26.864822449Z [inf]  > tsx index.ts
+2026-02-07T13:06:26.864829422Z [inf]  
+2026-02-07T13:06:27.172035287Z [err]  
+2026-02-07T13:06:27.172041674Z [err]  node:internal/process/esm_loader:40
+2026-02-07T13:06:27.172046840Z [err]        internalBinding('errors').triggerUncaughtException(
+2026-02-07T13:06:27.172052309Z [err]                                  ^
+2026-02-07T13:06:27.174702675Z [err]      at resolveBase (file:///app/bot/node_modules/tsx/dist/esm/index.mjs?1770469587042:2:3744)
+2026-02-07T13:06:27.174717253Z [err]      at resolveDirectory (file:///app/bot/node_modules/tsx/dist/esm/index.mjs?1770469587042:2:4243)
+2026-02-07T13:06:27.174726485Z [err]      at resolveTsPaths (file:///app/bot/node_modules/tsx/dist/esm/index.mjs?1770469587042:2:4984)
+2026-02-07T13:06:27.174735249Z [err]      at resolve (file:///app/bot/node_modules/tsx/dist/esm/index.mjs?1770469587042:2:5361)
+2026-02-07T13:06:27.174747598Z [err]  Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'dotenv' imported from /app/bot/index.ts
+2026-02-07T13:06:27.174749877Z [err]      at nextResolve (node:internal/modules/esm/hooks:864:28) {
+2026-02-07T13:06:27.174755174Z [err]      at new NodeError (node:internal/errors:405:5)
+2026-02-07T13:06:27.174763912Z [err]      at packageResolve (node:internal/modules/esm/resolve:916:9)
+2026-02-07T13:06:27.174767566Z [err]    code: 'ERR_MODULE_NOT_FOUND'
+2026-02-07T13:06:27.174772839Z [err]      at moduleResolve (node:internal/modules/esm/resolve:973:20)
+2026-02-07T13:06:27.174781861Z [err]  }
+2026-02-07T13:06:27.174782140Z [err]      at defaultResolve (node:internal/modules/esm/resolve:1206:11)
+2026-02-07T13:06:27.174796112Z [err]      at nextResolve (node:internal/modules/esm/hooks:864:28)
+2026-02-07T13:06:27.174797202Z [err]  
+2026-02-07T13:06:27.174807063Z [err]  Node.js v18.20.5
+2026-02-07T13:06:29.033867210Z [err]  npm warn config production Use `--omit=dev` instead.
+2026-02-07T13:06:29.033872318Z [inf]  
+2026-02-07T13:06:29.038032251Z [inf]  > polyagent@0.1.0 bot
+2026-02-07T13:06:29.038040750Z [inf]  > cd bot && npm start
+2026-02-07T13:06:29.038047155Z [inf]  
+2026-02-07T13:06:29.038052197Z [err]  npm warn config production Use `--omit=dev` instead.
+2026-02-07T13:06:29.038056461Z [inf]  
+2026-02-07T13:06:29.038062494Z [inf]  > polymarket-resolution-bot@1.0.0 start
+2026-02-07T13:06:29.038084465Z [inf]  > tsx index.ts
+2026-02-07T13:06:29.038088945Z [inf]  
+2026-02-07T13:06:29.303666317Z [err]  
+2026-02-07T13:06:29.303675416Z [err]  node:internal/process/esm_loader:40
+2026-02-07T13:06:29.303686588Z [err]        internalBinding('errors').triggerUncaughtException(
+2026-02-07T13:06:29.303691814Z [err]                                  ^
+2026-02-07T13:06:29.303697019Z [err]  Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'dotenv' imported from /app/bot/index.ts
+2026-02-07T13:06:29.303702269Z [err]      at new NodeError (node:internal/errors:405:5)
+2026-02-07T13:06:29.303709062Z [err]      at packageResolve (node:internal/modules/esm/resolve:916:9)
+2026-02-07T13:06:29.303716741Z [err]      at moduleResolve (node:internal/modules/esm/resolve:973:20)
+2026-02-07T13:06:29.303722174Z [err]      at defaultResolve (node:internal/modules/esm/resolve:1206:11)
+2026-02-07T13:06:29.303727364Z [err]      at nextResolve (node:internal/modules/esm/hooks:864:28)
+2026-02-07T13:06:29.303731859Z [err]      at resolveBase (file:///app/bot/node_modules/tsx/dist/esm/index.mjs?1770469589165:2:3744)
+2026-02-07T13:06:29.303736890Z [err]      at resolveDirectory (file:///app/bot/node_modules/tsx/dist/esm/index.mjs?1770469589165:2:4243)
+2026-02-07T13:06:29.303743218Z [err]      at resolveTsPaths (file:///app/bot/node_modules/tsx/dist/esm/index.mjs?1770469589165:2:4984)
+2026-02-07T13:06:29.303747925Z [err]      at resolve (file:///app/bot/node_modules/tsx/dist/esm/index.mjs?1770469589165:2:5361)
+2026-02-07T13:06:29.303752292Z [err]      at nextResolve (node:internal/modules/esm/hooks:864:28) {
+2026-02-07T13:06:29.303757221Z [err]    code: 'ERR_MODULE_NOT_FOUND'
+2026-02-07T13:06:29.303762074Z [err]  }
+2026-02-07T13:06:29.303766962Z [err]  
+2026-02-07T13:06:29.303776287Z [err]  Node.js v18.20.5
+2026-02-07T13:06:30.981445031Z [err]  npm warn config production Use `--omit=dev` instead.
+2026-02-07T13:06:31.010065465Z [inf]  > polyagent@0.1.0 bot
+2026-02-07T13:06:31.010072158Z [inf]  > cd bot && npm start
+2026-02-07T13:06:31.010077457Z [inf]  
+2026-02-07T13:06:31.929823159Z [err]    code: 'ERR_MODULE_NOT_FOUND'
+2026-02-07T13:06:31.929832705Z [err]  }
+2026-02-07T13:06:31.929920910Z [err]      at nextResolve (node:internal/modules/esm/hooks:864:28) {
+2026-02-07T13:06:31.929926450Z [err]  
+2026-02-07T13:06:31.929999031Z [err]      at packageResolve (node:internal/modules/esm/resolve:916:9)
+2026-02-07T13:06:31.930003197Z [err]      at moduleResolve (node:internal/modules/esm/resolve:973:20)
