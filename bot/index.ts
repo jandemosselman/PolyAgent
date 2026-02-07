@@ -3,6 +3,7 @@ import cron from 'node-cron'
 import TelegramBot from 'node-telegram-bot-api'
 import { performFullCheckCycle, getMonitoredConfigurations, initializeCopyTrades } from './copy-trade-manager.js'
 import { notifyBotStarted } from './telegram-notifier.js'
+import { startApiServer } from './api-server.js'
 
 // Initialize Telegram Bot
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || ''
@@ -151,6 +152,9 @@ async function runCheck() {
   
   console.log('✅ Finished checking all configurations\n')
 }
+
+// Start API server
+startApiServer()
 
 // Notify bot started
 notifyBotStarted(configurations.length)

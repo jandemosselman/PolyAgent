@@ -105,6 +105,7 @@ export default function CopySimulatorPage() {
   const [isCreating, setIsCreating] = useState(false)
   const [refreshingId, setRefreshingId] = useState<string | null>(null)
   const [checkingResolutionsId, setCheckingResolutionsId] = useState<string | null>(null)
+  const [syncingWithBot, setSyncingWithBot] = useState(false)
   const [notification, setNotification] = useState<{message: string, type: 'success' | 'info' | 'warning'} | null>(null)
   const [activeView, setActiveView] = useState<'list' | 'analysis'>('list')
   const [showArchived, setShowArchived] = useState(false)
@@ -365,6 +366,22 @@ export default function CopySimulatorPage() {
     
     loadData()
   }, [])
+
+  // Auto-sync with bot on page load
+  useEffect(() => {
+    const autoSync = async () => {
+      // Wait a bit for local data to load first
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      
+      console.log('🤖 Auto-syncing with Railway bot on page load...')
+      await syncWithBot()
+    }
+    
+    // Only auto-sync if RAILWAY_BOT_URL is configured
+    if (typeof window !== 'undefined') {
+      autoSync().catch(console.error)
+    }
+  }, []) // Empty deps - only run once on mount
 
   // Load config names from IndexedDB (with localStorage fallback)
   useEffect(() => {
@@ -630,6 +647,90 @@ export default function CopySimulatorPage() {
     setMinTriggerAmount(10)
     setMinPrice(0.5)
     setMaxPrice(0.66)
+  }
+
+  const syncWithBot = async () => {
+    setSyncingWithBot(true)
+    try {
+      console.log('🤖 Fetching data from Railway bot...')
+      
+      const response = await fetch('/api/bot-sync', {
+        method: 'GET',
+      })
+      
+      const result = await response.json()
+      
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to fetch from bot')
+      }
+      
+      const botRuns = result.data || []
+      console.log(`✅ Received ${botRuns.length} run(s) from bot`)
+      
+      // Merge bot data with local data
+      // Bot is source of truth for automated checks, localhost can have additional manual runs
+      const merged = [...copyTrades]
+      
+      for (const botRun of botRuns) {
+        const existingIndex = merged.findIndex(ct => ct.id === botRun.id)
+        
+        if (existingIndex >= 0) {
+          // Update existing run with bot data (bot is source of truth)
+          merged[existingIndex] = {
+            ...merged[existingIndex],
+            currentBudget: botRun.currentBudget,
+            trades: botRun.trades,
+            lastChecked: Date.now(), // Mark as synced
+          }
+          console.log(`🔄 Updated run: ${botRun.name}`)
+        } else {
+          // Add new run from bot
+          merged.push({
+            id: botRun.id,
+            name: botRun.name || 'Bot Run',
+            traderAddress: botRun.traderAddress,
+            initialBudget: botRun.initialBudget,
+            currentBudget: botRun.currentBudget,
+            fixedBetAmount: botRun.fixedBetAmount,
+            minTriggerAmount: botRun.minTriggerAmount,
+            minPrice: botRun.minPrice,
+            maxPrice: botRun.maxPrice,
+            trades: botRun.trades,
+            createdAt: botRun.createdAt || Date.now(),
+            lastChecked: Date.now(),
+            isArchived: false,
+            isActive: true,
+          })
+          console.log(`➕ Added new run: ${botRun.name}`)
+        }
+      }
+      
+      setCopyTrades(merged)
+      await saveToIndexedDB('copyTrades', merged)
+      
+      setNotification({
+        message: `✅ Synced with bot: ${botRuns.length} run(s) updated`,
+        type: 'success'
+      })
+      
+      // Send Telegram notification
+      fetch('/api/telegram', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: `🔄 *Synced with localhost*\n\n${botRuns.length} run(s) fetched from Railway bot`
+        })
+      }).catch(console.error)
+      
+    } catch (error: any) {
+      console.error('❌ Error syncing with bot:', error)
+      setNotification({
+        message: `❌ Sync failed: ${error.message}`,
+        type: 'warning'
+      })
+    } finally {
+      setSyncingWithBot(false)
+    }
   }
 
   const refreshCopyTrade = async (copyTradeId: string) => {
@@ -2492,6 +2593,14 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
             </p>
           </div>
           <div className="flex items-center gap-3">
+            <button
+              onClick={syncWithBot}
+              disabled={syncingWithBot}
+              className="px-4 py-2 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 hover:border-cyan-500/50 text-cyan-400 font-medium rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Sync data from Railway bot"
+            >
+              {syncingWithBot ? '🔄 Syncing...' : '🤖 Sync with Bot'}
+            </button>
             {copyTrades.length > 0 && (
               <>
                 <button
