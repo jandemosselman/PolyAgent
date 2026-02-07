@@ -1,0 +1,5 @@
+node_modules/
+dist/
+.env
+stats-cache.json
+*.log
