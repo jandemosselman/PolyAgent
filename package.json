@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p 3001",
-    "build": "next build",
-    "start": "next start",
+    "build": "echo 'Skipping Next.js build for bot deployment'",
+    "start": "cd bot && npm start",
     "lint": "next lint",
     "install-bot": "cd bot && npm install",
     "bot": "cd bot && npm start",
