@@ -39,6 +39,15 @@ export async function scanForNewTrades(
   const activities: Activity[] = await response.json()
   console.log(`  📊 Fetched ${activities.length} activities`)
   
+  // Debug first activity timestamp
+  if (activities.length > 0) {
+    const firstActivity = activities[0]
+    console.log(`  🔍 First activity timestamp debug:`)
+    console.log(`     Raw timestamp: ${firstActivity.timestamp}`)
+    console.log(`     As seconds: ${new Date(firstActivity.timestamp * 1000).toISOString()}`)
+    console.log(`     As milliseconds: ${new Date(firstActivity.timestamp).toISOString()}`)
+  }
+  
   // Filter activities
   const existingTradeIds = new Set(run.trades.map(t => t.transactionHash))
   
@@ -70,22 +79,34 @@ export async function scanForNewTrades(
   console.log(`  💰 Budget allows ${affordableCount} trades, copying ${tradesToCopy.length}`)
   
   // Create simulated trades
-  const newTrades: StoredTrade[] = tradesToCopy.map((activity, index) => ({
-    id: `${activity.transactionHash}-${activity.asset}-${Date.now()}-${index}-${Math.random().toString(36).substring(7)}`,
-    originalTrade: activity,
-    timestamp: activity.timestamp * 1000, // Convert to milliseconds
-    market: activity.market || activity.title || `Market ${activity.asset.substring(0, 8)}...`,
-    outcome: activity.outcome || activity.outcomeName || 'Unknown',
-    price: parseFloat(activity.price),
-    amount: run.fixedBetAmount,
-    asset: activity.asset,
-    conditionId: activity.conditionId || '',
-    slug: activity.slug || '',
-    transactionHash: activity.transactionHash,
-    icon: activity.icon || '',
-    status: 'open',
-    pnl: 0
-  }))
+  const newTrades: StoredTrade[] = tradesToCopy.map((activity, index) => {
+    // Handle timestamp - Polymarket API returns in seconds, need milliseconds
+    const timestampMs = activity.timestamp > 10000000000 
+      ? activity.timestamp  // Already in milliseconds
+      : activity.timestamp * 1000  // Convert from seconds
+    
+    // Get best available market name
+    const marketName = activity.title || activity.market || activity.slug || `Market ${activity.asset.substring(0, 8)}...`
+    
+    console.log(`  📝 Trade ${index + 1}: ${marketName} @ $${activity.price} on ${new Date(timestampMs).toISOString()}`)
+    
+    return {
+      id: `${activity.transactionHash}-${activity.asset}-${Date.now()}-${index}-${Math.random().toString(36).substring(7)}`,
+      originalTrade: activity,
+      timestamp: timestampMs,
+      market: marketName,
+      outcome: activity.outcome || activity.outcomeName || 'Unknown',
+      price: parseFloat(activity.price),
+      amount: run.fixedBetAmount,
+      asset: activity.asset,
+      conditionId: activity.conditionId || '',
+      slug: activity.slug || '',
+      transactionHash: activity.transactionHash,
+      icon: activity.icon || '',
+      status: 'open',
+      pnl: 0
+    }
+  })
   
   return {
     newTrades,
