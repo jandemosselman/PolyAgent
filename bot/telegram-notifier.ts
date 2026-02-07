@@ -67,17 +67,6 @@ Avg P&L: $${avgPnL.toFixed(2)}
   await sendTelegramUpdate(message)
 }
 
-export async function notifyError(trader: string, error: string) {
-  const message = `
-❌ *Error Checking Trader*
-
-Trader: \`${trader.slice(0, 10)}...\`
-Error: ${error}
-  `.trim()
-  
-  await sendTelegramUpdate(message)
-}
-
 export async function notifyBotStarted(configCount: number) {
   const message = `
 🤖 *Bot Started*
