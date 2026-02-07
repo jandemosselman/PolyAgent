@@ -367,7 +367,9 @@ export default function CopySimulatorPage() {
     loadData()
   }, [])
 
-  // Auto-sync with bot on page load
+  // Auto-sync with bot on page load (disabled by default - enable after setting RAILWAY_BOT_URL)
+  // Uncomment the useEffect below after you set RAILWAY_BOT_URL in .env.local
+  /*
   useEffect(() => {
     const autoSync = async () => {
       // Wait a bit for local data to load first
@@ -382,6 +384,7 @@ export default function CopySimulatorPage() {
       autoSync().catch(console.error)
     }
   }, []) // Empty deps - only run once on mount
+  */
 
   // Load config names from IndexedDB (with localStorage fallback)
   useEffect(() => {
@@ -724,8 +727,15 @@ export default function CopySimulatorPage() {
       
     } catch (error: any) {
       console.error('❌ Error syncing with bot:', error)
+      
+      // Check if it's a configuration error
+      const isConfigError = error.message.includes('RAILWAY_BOT_URL not configured') || 
+                           error.message.includes('404')
+      
       setNotification({
-        message: `❌ Sync failed: ${error.message}`,
+        message: isConfigError 
+          ? '⚙️ Railway bot not configured yet. See SYNC_SETUP.md for instructions.'
+          : `❌ Sync failed: ${error.message}`,
         type: 'warning'
       })
     } finally {
