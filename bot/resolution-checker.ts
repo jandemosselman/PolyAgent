@@ -213,7 +213,7 @@ Avg P&L: $${avgPnL.toFixed(2)}
 }
 
 async function fetchActivity(address: string, limit: number): Promise<Activity[]> {
-  const url = `https://gamma-api.polymarket.com/activity?user=${address}&limit=${limit}&offset=0`
+  const url = `https://data-api.polymarket.com/activity?user=${address}&limit=${limit}&offset=0`
   console.log(`  Fetching activity from: ${url}`)
   
   const response = await fetch(url, {
@@ -233,7 +233,7 @@ async function fetchActivity(address: string, limit: number): Promise<Activity[]
 }
 
 async function fetchClosedPositions(address: string, limit: number): Promise<ClosedPosition[]> {
-  const url = `https://gamma-api.polymarket.com/positions?user=${address}&limit=${limit}&offset=0&closed=true`
+  const url = `https://data-api.polymarket.com/positions?user=${address}&limit=${limit}&offset=0&closed=true`
   console.log(`  Fetching closed positions from: ${url}`)
   
   const response = await fetch(url, {
