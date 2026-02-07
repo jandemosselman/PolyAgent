@@ -44,10 +44,8 @@ export async function scanForNewTrades(
     // Must be a BUY
     if (activity.type !== 'TRADE' || activity.side !== 'BUY') return false
     
-    // Must be after run creation
-    if (activity.timestamp < run.createdAt) return false
-    
-    // Skip duplicates
+    // Skip duplicates (already copied)
+    if (existingTradeIds.has(activity.transactionHash)) return false
     if (existingTradeIds.has(activity.transactionHash)) return false
     
     // Check amount filter
