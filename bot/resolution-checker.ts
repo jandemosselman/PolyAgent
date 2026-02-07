@@ -68,6 +68,12 @@ const CONFIG_FILE = path.join(process.cwd(), 'configurations.json')
 // Load configurations from localStorage export
 function loadConfigurations(): Configuration[] {
   try {
+    // Try environment variable first (for Railway)
+    if (process.env.CONFIGURATIONS) {
+      return JSON.parse(process.env.CONFIGURATIONS)
+    }
+    
+    // Fall back to file (for local development)
     if (fs.existsSync(CONFIG_FILE)) {
       const data = fs.readFileSync(CONFIG_FILE, 'utf-8')
       return JSON.parse(data)
