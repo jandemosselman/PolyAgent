@@ -12,6 +12,8 @@ const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID || ''
 let bot: TelegramBot | null = null
 let currentCronJob: cron.ScheduledTask | null = null
 let currentInterval = 10 // minutes
+let maxGlobalTrades = 10000 // Stop when any run reaches this
+let isPaused = false
 
 if (TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID) {
   bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true })
@@ -92,14 +94,19 @@ Monitoring: *${configs.length} configuration(s)*
 
 ${configList}
 
-Schedule: Every ${currentInterval} minute${currentInterval > 1 ? 's' : ''}
+⏰ Schedule: Every ${currentInterval} minute${currentInterval > 1 ? 's' : ''}
+🛡️ Global limit: ${maxGlobalTrades.toLocaleString()} trades
+⏸️ Status: ${isPaused ? '*PAUSED*' : '*Active*'}
 
-Commands:
-• /refresh - Full cycle: check → scan → check (all configs)
-• /setinterval <minutes> - Change automatic check interval
+*Commands:*
+• /refresh - Manual full cycle
+• /setinterval <min> - Change check interval
+• /setmaxglobal <trades> - Set global trade limit
+• /pause - Pause automatic checks
+• /resume - Resume automatic checks
 • /checkall - Check all configs
 • /check1, /check2, etc - Check specific config
-• /cleardata - Delete all stored trade data (requires confirmation)
+• /cleardata - Delete all data (requires confirmation)
 • /status - Show this message
     `.trim(), { parse_mode: 'Markdown' })
   })
@@ -174,6 +181,90 @@ Commands:
     console.log(`✅ Cron interval updated to ${minutes} minutes (${cronSchedule})`)
   })
   
+  // Handle /setmaxglobal command - Set max trades per run before auto-pause
+  bot.onText(/\/setmaxglobal\s*(.*)/, async (msg, match) => {
+    const chatId = msg.chat.id.toString()
+    
+    if (chatId !== TELEGRAM_CHAT_ID) {
+      console.log(`❌ Unauthorized command from chat ID: ${chatId}`)
+      return
+    }
+    
+    const input = match?.[1]?.trim() || ''
+    
+    // If no input, show current limit
+    if (!input) {
+      await bot!.sendMessage(chatId, `
+🛡️ *Global Trade Limit*: ${maxGlobalTrades.toLocaleString()} trades
+⏸️ *Status*: ${isPaused ? 'PAUSED (limit reached)' : 'Active'}
+
+When ANY run reaches this limit, automatic checks will pause to prevent overflow and save credits.
+
+*Usage:* \`/setmaxglobal <number>\`
+
+*Examples:*
+• \`/setmaxglobal 5000\` - Pause at 5,000 trades
+• \`/setmaxglobal 10000\` - Pause at 10,000 trades (default)
+• \`/setmaxglobal 50000\` - Pause at 50,000 trades
+
+*Commands:*
+• \`/pause\` - Manually pause automatic checks
+• \`/resume\` - Resume automatic checks
+      `.trim(), { parse_mode: 'Markdown' })
+      return
+    }
+    
+    const limit = parseInt(input)
+    
+    if (isNaN(limit) || limit < 100) {
+      await bot!.sendMessage(chatId, '❌ Invalid limit. Please enter a number of at least 100 trades.', { parse_mode: 'Markdown' })
+      return
+    }
+    
+    maxGlobalTrades = limit
+    
+    await bot!.sendMessage(chatId, `✅ Global trade limit set to *${limit.toLocaleString()} trades*!\n\nAutomatic checks will pause when any run reaches this limit.`, { parse_mode: 'Markdown' })
+    console.log(`✅ Global trade limit updated to ${limit} trades`)
+  })
+  
+  // Handle /pause command - Manually pause automatic checks
+  bot.onText(/\/pause/, async (msg) => {
+    const chatId = msg.chat.id.toString()
+    
+    if (chatId !== TELEGRAM_CHAT_ID) {
+      console.log(`❌ Unauthorized command from chat ID: ${chatId}`)
+      return
+    }
+    
+    if (isPaused) {
+      await bot!.sendMessage(chatId, '⏸️ Bot is already paused.', { parse_mode: 'Markdown' })
+      return
+    }
+    
+    isPaused = true
+    await bot!.sendMessage(chatId, '⏸️ Automatic checks paused!\n\nUse `/resume` to continue or `/refresh` for manual checks.', { parse_mode: 'Markdown' })
+    console.log('⏸️ Bot paused by user command')
+  })
+  
+  // Handle /resume command - Resume automatic checks
+  bot.onText(/\/resume/, async (msg) => {
+    const chatId = msg.chat.id.toString()
+    
+    if (chatId !== TELEGRAM_CHAT_ID) {
+      console.log(`❌ Unauthorized command from chat ID: ${chatId}`)
+      return
+    }
+    
+    if (!isPaused) {
+      await bot!.sendMessage(chatId, '▶️ Bot is already running.', { parse_mode: 'Markdown' })
+      return
+    }
+    
+    isPaused = false
+    await bot!.sendMessage(chatId, '▶️ Automatic checks resumed!\n\nBot will continue checking on schedule.', { parse_mode: 'Markdown' })
+    console.log('▶️ Bot resumed by user command')
+  })
+  
   // Handle /cleardata command - Delete all stored trade data
   bot.onText(/\/cleardata/, async (msg) => {
     const chatId = msg.chat.id.toString()
@@ -215,7 +306,7 @@ Commands:
     }
   })
   
-  console.log('✅ Telegram bot commands initialized (/refresh, /setinterval, /checkall, /cleardata, /status)')
+  console.log('✅ Telegram bot commands initialized (/refresh, /setinterval, /setmaxglobal, /pause, /resume, /cleardata, /status)')
 } else {
   console.log('⚠️  Telegram bot commands disabled (missing credentials)')
 }
@@ -251,6 +342,44 @@ async function runCheck() {
     hour12: false 
   })
   console.log(`\n⏰ [${timestamp}] Running scheduled resolution check...`)
+  
+  // Check if paused
+  if (isPaused) {
+    console.log('⏸️ Bot is paused, skipping check')
+    return
+  }
+  
+  // Check if any run has reached the global trade limit
+  const { loadCopyTrades } = await import('./trade-storage.js')
+  const runs = loadCopyTrades()
+  const maxTradeRun = runs.reduce((max, run) => 
+    run.trades.length > max.trades.length ? run : max, 
+    runs[0] || { trades: [] }
+  )
+  
+  if (maxTradeRun && maxTradeRun.trades.length >= maxGlobalTrades) {
+    isPaused = true
+    console.log(`🛡️ Global trade limit reached! Run "${maxTradeRun.name}" has ${maxTradeRun.trades.length} trades (limit: ${maxGlobalTrades})`)
+    console.log('⏸️ Automatic checks paused to prevent overflow')
+    
+    // Send Telegram notification
+    if (bot && TELEGRAM_CHAT_ID) {
+      await bot.sendMessage(TELEGRAM_CHAT_ID, `
+🛡️ *GLOBAL TRADE LIMIT REACHED*
+
+Run: *${maxTradeRun.name}*
+Trades: *${maxTradeRun.trades.length.toLocaleString()}* / ${maxGlobalTrades.toLocaleString()}
+
+⏸️ Automatic checks have been paused to prevent overflow and save credits.
+
+*Options:*
+• \`/resume\` - Resume automatic checks (if you want to continue)
+• \`/setmaxglobal <number>\` - Increase the limit
+• \`/refresh\` - Run manual checks (still works while paused)
+      `.trim(), { parse_mode: 'Markdown' })
+    }
+    return
+  }
   
   for (const config of configurations) {
     try {
