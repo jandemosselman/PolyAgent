@@ -118,14 +118,14 @@ export async function checkResolutionsForConfig(config: Configuration) {
   console.log(`🔍 Checking config: ${config.name} (${config.traderAddress.slice(0, 8)}...)`)
   
   try {
-    // Fetch activity and closed positions
-    const [activity, closedPositions] = await Promise.all([
+    // STEP 1: Check resolutions (like pressing "Check Resolutions" button)
+    console.log(`  📊 Step 1: Checking resolutions on existing data...`)
+    let [activity, closedPositions] = await Promise.all([
       fetchActivity(config.traderAddress, 5000),
       fetchClosedPositions(config.traderAddress, 10000)
     ])
     
-    // Match and calculate stats with config filters applied
-    const { trades, stats } = matchResolvedBuysWithFilters(
+    let { trades, stats } = matchResolvedBuysWithFilters(
       activity, 
       closedPositions,
       config.minTriggerAmount,
@@ -133,12 +133,46 @@ export async function checkResolutionsForConfig(config: Configuration) {
       config.maxPrice
     )
     
+    const afterFirstCheck = {
+      winRate: stats.winRate,
+      totalTrades: trades.length,
+      wins: stats.wins,
+      losses: stats.losses,
+      avgPnL: stats.avgPnL,
+      totalPnL: stats.totalPnL
+    }
+    
+    // STEP 2: Refresh to find new trades (like pressing "Refresh" button)
+    console.log(`  🔄 Step 2: Refreshing to find new trades...`)
+    await new Promise(resolve => setTimeout(resolve, 2000)) // Wait 2 seconds like manual refresh
+    
+    ;[activity, closedPositions] = await Promise.all([
+      fetchActivity(config.traderAddress, 5000),
+      fetchClosedPositions(config.traderAddress, 10000)
+    ])
+    
+    // STEP 3: Check resolutions again (like pressing "Check Resolutions" again)
+    console.log(`  📊 Step 3: Checking resolutions again after refresh...`)
+    ;({ trades, stats } = matchResolvedBuysWithFilters(
+      activity, 
+      closedPositions,
+      config.minTriggerAmount,
+      config.minPrice,
+      config.maxPrice
+    ))
+    
     const newWinRate = stats.winRate
     const totalTrades = trades.length
     const wins = stats.wins
     const losses = stats.losses
     const avgPnL = stats.avgPnL
     const totalPnL = stats.totalPnL
+    
+    // Detect if refresh found new trades
+    const newTradesFromRefresh = totalTrades - afterFirstCheck.totalTrades
+    if (newTradesFromRefresh > 0) {
+      console.log(`  ✨ Refresh found ${newTradesFromRefresh} new trade(s)!`)
+    }
     
     // Check if this is first time tracking this config
     const oldStats = statsCache.get(config.id)
@@ -159,31 +193,42 @@ Avg P&L: $${avgPnL.toFixed(2)}
 Total P&L: $${totalPnL.toFixed(2)}
       `.trim())
     } else {
-      // Check for significant changes
+      // Check for changes compared to last run (10 minutes ago)
       const winRateChange = Math.abs(newWinRate - oldStats.winRate)
       const newTradesCount = totalTrades - oldStats.totalTrades
       
-      // Notify if win rate changed by >1% OR 5+ new trades
-      if (winRateChange > 1) {
-        await sendTelegramUpdate(`
-📈 *Win Rate Update*
-
-Config: *${config.name}*
-Win Rate: *${newWinRate.toFixed(1)}%* (${newWinRate >= oldStats.winRate ? '+' : ''}${(newWinRate - oldStats.winRate).toFixed(1)}%)
-Total Trades: ${totalTrades}
-W/L: ${wins}/${losses}
-Avg P&L: $${avgPnL.toFixed(2)}
-        `.trim())
-      } else if (newTradesCount >= 5) {
-        await sendTelegramUpdate(`
-🔔 *New Trades Detected*
+      // Build notification messages
+      const notifications = []
+      
+      // Notify about new trades found
+      if (newTradesCount > 0) {
+        notifications.push(`
+🆕 *New Trades Found*
 
 Config: *${config.name}*
 New Trades: *${newTradesCount}*
-Current Win Rate: ${newWinRate.toFixed(1)}%
+${newTradesFromRefresh > 0 ? `(${newTradesFromRefresh} found in refresh step)\n` : ''}Current Win Rate: ${newWinRate.toFixed(1)}%
 Total Trades: ${totalTrades}
-Avg P&L: $${avgPnL.toFixed(2)}
         `.trim())
+      }
+      
+      // Notify about win rate changes
+      if (winRateChange > 1 && newTradesCount > 0) {
+        notifications.push(`
+� *Win Rate Changed*
+
+Config: *${config.name}*
+Old: ${oldStats.winRate.toFixed(1)}% → New: *${newWinRate.toFixed(1)}%*
+Change: ${newWinRate >= oldStats.winRate ? '+' : ''}${(newWinRate - oldStats.winRate).toFixed(1)}%
+W/L: ${wins}/${losses}
+Avg P&L: $${avgPnL.toFixed(2)}
+Total P&L: $${totalPnL.toFixed(2)}
+        `.trim())
+      }
+      
+      // Send all notifications
+      for (const notification of notifications) {
+        await sendTelegramUpdate(notification)
       }
     }
     
