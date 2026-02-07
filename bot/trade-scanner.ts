@@ -4,6 +4,7 @@ interface Activity {
   id: string
   user: string
   market: string
+  title?: string
   asset: string
   type: string
   side: string
@@ -14,6 +15,7 @@ interface Activity {
   icon?: string
   transactionHash: string
   outcome?: string
+  outcomeName?: string
   conditionId?: string
 }
 
@@ -68,19 +70,19 @@ export async function scanForNewTrades(
   console.log(`  💰 Budget allows ${affordableCount} trades, copying ${tradesToCopy.length}`)
   
   // Create simulated trades
-  const newTrades: StoredTrade[] = tradesToCopy.map(activity => ({
-    id: `${run.id}-${activity.transactionHash}`,
+  const newTrades: StoredTrade[] = tradesToCopy.map((activity, index) => ({
+    id: `${activity.transactionHash}-${activity.asset}-${Date.now()}-${index}-${Math.random().toString(36).substring(7)}`,
     originalTrade: activity,
-    timestamp: activity.timestamp,
-    market: activity.market,
-    outcome: activity.outcome || 'Unknown',
+    timestamp: activity.timestamp * 1000, // Convert to milliseconds
+    market: activity.market || activity.title || `Market ${activity.asset.substring(0, 8)}...`,
+    outcome: activity.outcome || activity.outcomeName || 'Unknown',
     price: parseFloat(activity.price),
     amount: run.fixedBetAmount,
     asset: activity.asset,
     conditionId: activity.conditionId || '',
-    slug: activity.slug,
+    slug: activity.slug || '',
     transactionHash: activity.transactionHash,
-    icon: activity.icon,
+    icon: activity.icon || '',
     status: 'open',
     pnl: 0
   }))
