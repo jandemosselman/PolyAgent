@@ -96,6 +96,7 @@ Commands:
 • /refresh - Full cycle: check → scan → check (all configs)
 • /checkall - Check all configs
 • /check1, /check2, etc - Check specific config
+• /cleardata - Delete all stored trade data (requires confirmation)
 • /status - Show this message
     `.trim(), { parse_mode: 'Markdown' })
   })
@@ -118,7 +119,48 @@ Commands:
     await bot!.sendMessage(chatId, '✅ Full refresh cycle completed!', { parse_mode: 'Markdown' })
   })
   
-  console.log('✅ Telegram bot commands initialized (/refresh, /checkall, /status)')
+  // Handle /cleardata command - Delete all stored trade data
+  bot.onText(/\/cleardata/, async (msg) => {
+    const chatId = msg.chat.id.toString()
+    
+    // Only respond to the configured chat ID
+    if (chatId !== TELEGRAM_CHAT_ID) {
+      console.log(`❌ Unauthorized command from chat ID: ${chatId}`)
+      return
+    }
+    
+    await bot!.sendMessage(chatId, '⚠️ *WARNING*: This will delete ALL stored trade data!\n\nReply with `/cleardata confirm` to proceed.', { parse_mode: 'Markdown' })
+  })
+  
+  // Handle /cleardata confirm
+  bot.onText(/\/cleardata confirm/, async (msg) => {
+    const chatId = msg.chat.id.toString()
+    
+    if (chatId !== TELEGRAM_CHAT_ID) {
+      console.log(`❌ Unauthorized command from chat ID: ${chatId}`)
+      return
+    }
+    
+    await bot!.sendMessage(chatId, '🗑️ Deleting all stored trade data...', { parse_mode: 'Markdown' })
+    console.log('📱 Received /cleardata confirm command from Telegram')
+    
+    try {
+      // Clear the storage by reinitializing from configurations
+      const { saveCopyTrades } = await import('./trade-storage.js')
+      saveCopyTrades([])
+      
+      // Reinitialize from configurations
+      initializeCopyTrades()
+      
+      await bot!.sendMessage(chatId, '✅ All trade data cleared! Fresh runs created from configurations.', { parse_mode: 'Markdown' })
+      console.log('✅ Trade data cleared and reinitialized')
+    } catch (error: any) {
+      await bot!.sendMessage(chatId, `❌ Error clearing data: ${error.message}`, { parse_mode: 'Markdown' })
+      console.error('❌ Error clearing data:', error)
+    }
+  })
+  
+  console.log('✅ Telegram bot commands initialized (/refresh, /checkall, /cleardata, /status)')
 } else {
   console.log('⚠️  Telegram bot commands disabled (missing credentials)')
 }
