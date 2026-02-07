@@ -1,0 +1,1457 @@
+[Log] Fetching closed positions with limit: – 500
+[Log] API URL: – "/api/closed-positions?user=0xdc876e6873772d38716fda7f2452a78d426d7ab6&limit=500&sortBy=TIMESTAMP&sortDirection=DESC"
+[Log] 🔥 CLOSED POSITIONS EFFECT TRIGGERED
+[Log]   - positionsTab: – "active"
+[Log]   - closedPositionsLimit: – 500
+[Log]   - activeTab: – "positions"
+[Log]   - showResolvedOnly: – false
+[Log] ❌ Conditions NOT met - skipping closed positions fetch
+[Log] 🔥 ACTIVITY LIMIT CHANGED EFFECT TRIGGERED
+[Log]   - activityLimit: – 200
+[Log]   - showResolvedOnly: – false
+[Log]   - closedPositionsLimit: – 500
+[Log]   - activeTab: – "positions"
+[Log] ❌ showResolvedOnly is FALSE - NOT auto-scaling closed positions
+[Log] Received closed positions: – 500
+[Error] Failed to load resource: the server responded with a status of 403 (Forbidden) (efl-championship-logo.png, line 0)
+[Log] 🔥 ACTIVITY LIMIT CHANGED EFFECT TRIGGERED
+[Log]   - activityLimit: – 10000
+[Log]   - showResolvedOnly: – false
+[Log]   - closedPositionsLimit: – 500
+[Log]   - activeTab: – "activity"
+[Log] ❌ showResolvedOnly is FALSE - NOT auto-scaling closed positions
+[Error] Failed to load resource: the server responded with a status of 403 (Forbidden) (efl-championship-logo.png, line 0)
+[Log] 🔥🔥🔥 getResolvedBuysWithStreaks CALLED
+[Log]   - activity.length: – 10000
+[Log]   - closedPositions.length: – 500
+[Log] === Resolved Buys Analysis ===
+[Log] Total activity items: – 10000
+[Log] Total BUY trades (with duplicates): – 2869
+[Log] Unique BUY trades (after deduplication): – 2868
+[Log] Duplicates removed: – 1
+[Log] Closed positions available: – 500
+[Log] Activity breakdown by type: – {TRADE: 2869, REDEEM: 7131}
+[Log] Trade sides breakdown: – {BUY: 2869}
+[Log] Closed positions map size (unique keys): – 830
+[Log] 🔍 CONDITION ID OVERLAP CHECK:
+[Log]   - Unique conditionIds in closed positions: – 330
+[Log]   - Unique conditionIds in buy trades: – 105
+[Log]   - conditionIds that exist in BOTH: – 34
+[Log] Sample closed positions (first 3): – [{asset: "20279811483260328512...", conditionId: "0x13483bbf591ab98c59..."}, {asset: "10338068268174499817...", conditionId: "0x447acfbdfe535357e7..."}, {asset: "11018653134274601278...", conditionId: "0x9f00daaefe50599159..."}] (3)
+[Log] Sample BUY trades (first 3): – [{asset: "94719178329437561812...", conditionId: "0xc5b46a56b2d904eb9f...", transactionHash: "0x83be67b480b5eb7844..."}, {asset: "42363451248419962323...", conditionId: "0xbe2f5a7905f2d9d98f...", transactionHash: "0x62cb7514dc83941d0a..."}, {asset: "42363451248419962323...", conditionId: "0xbe2f5a7905f2d9d98f...", transactionHash: "0xa45e9e6584d236355f..."}] (3)
+[Log] 🔍 MATCHING ANALYSIS:
+[Log]   - Trades matching by asset: – 646
+[Log]   - Trades matching by conditionId: – 0
+[Log]   - Trades with NO match: – 2222
+[Log]   - Sample unmatched assets: – ["94719178329437561812686798398332953413813172005132613157137814482919328264366", "42363451248419962323383174574228169839104175998123506308497753121046307880987", "78297393943884645746584923838818473472194832976174173983095953916405403607485", …] (5)
+["94719178329437561812686798398332953413813172005132613157137814482919328264366", "42363451248419962323383174574228169839104175998123506308497753121046307880987", "78297393943884645746584923838818473472194832976174173983095953916405403607485", "110341334888276263354956840170446866499566337580422797125271184650055382549508", "15188919936253802816117227770415416690675420537782784887775174067509274453451"]Array (5)
+[Log]   - Sample unmatched conditionIds: – ["0xc5b46a56b2d904eb9f8fd0898d11cbe1e446c9e2f6a6a6625d14d2f5d11076b0", "0xbe2f5a7905f2d9d98f58f0cb784a44848c230309dad12db6e1d390e5fa94ed8d", "0x3516d1f9aca57ef0398782467cdf5d3c7c8171f78b4518de94ae0eccfcc669d5", …] (5)
+["0xc5b46a56b2d904eb9f8fd0898d11cbe1e446c9e2f6a6a6625d14d2f5d11076b0", "0xbe2f5a7905f2d9d98f58f0cb784a44848c230309dad12db6e1d390e5fa94ed8d", "0x3516d1f9aca57ef0398782467cdf5d3c7c8171f78b4518de94ae0eccfcc669d5", "0x14f8b1859749fdff7903cbad81c0c310de963596e28951e1387401608e8976cb", "0xce8507bec57b999d9cb8150d306b42696aa9cc6c8728605b3e84a52679a2beda"]Array (5)
+[Log] 🔍 CLOSED POSITIONS FIELD CHECK:
+[Log]   - Sample closed position keys: – ["proxyWallet", "asset", "conditionId", …] (17)
+["proxyWallet", "asset", "conditionId", "avgPrice", "totalBought", "realizedPnl", "curPrice", "title", "slug", "icon", …]Array (17)
+[Log]   - Has asset? – true
+[Log]   - Has conditionId? – true
+[Log]   - FULL sample closed position: – "{↵  \"proxyWallet\": \"0xdc876e6873772d38716fda7f2452a78d426d7ab6\",↵  \"asset\"…"
+"{
+  \"proxyWallet\": \"0xdc876e6873772d38716fda7f2452a78d426d7ab6\",
+  \"asset\": \"20279811483260328512907125236742450693828964599453213376897569415321346588783\",
+  \"conditionId\": \"0x13483bbf591ab98c595831415a00d91c72ce1465852781fa52331a3c77316174\",
+  \"avgPrice\": 0.5,
+  \"totalBought\": 5640.249999999999,
+  \"realizedPnl\": 2820.1249999999995,
+  \"curPrice\": 1,
+  \"title\": \"Portsmouth FC vs. Southampton FC: O/U 2.5\",
+  \"slug\": \"elc-por-sot-2026-01-25-total-2pt5\",
+  \"icon\": \"https://polymarket-upload.s3.us-east-2.amazonaws.com/efl-championship-logo.png\",
+  \"eventSlug\": \"elc-por-sot-2026-01-25-more-markets\",
+  \"outcome\": \"Under\",
+  \"outcomeIndex\": 1,
+  \"oppositeOutcome\": \"Over\",
+  \"oppositeAsset\": \"68375505679629779306575553076569847600824073981393967695181780280859795235601\",
+  \"endDate\": \"2026-01-25T00:00:00Z\",
+  \"timestamp\": 1769358882
+}"
+[Log] 🔍 BUY TRADES FIELD CHECK:
+[Log]   - Sample buy trade keys: – ["proxyWallet", "timestamp", "conditionId", …] (21)
+["proxyWallet", "timestamp", "conditionId", "type", "size", "usdcSize", "transactionHash", "price", "asset", "side", …]Array (21)
+[Log]   - Has asset? – true
+[Log]   - Has conditionId? – true
+[Log]   - FULL sample buy trade: – "{↵  \"proxyWallet\": \"0xdc876e6873772d38716fda7f2452a78d426d7ab6\",↵  \"timestamp\": 1769365258,↵  \"conditionId\"…"
+"{
+  \"proxyWallet\": \"0xdc876e6873772d38716fda7f2452a78d426d7ab6\",
+  \"timestamp\": 1769365258,
+  \"conditionId\": \"0xc5b46a56b2d904eb9f8fd0898d11cbe1e446c9e2f6a6a6625d14d2f5d11076b0\",
+  \"type\": \"TRADE\",
+  \"size\": 681.81818,
+  \"usdcSize\": 381.818181,
+  \"transactionHash\": \"0x83be67b480b5eb7844f5c037e4d35320a8bd94ef503d9ccb455eaae5cddca981\",
+  \"price\": 0.5600000002933333,
+  \"asset\": \"94719178329437561812686798398332953413813172005132613157137814482919328264366\",
+  \"side\": \"BUY\",
+  \"outcomeIndex\": 1,
+  \"title\": \"AS Roma vs. AC Milan: O/U 2.5\",
+  \"slug\": \"sea-rom-mil-2026-01-25-total-2pt5\",
+  \"icon\": \"https://polymarket-upload.s3.us-east-2.amazonaws.com/Serie-A-Logo.png\",
+  \"eventSlug\": \"sea-rom-mil-2026-01-25-more-markets\",
+  \"outcome\": \"Under\",
+  \"name\": \"432614799197\",
+  \"pseudonym\": \"Sorrowful-Shallows\",
+  \"bio\": \"\",
+  \"profileImage\": \"\",
+  \"profileImageOptimized\": \"\"
+}"
+[Log] Matched buys with closed positions: – 646
+[Log] Filtered out by min bet amount: – 0
+[Log] Filtered out by price range: – 0
+[Log] Final resolved buys after filters: – 646
+[Log] Unmatched BUY trades (still open): – 2222
+[Log] ==============================
+[Log] === Deduplication Analysis ===
+[Log] Resolved buys before deduplication: – 646
+[Log] Unique resolved buys after deduplication: – 646
+[Log] Duplicates removed: – 0
+[Log] Top 5 most duplicated trades: – [] (0)
+[Log] ==============================
+[Log] 🔥🔥🔥 getResolvedBuysWithStreaks CALLED
+[Log]   - activity.length: – 10000
+[Log]   - closedPositions.length: – 500
+[Log] === Resolved Buys Analysis ===
+[Log] Total activity items: – 10000
+[Log] Total BUY trades (with duplicates): – 2869
+[Log] Unique BUY trades (after deduplication): – 2868
+[Log] Duplicates removed: – 1
+[Log] Closed positions available: – 500
+[Log] Activity breakdown by type: – {TRADE: 2869, REDEEM: 7131}
+[Log] Trade sides breakdown: – {BUY: 2869}
+[Log] Closed positions map size (unique keys): – 830
+[Log] 🔍 CONDITION ID OVERLAP CHECK:
+[Log]   - Unique conditionIds in closed positions: – 330
+[Log]   - Unique conditionIds in buy trades: – 105
+[Log]   - conditionIds that exist in BOTH: – 34
+[Log] Sample closed positions (first 3): – [{asset: "20279811483260328512...", conditionId: "0x13483bbf591ab98c59..."}, {asset: "10338068268174499817...", conditionId: "0x447acfbdfe535357e7..."}, {asset: "11018653134274601278...", conditionId: "0x9f00daaefe50599159..."}] (3)
+[Log] Sample BUY trades (first 3): – [{asset: "94719178329437561812...", conditionId: "0xc5b46a56b2d904eb9f...", transactionHash: "0x83be67b480b5eb7844..."}, {asset: "42363451248419962323...", conditionId: "0xbe2f5a7905f2d9d98f...", transactionHash: "0x62cb7514dc83941d0a..."}, {asset: "42363451248419962323...", conditionId: "0xbe2f5a7905f2d9d98f...", transactionHash: "0xa45e9e6584d236355f..."}] (3)
+[Log] 🔍 MATCHING ANALYSIS:
+[Log]   - Trades matching by asset: – 646
+[Log]   - Trades matching by conditionId: – 0
+[Log]   - Trades with NO match: – 2222
+[Log]   - Sample unmatched assets: – ["94719178329437561812686798398332953413813172005132613157137814482919328264366", "42363451248419962323383174574228169839104175998123506308497753121046307880987", "78297393943884645746584923838818473472194832976174173983095953916405403607485", …] (5)
+["94719178329437561812686798398332953413813172005132613157137814482919328264366", "42363451248419962323383174574228169839104175998123506308497753121046307880987", "78297393943884645746584923838818473472194832976174173983095953916405403607485", "110341334888276263354956840170446866499566337580422797125271184650055382549508", "15188919936253802816117227770415416690675420537782784887775174067509274453451"]Array (5)
+[Log]   - Sample unmatched conditionIds: – ["0xc5b46a56b2d904eb9f8fd0898d11cbe1e446c9e2f6a6a6625d14d2f5d11076b0", "0xbe2f5a7905f2d9d98f58f0cb784a44848c230309dad12db6e1d390e5fa94ed8d", "0x3516d1f9aca57ef0398782467cdf5d3c7c8171f78b4518de94ae0eccfcc669d5", …] (5)
+["0xc5b46a56b2d904eb9f8fd0898d11cbe1e446c9e2f6a6a6625d14d2f5d11076b0", "0xbe2f5a7905f2d9d98f58f0cb784a44848c230309dad12db6e1d390e5fa94ed8d", "0x3516d1f9aca57ef0398782467cdf5d3c7c8171f78b4518de94ae0eccfcc669d5", "0x14f8b1859749fdff7903cbad81c0c310de963596e28951e1387401608e8976cb", "0xce8507bec57b999d9cb8150d306b42696aa9cc6c8728605b3e84a52679a2beda"]Array (5)
+[Log] 🔍 CLOSED POSITIONS FIELD CHECK:
+[Log]   - Sample closed position keys: – ["proxyWallet", "asset", "conditionId", …] (17)
+["proxyWallet", "asset", "conditionId", "avgPrice", "totalBought", "realizedPnl", "curPrice", "title", "slug", "icon", …]Array (17)
+[Log]   - Has asset? – true
+[Log]   - Has conditionId? – true
+[Log]   - FULL sample closed position: – "{↵  \"proxyWallet\": \"0xdc876e6873772d38716fda7f2452a78d426d7ab6\",↵  \"asset\"…"
+"{
+  \"proxyWallet\": \"0xdc876e6873772d38716fda7f2452a78d426d7ab6\",
+  \"asset\": \"20279811483260328512907125236742450693828964599453213376897569415321346588783\",
+  \"conditionId\": \"0x13483bbf591ab98c595831415a00d91c72ce1465852781fa52331a3c77316174\",
+  \"avgPrice\": 0.5,
+  \"totalBought\": 5640.249999999999,
+  \"realizedPnl\": 2820.1249999999995,
+  \"curPrice\": 1,
+  \"title\": \"Portsmouth FC vs. Southampton FC: O/U 2.5\",
+  \"slug\": \"elc-por-sot-2026-01-25-total-2pt5\",
+  \"icon\": \"https://polymarket-upload.s3.us-east-2.amazonaws.com/efl-championship-logo.png\",
+  \"eventSlug\": \"elc-por-sot-2026-01-25-more-markets\",
+  \"outcome\": \"Under\",
+  \"outcomeIndex\": 1,
+  \"oppositeOutcome\": \"Over\",
+  \"oppositeAsset\": \"68375505679629779306575553076569847600824073981393967695181780280859795235601\",
+  \"endDate\": \"2026-01-25T00:00:00Z\",
+  \"timestamp\": 1769358882
+}"
+[Log] 🔍 BUY TRADES FIELD CHECK:
+[Log]   - Sample buy trade keys: – ["proxyWallet", "timestamp", "conditionId", …] (21)
+["proxyWallet", "timestamp", "conditionId", "type", "size", "usdcSize", "transactionHash", "price", "asset", "side", …]Array (21)
+[Log]   - Has asset? – true
+[Log]   - Has conditionId? – true
+[Log]   - FULL sample buy trade: – "{↵  \"proxyWallet\": \"0xdc876e6873772d38716fda7f2452a78d426d7ab6\",↵  \"timestamp\": 1769365258,↵  \"conditionId\"…"
+"{
+  \"proxyWallet\": \"0xdc876e6873772d38716fda7f2452a78d426d7ab6\",
+  \"timestamp\": 1769365258,
+  \"conditionId\": \"0xc5b46a56b2d904eb9f8fd0898d11cbe1e446c9e2f6a6a6625d14d2f5d11076b0\",
+  \"type\": \"TRADE\",
+  \"size\": 681.81818,
+  \"usdcSize\": 381.818181,
+  \"transactionHash\": \"0x83be67b480b5eb7844f5c037e4d35320a8bd94ef503d9ccb455eaae5cddca981\",
+  \"price\": 0.5600000002933333,
+  \"asset\": \"94719178329437561812686798398332953413813172005132613157137814482919328264366\",
+  \"side\": \"BUY\",
+  \"outcomeIndex\": 1,
+  \"title\": \"AS Roma vs. AC Milan: O/U 2.5\",
+  \"slug\": \"sea-rom-mil-2026-01-25-total-2pt5\",
+  \"icon\": \"https://polymarket-upload.s3.us-east-2.amazonaws.com/Serie-A-Logo.png\",
+  \"eventSlug\": \"sea-rom-mil-2026-01-25-more-markets\",
+  \"outcome\": \"Under\",
+  \"name\": \"432614799197\",
+  \"pseudonym\": \"Sorrowful-Shallows\",
+  \"bio\": \"\",
+  \"profileImage\": \"\",
+  \"profileImageOptimized\": \"\"
+}"
+[Log] Matched buys with closed positions: – 646
+[Log] Filtered out by min bet amount: – 0
+[Log] Filtered out by price range: – 0
+[Log] Final resolved buys after filters: – 646
+[Log] Unmatched BUY trades (still open): – 2222
+[Log] ==============================
+[Log] 🔥🔥🔥 getResolvedBuysWithStreaks CALLED
+[Log]   - activity.length: – 10000
+[Log]   - closedPositions.length: – 500
+[Log] === Resolved Buys Analysis ===
+[Log] Total activity items: – 10000
+[Log] Total BUY trades (with duplicates): – 2869
+[Log] Unique BUY trades (after deduplication): – 2868
+[Log] Duplicates removed: – 1
+[Log] Closed positions available: – 500
+[Log] Activity breakdown by type: – {TRADE: 2869, REDEEM: 7131}
+[Log] Trade sides breakdown: – {BUY: 2869}
+[Log] Closed positions map size (unique keys): – 830
+[Log] 🔍 CONDITION ID OVERLAP CHECK:
+[Log]   - Unique conditionIds in closed positions: – 330
+[Log]   - Unique conditionIds in buy trades: – 105
+[Log]   - conditionIds that exist in BOTH: – 34
+[Log] Sample closed positions (first 3): – [{asset: "20279811483260328512...", conditionId: "0x13483bbf591ab98c59..."}, {asset: "10338068268174499817...", conditionId: "0x447acfbdfe535357e7..."}, {asset: "11018653134274601278...", conditionId: "0x9f00daaefe50599159..."}] (3)
+[Log] Sample BUY trades (first 3): – [{asset: "94719178329437561812...", conditionId: "0xc5b46a56b2d904eb9f...", transactionHash: "0x83be67b480b5eb7844..."}, {asset: "42363451248419962323...", conditionId: "0xbe2f5a7905f2d9d98f...", transactionHash: "0x62cb7514dc83941d0a..."}, {asset: "42363451248419962323...", conditionId: "0xbe2f5a7905f2d9d98f...", transactionHash: "0xa45e9e6584d236355f..."}] (3)
+[Log] 🔍 MATCHING ANALYSIS:
+[Log]   - Trades matching by asset: – 646
+[Log]   - Trades matching by conditionId: – 0
+[Log]   - Trades with NO match: – 2222
+[Log]   - Sample unmatched assets: – ["94719178329437561812686798398332953413813172005132613157137814482919328264366", "42363451248419962323383174574228169839104175998123506308497753121046307880987", "78297393943884645746584923838818473472194832976174173983095953916405403607485", …] (5)
+["94719178329437561812686798398332953413813172005132613157137814482919328264366", "42363451248419962323383174574228169839104175998123506308497753121046307880987", "78297393943884645746584923838818473472194832976174173983095953916405403607485", "110341334888276263354956840170446866499566337580422797125271184650055382549508", "15188919936253802816117227770415416690675420537782784887775174067509274453451"]Array (5)
+[Log]   - Sample unmatched conditionIds: – ["0xc5b46a56b2d904eb9f8fd0898d11cbe1e446c9e2f6a6a6625d14d2f5d11076b0", "0xbe2f5a7905f2d9d98f58f0cb784a44848c230309dad12db6e1d390e5fa94ed8d", "0x3516d1f9aca57ef0398782467cdf5d3c7c8171f78b4518de94ae0eccfcc669d5", …] (5)
+["0xc5b46a56b2d904eb9f8fd0898d11cbe1e446c9e2f6a6a6625d14d2f5d11076b0", "0xbe2f5a7905f2d9d98f58f0cb784a44848c230309dad12db6e1d390e5fa94ed8d", "0x3516d1f9aca57ef0398782467cdf5d3c7c8171f78b4518de94ae0eccfcc669d5", "0x14f8b1859749fdff7903cbad81c0c310de963596e28951e1387401608e8976cb", "0xce8507bec57b999d9cb8150d306b42696aa9cc6c8728605b3e84a52679a2beda"]Array (5)
+[Log] 🔍 CLOSED POSITIONS FIELD CHECK:
+[Log]   - Sample closed position keys: – ["proxyWallet", "asset", "conditionId", …] (17)
+["proxyWallet", "asset", "conditionId", "avgPrice", "totalBought", "realizedPnl", "curPrice", "title", "slug", "icon", …]Array (17)
+[Log]   - Has asset? – true
+[Log]   - Has conditionId? – true
+[Log]   - FULL sample closed position: – "{↵  \"proxyWallet\": \"0xdc876e6873772d38716fda7f2452a78d426d7ab6\",↵  \"asset\"…"
+"{
+  \"proxyWallet\": \"0xdc876e6873772d38716fda7f2452a78d426d7ab6\",
+  \"asset\": \"20279811483260328512907125236742450693828964599453213376897569415321346588783\",
+  \"conditionId\": \"0x13483bbf591ab98c595831415a00d91c72ce1465852781fa52331a3c77316174\",
+  \"avgPrice\": 0.5,
+  \"totalBought\": 5640.249999999999,
+  \"realizedPnl\": 2820.1249999999995,
+  \"curPrice\": 1,
+  \"title\": \"Portsmouth FC vs. Southampton FC: O/U 2.5\",
+  \"slug\": \"elc-por-sot-2026-01-25-total-2pt5\",
+  \"icon\": \"https://polymarket-upload.s3.us-east-2.amazonaws.com/efl-championship-logo.png\",
+  \"eventSlug\": \"elc-por-sot-2026-01-25-more-markets\",
+  \"outcome\": \"Under\",
+  \"outcomeIndex\": 1,
+  \"oppositeOutcome\": \"Over\",
+  \"oppositeAsset\": \"68375505679629779306575553076569847600824073981393967695181780280859795235601\",
+  \"endDate\": \"2026-01-25T00:00:00Z\",
+  \"timestamp\": 1769358882
+}"
+[Log] 🔍 BUY TRADES FIELD CHECK:
+[Log]   - Sample buy trade keys: – ["proxyWallet", "timestamp", "conditionId", …] (21)
+["proxyWallet", "timestamp", "conditionId", "type", "size", "usdcSize", "transactionHash", "price", "asset", "side", …]Array (21)
+[Log]   - Has asset? – true
+[Log]   - Has conditionId? – true
+[Log]   - FULL sample buy trade: – "{↵  \"proxyWallet\": \"0xdc876e6873772d38716fda7f2452a78d426d7ab6\",↵  \"timestamp\": 1769365258,↵  \"conditionId\"…"
+"{
+  \"proxyWallet\": \"0xdc876e6873772d38716fda7f2452a78d426d7ab6\",
+  \"timestamp\": 1769365258,
+  \"conditionId\": \"0xc5b46a56b2d904eb9f8fd0898d11cbe1e446c9e2f6a6a6625d14d2f5d11076b0\",
+  \"type\": \"TRADE\",
+  \"size\": 681.81818,
+  \"usdcSize\": 381.818181,
+  \"transactionHash\": \"0x83be67b480b5eb7844f5c037e4d35320a8bd94ef503d9ccb455eaae5cddca981\",
+  \"price\": 0.5600000002933333,
+  \"asset\": \"94719178329437561812686798398332953413813172005132613157137814482919328264366\",
+  \"side\": \"BUY\",
+  \"outcomeIndex\": 1,
+  \"title\": \"AS Roma vs. AC Milan: O/U 2.5\",
+  \"slug\": \"sea-rom-mil-2026-01-25-total-2pt5\",
+  \"icon\": \"https://polymarket-upload.s3.us-east-2.amazonaws.com/Serie-A-Logo.png\",
+  \"eventSlug\": \"sea-rom-mil-2026-01-25-more-markets\",
+  \"outcome\": \"Under\",
+  \"name\": \"432614799197\",
+  \"pseudonym\": \"Sorrowful-Shallows\",
+  \"bio\": \"\",
+  \"profileImage\": \"\",
+  \"profileImageOptimized\": \"\"
+}"
+[Log] Matched buys with closed positions: – 646
+[Log] Filtered out by min bet amount: – 0
+[Log] Filtered out by price range: – 0
+[Log] Final resolved buys after filters: – 646
+[Log] Unmatched BUY trades (still open): – 2222
+[Log] ==============================
+[Log] === Deduplication Analysis ===
+[Log] Resolved buys before deduplication: – 646
+[Log] Unique resolved buys after deduplication: – 646
+[Log] Duplicates removed: – 0
+[Log] Top 5 most duplicated trades: – [] (0)
+[Log] ==============================
+[Log] 🔥🔥🔥 getResolvedBuysWithStreaks CALLED
+[Log]   - activity.length: – 10000
+[Log]   - closedPositions.length: – 500
+[Log] === Resolved Buys Analysis ===
+[Log] Total activity items: – 10000
+[Log] Total BUY trades (with duplicates): – 2869
+[Log] Unique BUY trades (after deduplication): – 2868
+[Log] Duplicates removed: – 1
+[Log] Closed positions available: – 500
+[Log] Activity breakdown by type: – {TRADE: 2869, REDEEM: 7131}
+[Log] Trade sides breakdown: – {BUY: 2869}
+[Log] Closed positions map size (unique keys): – 830
+[Log] 🔍 CONDITION ID OVERLAP CHECK:
+[Log]   - Unique conditionIds in closed positions: – 330
+[Log]   - Unique conditionIds in buy trades: – 105
+[Log]   - conditionIds that exist in BOTH: – 34
+[Log] Sample closed positions (first 3): – [{asset: "20279811483260328512...", conditionId: "0x13483bbf591ab98c59..."}, {asset: "10338068268174499817...", conditionId: "0x447acfbdfe535357e7..."}, {asset: "11018653134274601278...", conditionId: "0x9f00daaefe50599159..."}] (3)
+[Log] Sample BUY trades (first 3): – [{asset: "94719178329437561812...", conditionId: "0xc5b46a56b2d904eb9f...", transactionHash: "0x83be67b480b5eb7844..."}, {asset: "42363451248419962323...", conditionId: "0xbe2f5a7905f2d9d98f...", transactionHash: "0x62cb7514dc83941d0a..."}, {asset: "42363451248419962323...", conditionId: "0xbe2f5a7905f2d9d98f...", transactionHash: "0xa45e9e6584d236355f..."}] (3)
+[Log] 🔍 MATCHING ANALYSIS:
+[Log]   - Trades matching by asset: – 646
+[Log]   - Trades matching by conditionId: – 0
+[Log]   - Trades with NO match: – 2222
+[Log]   - Sample unmatched assets: – ["94719178329437561812686798398332953413813172005132613157137814482919328264366", "42363451248419962323383174574228169839104175998123506308497753121046307880987", "78297393943884645746584923838818473472194832976174173983095953916405403607485", …] (5)
+["94719178329437561812686798398332953413813172005132613157137814482919328264366", "42363451248419962323383174574228169839104175998123506308497753121046307880987", "78297393943884645746584923838818473472194832976174173983095953916405403607485", "110341334888276263354956840170446866499566337580422797125271184650055382549508", "15188919936253802816117227770415416690675420537782784887775174067509274453451"]Array (5)
+[Log]   - Sample unmatched conditionIds: – ["0xc5b46a56b2d904eb9f8fd0898d11cbe1e446c9e2f6a6a6625d14d2f5d11076b0", "0xbe2f5a7905f2d9d98f58f0cb784a44848c230309dad12db6e1d390e5fa94ed8d", "0x3516d1f9aca57ef0398782467cdf5d3c7c8171f78b4518de94ae0eccfcc669d5", …] (5)
+["0xc5b46a56b2d904eb9f8fd0898d11cbe1e446c9e2f6a6a6625d14d2f5d11076b0", "0xbe2f5a7905f2d9d98f58f0cb784a44848c230309dad12db6e1d390e5fa94ed8d", "0x3516d1f9aca57ef0398782467cdf5d3c7c8171f78b4518de94ae0eccfcc669d5", "0x14f8b1859749fdff7903cbad81c0c310de963596e28951e1387401608e8976cb", "0xce8507bec57b999d9cb8150d306b42696aa9cc6c8728605b3e84a52679a2beda"]Array (5)
+[Log] 🔍 CLOSED POSITIONS FIELD CHECK:
+[Log]   - Sample closed position keys: – ["proxyWallet", "asset", "conditionId", …] (17)
+["proxyWallet", "asset", "conditionId", "avgPrice", "totalBought", "realizedPnl", "curPrice", "title", "slug", "icon", …]Array (17)
+[Log]   - Has asset? – true
+[Log]   - Has conditionId? – true
+[Log]   - FULL sample closed position: – "{↵  \"proxyWallet\": \"0xdc876e6873772d38716fda7f2452a78d426d7ab6\",↵  \"asset\"…"
+"{
+  \"proxyWallet\": \"0xdc876e6873772d38716fda7f2452a78d426d7ab6\",
+  \"asset\": \"20279811483260328512907125236742450693828964599453213376897569415321346588783\",
+  \"conditionId\": \"0x13483bbf591ab98c595831415a00d91c72ce1465852781fa52331a3c77316174\",
+  \"avgPrice\": 0.5,
+  \"totalBought\": 5640.249999999999,
+  \"realizedPnl\": 2820.1249999999995,
+  \"curPrice\": 1,
+  \"title\": \"Portsmouth FC vs. Southampton FC: O/U 2.5\",
+  \"slug\": \"elc-por-sot-2026-01-25-total-2pt5\",
+  \"icon\": \"https://polymarket-upload.s3.us-east-2.amazonaws.com/efl-championship-logo.png\",
+  \"eventSlug\": \"elc-por-sot-2026-01-25-more-markets\",
+  \"outcome\": \"Under\",
+  \"outcomeIndex\": 1,
+  \"oppositeOutcome\": \"Over\",
+  \"oppositeAsset\": \"68375505679629779306575553076569847600824073981393967695181780280859795235601\",
+  \"endDate\": \"2026-01-25T00:00:00Z\",
+  \"timestamp\": 1769358882
+}"
+[Log] 🔍 BUY TRADES FIELD CHECK:
+[Log]   - Sample buy trade keys: – ["proxyWallet", "timestamp", "conditionId", …] (21)
+["proxyWallet", "timestamp", "conditionId", "type", "size", "usdcSize", "transactionHash", "price", "asset", "side", …]Array (21)
+[Log]   - Has asset? – true
+[Log]   - Has conditionId? – true
+[Log]   - FULL sample buy trade: – "{↵  \"proxyWallet\": \"0xdc876e6873772d38716fda7f2452a78d426d7ab6\",↵  \"timestamp\": 1769365258,↵  \"conditionId\"…"
+"{
+  \"proxyWallet\": \"0xdc876e6873772d38716fda7f2452a78d426d7ab6\",
+  \"timestamp\": 1769365258,
+  \"conditionId\": \"0xc5b46a56b2d904eb9f8fd0898d11cbe1e446c9e2f6a6a6625d14d2f5d11076b0\",
+  \"type\": \"TRADE\",
+  \"size\": 681.81818,
+  \"usdcSize\": 381.818181,
+  \"transactionHash\": \"0x83be67b480b5eb7844f5c037e4d35320a8bd94ef503d9ccb455eaae5cddca981\",
+  \"price\": 0.5600000002933333,
+  \"asset\": \"94719178329437561812686798398332953413813172005132613157137814482919328264366\",
+  \"side\": \"BUY\",
+  \"outcomeIndex\": 1,
+  \"title\": \"AS Roma vs. AC Milan: O/U 2.5\",
+  \"slug\": \"sea-rom-mil-2026-01-25-total-2pt5\",
+  \"icon\": \"https://polymarket-upload.s3.us-east-2.amazonaws.com/Serie-A-Logo.png\",
+  \"eventSlug\": \"sea-rom-mil-2026-01-25-more-markets\",
+  \"outcome\": \"Under\",
+  \"name\": \"432614799197\",
+  \"pseudonym\": \"Sorrowful-Shallows\",
+  \"bio\": \"\",
+  \"profileImage\": \"\",
+  \"profileImageOptimized\": \"\"
+}"
+[Log] Matched buys with closed positions: – 646
+[Log] Filtered out by min bet amount: – 0
+[Log] Filtered out by price range: – 0
+[Log] Final resolved buys after filters: – 646
+[Log] Unmatched BUY trades (still open): – 2222
+[Log] ==============================
+[Log] 🔥 CLOSED POSITIONS EFFECT TRIGGERED
+[Log]   - positionsTab: – "active"
+[Log]   - closedPositionsLimit: – 500
+[Log]   - activeTab: – "activity"
+[Log]   - showResolvedOnly: – true
+[Log] ✅ Conditions met - fetching closed positions
+[Log] Fetching closed positions with limit: – 500
+[Log] API URL: – "/api/closed-positions?user=0xdc876e6873772d38716fda7f2452a78d426d7ab6&limit=500&sortBy=TIMESTAMP&sortDirection=DESC"
+[Error] Failed to load resource: the server responded with a status of 403 (Forbidden) (efl-championship-logo.png, line 0)
+[Log] 🔥🔥🔥 getResolvedBuysWithStreaks CALLED
+[Log]   - activity.length: – 10000
+[Log]   - closedPositions.length: – 500
+[Log] === Resolved Buys Analysis ===
+[Log] Total activity items: – 10000
+[Log] Total BUY trades (with duplicates): – 2869
+[Log] Unique BUY trades (after deduplication): – 2868
+[Log] Duplicates removed: – 1
+[Log] Closed positions available: – 500
+[Log] Activity breakdown by type: – {TRADE: 2869, REDEEM: 7131}
+[Log] Trade sides breakdown: – {BUY: 2869}
+[Log] Closed positions map size (unique keys): – 830
+[Log] 🔍 CONDITION ID OVERLAP CHECK:
+[Log]   - Unique conditionIds in closed positions: – 330
+[Log]   - Unique conditionIds in buy trades: – 105
+[Log]   - conditionIds that exist in BOTH: – 34
+[Log] Sample closed positions (first 3): – [{asset: "20279811483260328512...", conditionId: "0x13483bbf591ab98c59..."}, {asset: "10338068268174499817...", conditionId: "0x447acfbdfe535357e7..."}, {asset: "11018653134274601278...", conditionId: "0x9f00daaefe50599159..."}] (3)
+[Log] Sample BUY trades (first 3): – [{asset: "94719178329437561812...", conditionId: "0xc5b46a56b2d904eb9f...", transactionHash: "0x83be67b480b5eb7844..."}, {asset: "42363451248419962323...", conditionId: "0xbe2f5a7905f2d9d98f...", transactionHash: "0x62cb7514dc83941d0a..."}, {asset: "42363451248419962323...", conditionId: "0xbe2f5a7905f2d9d98f...", transactionHash: "0xa45e9e6584d236355f..."}] (3)
+[Log] 🔍 MATCHING ANALYSIS:
+[Log]   - Trades matching by asset: – 646
+[Log]   - Trades matching by conditionId: – 0
+[Log]   - Trades with NO match: – 2222
+[Log]   - Sample unmatched assets: – ["94719178329437561812686798398332953413813172005132613157137814482919328264366", "42363451248419962323383174574228169839104175998123506308497753121046307880987", "78297393943884645746584923838818473472194832976174173983095953916405403607485", …] (5)
+["94719178329437561812686798398332953413813172005132613157137814482919328264366", "42363451248419962323383174574228169839104175998123506308497753121046307880987", "78297393943884645746584923838818473472194832976174173983095953916405403607485", "110341334888276263354956840170446866499566337580422797125271184650055382549508", "15188919936253802816117227770415416690675420537782784887775174067509274453451"]Array (5)
+[Log]   - Sample unmatched conditionIds: – ["0xc5b46a56b2d904eb9f8fd0898d11cbe1e446c9e2f6a6a6625d14d2f5d11076b0", "0xbe2f5a7905f2d9d98f58f0cb784a44848c230309dad12db6e1d390e5fa94ed8d", "0x3516d1f9aca57ef0398782467cdf5d3c7c8171f78b4518de94ae0eccfcc669d5", …] (5)
+["0xc5b46a56b2d904eb9f8fd0898d11cbe1e446c9e2f6a6a6625d14d2f5d11076b0", "0xbe2f5a7905f2d9d98f58f0cb784a44848c230309dad12db6e1d390e5fa94ed8d", "0x3516d1f9aca57ef0398782467cdf5d3c7c8171f78b4518de94ae0eccfcc669d5", "0x14f8b1859749fdff7903cbad81c0c310de963596e28951e1387401608e8976cb", "0xce8507bec57b999d9cb8150d306b42696aa9cc6c8728605b3e84a52679a2beda"]Array (5)
+[Log] 🔍 CLOSED POSITIONS FIELD CHECK:
+[Log]   - Sample closed position keys: – ["proxyWallet", "asset", "conditionId", …] (17)
+["proxyWallet", "asset", "conditionId", "avgPrice", "totalBought", "realizedPnl", "curPrice", "title", "slug", "icon", …]Array (17)
+[Log]   - Has asset? – true
+[Log]   - Has conditionId? – true
+[Log]   - FULL sample closed position: – "{↵  \"proxyWallet\": \"0xdc876e6873772d38716fda7f2452a78d426d7ab6\",↵  \"asset\"…"
+"{
+  \"proxyWallet\": \"0xdc876e6873772d38716fda7f2452a78d426d7ab6\",
+  \"asset\": \"20279811483260328512907125236742450693828964599453213376897569415321346588783\",
+  \"conditionId\": \"0x13483bbf591ab98c595831415a00d91c72ce1465852781fa52331a3c77316174\",
+  \"avgPrice\": 0.5,
+  \"totalBought\": 5640.249999999999,
+  \"realizedPnl\": 2820.1249999999995,
+  \"curPrice\": 1,
+  \"title\": \"Portsmouth FC vs. Southampton FC: O/U 2.5\",
+  \"slug\": \"elc-por-sot-2026-01-25-total-2pt5\",
+  \"icon\": \"https://polymarket-upload.s3.us-east-2.amazonaws.com/efl-championship-logo.png\",
+  \"eventSlug\": \"elc-por-sot-2026-01-25-more-markets\",
+  \"outcome\": \"Under\",
+  \"outcomeIndex\": 1,
+  \"oppositeOutcome\": \"Over\",
+  \"oppositeAsset\": \"68375505679629779306575553076569847600824073981393967695181780280859795235601\",
+  \"endDate\": \"2026-01-25T00:00:00Z\",
+  \"timestamp\": 1769358882
+}"
+[Log] 🔍 BUY TRADES FIELD CHECK:
+[Log]   - Sample buy trade keys: – ["proxyWallet", "timestamp", "conditionId", …] (21)
+["proxyWallet", "timestamp", "conditionId", "type", "size", "usdcSize", "transactionHash", "price", "asset", "side", …]Array (21)
+[Log]   - Has asset? – true
+[Log]   - Has conditionId? – true
+[Log]   - FULL sample buy trade: – "{↵  \"proxyWallet\": \"0xdc876e6873772d38716fda7f2452a78d426d7ab6\",↵  \"timestamp\": 1769365258,↵  \"conditionId\"…"
+"{
+  \"proxyWallet\": \"0xdc876e6873772d38716fda7f2452a78d426d7ab6\",
+  \"timestamp\": 1769365258,
+  \"conditionId\": \"0xc5b46a56b2d904eb9f8fd0898d11cbe1e446c9e2f6a6a6625d14d2f5d11076b0\",
+  \"type\": \"TRADE\",
+  \"size\": 681.81818,
+  \"usdcSize\": 381.818181,
+  \"transactionHash\": \"0x83be67b480b5eb7844f5c037e4d35320a8bd94ef503d9ccb455eaae5cddca981\",
+  \"price\": 0.5600000002933333,
+  \"asset\": \"94719178329437561812686798398332953413813172005132613157137814482919328264366\",
+  \"side\": \"BUY\",
+  \"outcomeIndex\": 1,
+  \"title\": \"AS Roma vs. AC Milan: O/U 2.5\",
+  \"slug\": \"sea-rom-mil-2026-01-25-total-2pt5\",
+  \"icon\": \"https://polymarket-upload.s3.us-east-2.amazonaws.com/Serie-A-Logo.png\",
+  \"eventSlug\": \"sea-rom-mil-2026-01-25-more-markets\",
+  \"outcome\": \"Under\",
+  \"name\": \"432614799197\",
+  \"pseudonym\": \"Sorrowful-Shallows\",
+  \"bio\": \"\",
+  \"profileImage\": \"\",
+  \"profileImageOptimized\": \"\"
+}"
+[Log] Matched buys with closed positions: – 646
+[Log] Filtered out by min bet amount: – 0
+[Log] Filtered out by price range: – 0
+[Log] Final resolved buys after filters: – 646
+[Log] Unmatched BUY trades (still open): – 2222
+[Log] ==============================
+[Log] === Deduplication Analysis ===
+[Log] Resolved buys before deduplication: – 646
+[Log] Unique resolved buys after deduplication: – 646
+[Log] Duplicates removed: – 0
+[Log] Top 5 most duplicated trades: – [] (0)
+[Log] ==============================
+[Log] 🔥🔥🔥 getResolvedBuysWithStreaks CALLED
+[Log]   - activity.length: – 10000
+[Log]   - closedPositions.length: – 500
+[Log] === Resolved Buys Analysis ===
+[Log] Total activity items: – 10000
+[Log] Total BUY trades (with duplicates): – 2869
+[Log] Unique BUY trades (after deduplication): – 2868
+[Log] Duplicates removed: – 1
+[Log] Closed positions available: – 500
+[Log] Activity breakdown by type: – {TRADE: 2869, REDEEM: 7131}
+[Log] Trade sides breakdown: – {BUY: 2869}
+[Log] Closed positions map size (unique keys): – 830
+[Log] 🔍 CONDITION ID OVERLAP CHECK:
+[Log]   - Unique conditionIds in closed positions: – 330
+[Log]   - Unique conditionIds in buy trades: – 105
+[Log]   - conditionIds that exist in BOTH: – 34
+[Log] Sample closed positions (first 3): – [{asset: "20279811483260328512...", conditionId: "0x13483bbf591ab98c59..."}, {asset: "10338068268174499817...", conditionId: "0x447acfbdfe535357e7..."}, {asset: "11018653134274601278...", conditionId: "0x9f00daaefe50599159..."}] (3)
+[Log] Sample BUY trades (first 3): – [{asset: "94719178329437561812...", conditionId: "0xc5b46a56b2d904eb9f...", transactionHash: "0x83be67b480b5eb7844..."}, {asset: "42363451248419962323...", conditionId: "0xbe2f5a7905f2d9d98f...", transactionHash: "0x62cb7514dc83941d0a..."}, {asset: "42363451248419962323...", conditionId: "0xbe2f5a7905f2d9d98f...", transactionHash: "0xa45e9e6584d236355f..."}] (3)
+[Log] 🔍 MATCHING ANALYSIS:
+[Log]   - Trades matching by asset: – 646
+[Log]   - Trades matching by conditionId: – 0
+[Log]   - Trades with NO match: – 2222
+[Log]   - Sample unmatched assets: – ["94719178329437561812686798398332953413813172005132613157137814482919328264366", "42363451248419962323383174574228169839104175998123506308497753121046307880987", "78297393943884645746584923838818473472194832976174173983095953916405403607485", …] (5)
+["94719178329437561812686798398332953413813172005132613157137814482919328264366", "42363451248419962323383174574228169839104175998123506308497753121046307880987", "78297393943884645746584923838818473472194832976174173983095953916405403607485", "110341334888276263354956840170446866499566337580422797125271184650055382549508", "15188919936253802816117227770415416690675420537782784887775174067509274453451"]Array (5)
+[Log]   - Sample unmatched conditionIds: – ["0xc5b46a56b2d904eb9f8fd0898d11cbe1e446c9e2f6a6a6625d14d2f5d11076b0", "0xbe2f5a7905f2d9d98f58f0cb784a44848c230309dad12db6e1d390e5fa94ed8d", "0x3516d1f9aca57ef0398782467cdf5d3c7c8171f78b4518de94ae0eccfcc669d5", …] (5)
+["0xc5b46a56b2d904eb9f8fd0898d11cbe1e446c9e2f6a6a6625d14d2f5d11076b0", "0xbe2f5a7905f2d9d98f58f0cb784a44848c230309dad12db6e1d390e5fa94ed8d", "0x3516d1f9aca57ef0398782467cdf5d3c7c8171f78b4518de94ae0eccfcc669d5", "0x14f8b1859749fdff7903cbad81c0c310de963596e28951e1387401608e8976cb", "0xce8507bec57b999d9cb8150d306b42696aa9cc6c8728605b3e84a52679a2beda"]Array (5)
+[Log] 🔍 CLOSED POSITIONS FIELD CHECK:
+[Log]   - Sample closed position keys: – ["proxyWallet", "asset", "conditionId", …] (17)
+["proxyWallet", "asset", "conditionId", "avgPrice", "totalBought", "realizedPnl", "curPrice", "title", "slug", "icon", …]Array (17)
+[Log]   - Has asset? – true
+[Log]   - Has conditionId? – true
+[Log]   - FULL sample closed position: – "{↵  \"proxyWallet\": \"0xdc876e6873772d38716fda7f2452a78d426d7ab6\",↵  \"asset\"…"
+"{
+  \"proxyWallet\": \"0xdc876e6873772d38716fda7f2452a78d426d7ab6\",
+  \"asset\": \"20279811483260328512907125236742450693828964599453213376897569415321346588783\",
+  \"conditionId\": \"0x13483bbf591ab98c595831415a00d91c72ce1465852781fa52331a3c77316174\",
+  \"avgPrice\": 0.5,
+  \"totalBought\": 5640.249999999999,
+  \"realizedPnl\": 2820.1249999999995,
+  \"curPrice\": 1,
+  \"title\": \"Portsmouth FC vs. Southampton FC: O/U 2.5\",
+  \"slug\": \"elc-por-sot-2026-01-25-total-2pt5\",
+  \"icon\": \"https://polymarket-upload.s3.us-east-2.amazonaws.com/efl-championship-logo.png\",
+  \"eventSlug\": \"elc-por-sot-2026-01-25-more-markets\",
+  \"outcome\": \"Under\",
+  \"outcomeIndex\": 1,
+  \"oppositeOutcome\": \"Over\",
+  \"oppositeAsset\": \"68375505679629779306575553076569847600824073981393967695181780280859795235601\",
+  \"endDate\": \"2026-01-25T00:00:00Z\",
+  \"timestamp\": 1769358882
+}"
+[Log] 🔍 BUY TRADES FIELD CHECK:
+[Log]   - Sample buy trade keys: – ["proxyWallet", "timestamp", "conditionId", …] (21)
+["proxyWallet", "timestamp", "conditionId", "type", "size", "usdcSize", "transactionHash", "price", "asset", "side", …]Array (21)
+[Log]   - Has asset? – true
+[Log]   - Has conditionId? – true
+[Log]   - FULL sample buy trade: – "{↵  \"proxyWallet\": \"0xdc876e6873772d38716fda7f2452a78d426d7ab6\",↵  \"timestamp\": 1769365258,↵  \"conditionId\"…"
+"{
+  \"proxyWallet\": \"0xdc876e6873772d38716fda7f2452a78d426d7ab6\",
+  \"timestamp\": 1769365258,
+  \"conditionId\": \"0xc5b46a56b2d904eb9f8fd0898d11cbe1e446c9e2f6a6a6625d14d2f5d11076b0\",
+  \"type\": \"TRADE\",
+  \"size\": 681.81818,
+  \"usdcSize\": 381.818181,
+  \"transactionHash\": \"0x83be67b480b5eb7844f5c037e4d35320a8bd94ef503d9ccb455eaae5cddca981\",
+  \"price\": 0.5600000002933333,
+  \"asset\": \"94719178329437561812686798398332953413813172005132613157137814482919328264366\",
+  \"side\": \"BUY\",
+  \"outcomeIndex\": 1,
+  \"title\": \"AS Roma vs. AC Milan: O/U 2.5\",
+  \"slug\": \"sea-rom-mil-2026-01-25-total-2pt5\",
+  \"icon\": \"https://polymarket-upload.s3.us-east-2.amazonaws.com/Serie-A-Logo.png\",
+  \"eventSlug\": \"sea-rom-mil-2026-01-25-more-markets\",
+  \"outcome\": \"Under\",
+  \"name\": \"432614799197\",
+  \"pseudonym\": \"Sorrowful-Shallows\",
+  \"bio\": \"\",
+  \"profileImage\": \"\",
+  \"profileImageOptimized\": \"\"
+}"
+[Log] Matched buys with closed positions: – 646
+[Log] Filtered out by min bet amount: – 0
+[Log] Filtered out by price range: – 0
+[Log] Final resolved buys after filters: – 646
+[Log] Unmatched BUY trades (still open): – 2222
+[Log] ==============================
+[Log] 🔥🔥🔥 getResolvedBuysWithStreaks CALLED
+[Log]   - activity.length: – 10000
+[Log]   - closedPositions.length: – 500
+[Log] === Resolved Buys Analysis ===
+[Log] Total activity items: – 10000
+[Log] Total BUY trades (with duplicates): – 2869
+[Log] Unique BUY trades (after deduplication): – 2868
+[Log] Duplicates removed: – 1
+[Log] Closed positions available: – 500
+[Log] Activity breakdown by type: – {TRADE: 2869, REDEEM: 7131}
+[Log] Trade sides breakdown: – {BUY: 2869}
+[Log] Closed positions map size (unique keys): – 830
+[Log] 🔍 CONDITION ID OVERLAP CHECK:
+[Log]   - Unique conditionIds in closed positions: – 330
+[Log]   - Unique conditionIds in buy trades: – 105
+[Log]   - conditionIds that exist in BOTH: – 34
+[Log] Sample closed positions (first 3): – [{asset: "20279811483260328512...", conditionId: "0x13483bbf591ab98c59..."}, {asset: "10338068268174499817...", conditionId: "0x447acfbdfe535357e7..."}, {asset: "11018653134274601278...", conditionId: "0x9f00daaefe50599159..."}] (3)
+[Log] Sample BUY trades (first 3): – [{asset: "94719178329437561812...", conditionId: "0xc5b46a56b2d904eb9f...", transactionHash: "0x83be67b480b5eb7844..."}, {asset: "42363451248419962323...", conditionId: "0xbe2f5a7905f2d9d98f...", transactionHash: "0x62cb7514dc83941d0a..."}, {asset: "42363451248419962323...", conditionId: "0xbe2f5a7905f2d9d98f...", transactionHash: "0xa45e9e6584d236355f..."}] (3)
+[Log] 🔍 MATCHING ANALYSIS:
+[Log]   - Trades matching by asset: – 646
+[Log]   - Trades matching by conditionId: – 0
+[Log]   - Trades with NO match: – 2222
+[Log]   - Sample unmatched assets: – ["94719178329437561812686798398332953413813172005132613157137814482919328264366", "42363451248419962323383174574228169839104175998123506308497753121046307880987", "78297393943884645746584923838818473472194832976174173983095953916405403607485", …] (5)
+["94719178329437561812686798398332953413813172005132613157137814482919328264366", "42363451248419962323383174574228169839104175998123506308497753121046307880987", "78297393943884645746584923838818473472194832976174173983095953916405403607485", "110341334888276263354956840170446866499566337580422797125271184650055382549508", "15188919936253802816117227770415416690675420537782784887775174067509274453451"]Array (5)
+[Log]   - Sample unmatched conditionIds: – ["0xc5b46a56b2d904eb9f8fd0898d11cbe1e446c9e2f6a6a6625d14d2f5d11076b0", "0xbe2f5a7905f2d9d98f58f0cb784a44848c230309dad12db6e1d390e5fa94ed8d", "0x3516d1f9aca57ef0398782467cdf5d3c7c8171f78b4518de94ae0eccfcc669d5", …] (5)
+["0xc5b46a56b2d904eb9f8fd0898d11cbe1e446c9e2f6a6a6625d14d2f5d11076b0", "0xbe2f5a7905f2d9d98f58f0cb784a44848c230309dad12db6e1d390e5fa94ed8d", "0x3516d1f9aca57ef0398782467cdf5d3c7c8171f78b4518de94ae0eccfcc669d5", "0x14f8b1859749fdff7903cbad81c0c310de963596e28951e1387401608e8976cb", "0xce8507bec57b999d9cb8150d306b42696aa9cc6c8728605b3e84a52679a2beda"]Array (5)
+[Log] 🔍 CLOSED POSITIONS FIELD CHECK:
+[Log]   - Sample closed position keys: – ["proxyWallet", "asset", "conditionId", …] (17)
+["proxyWallet", "asset", "conditionId", "avgPrice", "totalBought", "realizedPnl", "curPrice", "title", "slug", "icon", …]Array (17)
+[Log]   - Has asset? – true
+[Log]   - Has conditionId? – true
+[Log]   - FULL sample closed position: – "{↵  \"proxyWallet\": \"0xdc876e6873772d38716fda7f2452a78d426d7ab6\",↵  \"asset\"…"
+"{
+  \"proxyWallet\": \"0xdc876e6873772d38716fda7f2452a78d426d7ab6\",
+  \"asset\": \"20279811483260328512907125236742450693828964599453213376897569415321346588783\",
+  \"conditionId\": \"0x13483bbf591ab98c595831415a00d91c72ce1465852781fa52331a3c77316174\",
+  \"avgPrice\": 0.5,
+  \"totalBought\": 5640.249999999999,
+  \"realizedPnl\": 2820.1249999999995,
+  \"curPrice\": 1,
+  \"title\": \"Portsmouth FC vs. Southampton FC: O/U 2.5\",
+  \"slug\": \"elc-por-sot-2026-01-25-total-2pt5\",
+  \"icon\": \"https://polymarket-upload.s3.us-east-2.amazonaws.com/efl-championship-logo.png\",
+  \"eventSlug\": \"elc-por-sot-2026-01-25-more-markets\",
+  \"outcome\": \"Under\",
+  \"outcomeIndex\": 1,
+  \"oppositeOutcome\": \"Over\",
+  \"oppositeAsset\": \"68375505679629779306575553076569847600824073981393967695181780280859795235601\",
+  \"endDate\": \"2026-01-25T00:00:00Z\",
+  \"timestamp\": 1769358882
+}"
+[Log] 🔍 BUY TRADES FIELD CHECK:
+[Log]   - Sample buy trade keys: – ["proxyWallet", "timestamp", "conditionId", …] (21)
+["proxyWallet", "timestamp", "conditionId", "type", "size", "usdcSize", "transactionHash", "price", "asset", "side", …]Array (21)
+[Log]   - Has asset? – true
+[Log]   - Has conditionId? – true
+[Log]   - FULL sample buy trade: – "{↵  \"proxyWallet\": \"0xdc876e6873772d38716fda7f2452a78d426d7ab6\",↵  \"timestamp\": 1769365258,↵  \"conditionId\"…"
+"{
+  \"proxyWallet\": \"0xdc876e6873772d38716fda7f2452a78d426d7ab6\",
+  \"timestamp\": 1769365258,
+  \"conditionId\": \"0xc5b46a56b2d904eb9f8fd0898d11cbe1e446c9e2f6a6a6625d14d2f5d11076b0\",
+  \"type\": \"TRADE\",
+  \"size\": 681.81818,
+  \"usdcSize\": 381.818181,
+  \"transactionHash\": \"0x83be67b480b5eb7844f5c037e4d35320a8bd94ef503d9ccb455eaae5cddca981\",
+  \"price\": 0.5600000002933333,
+  \"asset\": \"94719178329437561812686798398332953413813172005132613157137814482919328264366\",
+  \"side\": \"BUY\",
+  \"outcomeIndex\": 1,
+  \"title\": \"AS Roma vs. AC Milan: O/U 2.5\",
+  \"slug\": \"sea-rom-mil-2026-01-25-total-2pt5\",
+  \"icon\": \"https://polymarket-upload.s3.us-east-2.amazonaws.com/Serie-A-Logo.png\",
+  \"eventSlug\": \"sea-rom-mil-2026-01-25-more-markets\",
+  \"outcome\": \"Under\",
+  \"name\": \"432614799197\",
+  \"pseudonym\": \"Sorrowful-Shallows\",
+  \"bio\": \"\",
+  \"profileImage\": \"\",
+  \"profileImageOptimized\": \"\"
+}"
+[Log] Matched buys with closed positions: – 646
+[Log] Filtered out by min bet amount: – 0
+[Log] Filtered out by price range: – 0
+[Log] Final resolved buys after filters: – 646
+[Log] Unmatched BUY trades (still open): – 2222
+[Log] ==============================
+[Log] === Deduplication Analysis ===
+[Log] Resolved buys before deduplication: – 646
+[Log] Unique resolved buys after deduplication: – 646
+[Log] Duplicates removed: – 0
+[Log] Top 5 most duplicated trades: – [] (0)
+[Log] ==============================
+[Log] 🔥🔥🔥 getResolvedBuysWithStreaks CALLED
+[Log]   - activity.length: – 10000
+[Log]   - closedPositions.length: – 500
+[Log] === Resolved Buys Analysis ===
+[Log] Total activity items: – 10000
+[Log] Total BUY trades (with duplicates): – 2869
+[Log] Unique BUY trades (after deduplication): – 2868
+[Log] Duplicates removed: – 1
+[Log] Closed positions available: – 500
+[Log] Activity breakdown by type: – {TRADE: 2869, REDEEM: 7131}
+[Log] Trade sides breakdown: – {BUY: 2869}
+[Log] Closed positions map size (unique keys): – 830
+[Log] 🔍 CONDITION ID OVERLAP CHECK:
+[Log]   - Unique conditionIds in closed positions: – 330
+[Log]   - Unique conditionIds in buy trades: – 105
+[Log]   - conditionIds that exist in BOTH: – 34
+[Log] Sample closed positions (first 3): – [{asset: "20279811483260328512...", conditionId: "0x13483bbf591ab98c59..."}, {asset: "10338068268174499817...", conditionId: "0x447acfbdfe535357e7..."}, {asset: "11018653134274601278...", conditionId: "0x9f00daaefe50599159..."}] (3)
+[Log] Sample BUY trades (first 3): – [{asset: "94719178329437561812...", conditionId: "0xc5b46a56b2d904eb9f...", transactionHash: "0x83be67b480b5eb7844..."}, {asset: "42363451248419962323...", conditionId: "0xbe2f5a7905f2d9d98f...", transactionHash: "0x62cb7514dc83941d0a..."}, {asset: "42363451248419962323...", conditionId: "0xbe2f5a7905f2d9d98f...", transactionHash: "0xa45e9e6584d236355f..."}] (3)
+[Log] 🔍 MATCHING ANALYSIS:
+[Log]   - Trades matching by asset: – 646
+[Log]   - Trades matching by conditionId: – 0
+[Log]   - Trades with NO match: – 2222
+[Log]   - Sample unmatched assets: – ["94719178329437561812686798398332953413813172005132613157137814482919328264366", "42363451248419962323383174574228169839104175998123506308497753121046307880987", "78297393943884645746584923838818473472194832976174173983095953916405403607485", …] (5)
+["94719178329437561812686798398332953413813172005132613157137814482919328264366", "42363451248419962323383174574228169839104175998123506308497753121046307880987", "78297393943884645746584923838818473472194832976174173983095953916405403607485", "110341334888276263354956840170446866499566337580422797125271184650055382549508", "15188919936253802816117227770415416690675420537782784887775174067509274453451"]Array (5)
+[Log]   - Sample unmatched conditionIds: – ["0xc5b46a56b2d904eb9f8fd0898d11cbe1e446c9e2f6a6a6625d14d2f5d11076b0", "0xbe2f5a7905f2d9d98f58f0cb784a44848c230309dad12db6e1d390e5fa94ed8d", "0x3516d1f9aca57ef0398782467cdf5d3c7c8171f78b4518de94ae0eccfcc669d5", …] (5)
+["0xc5b46a56b2d904eb9f8fd0898d11cbe1e446c9e2f6a6a6625d14d2f5d11076b0", "0xbe2f5a7905f2d9d98f58f0cb784a44848c230309dad12db6e1d390e5fa94ed8d", "0x3516d1f9aca57ef0398782467cdf5d3c7c8171f78b4518de94ae0eccfcc669d5", "0x14f8b1859749fdff7903cbad81c0c310de963596e28951e1387401608e8976cb", "0xce8507bec57b999d9cb8150d306b42696aa9cc6c8728605b3e84a52679a2beda"]Array (5)
+[Log] 🔍 CLOSED POSITIONS FIELD CHECK:
+[Log]   - Sample closed position keys: – ["proxyWallet", "asset", "conditionId", …] (17)
+["proxyWallet", "asset", "conditionId", "avgPrice", "totalBought", "realizedPnl", "curPrice", "title", "slug", "icon", …]Array (17)
+[Log]   - Has asset? – true
+[Log]   - Has conditionId? – true
+[Log]   - FULL sample closed position: – "{↵  \"proxyWallet\": \"0xdc876e6873772d38716fda7f2452a78d426d7ab6\",↵  \"asset\"…"
+"{
+  \"proxyWallet\": \"0xdc876e6873772d38716fda7f2452a78d426d7ab6\",
+  \"asset\": \"20279811483260328512907125236742450693828964599453213376897569415321346588783\",
+  \"conditionId\": \"0x13483bbf591ab98c595831415a00d91c72ce1465852781fa52331a3c77316174\",
+  \"avgPrice\": 0.5,
+  \"totalBought\": 5640.249999999999,
+  \"realizedPnl\": 2820.1249999999995,
+  \"curPrice\": 1,
+  \"title\": \"Portsmouth FC vs. Southampton FC: O/U 2.5\",
+  \"slug\": \"elc-por-sot-2026-01-25-total-2pt5\",
+  \"icon\": \"https://polymarket-upload.s3.us-east-2.amazonaws.com/efl-championship-logo.png\",
+  \"eventSlug\": \"elc-por-sot-2026-01-25-more-markets\",
+  \"outcome\": \"Under\",
+  \"outcomeIndex\": 1,
+  \"oppositeOutcome\": \"Over\",
+  \"oppositeAsset\": \"68375505679629779306575553076569847600824073981393967695181780280859795235601\",
+  \"endDate\": \"2026-01-25T00:00:00Z\",
+  \"timestamp\": 1769358882
+}"
+[Log] 🔍 BUY TRADES FIELD CHECK:
+[Log]   - Sample buy trade keys: – ["proxyWallet", "timestamp", "conditionId", …] (21)
+["proxyWallet", "timestamp", "conditionId", "type", "size", "usdcSize", "transactionHash", "price", "asset", "side", …]Array (21)
+[Log]   - Has asset? – true
+[Log]   - Has conditionId? – true
+[Log]   - FULL sample buy trade: – "{↵  \"proxyWallet\": \"0xdc876e6873772d38716fda7f2452a78d426d7ab6\",↵  \"timestamp\": 1769365258,↵  \"conditionId\"…"
+"{
+  \"proxyWallet\": \"0xdc876e6873772d38716fda7f2452a78d426d7ab6\",
+  \"timestamp\": 1769365258,
+  \"conditionId\": \"0xc5b46a56b2d904eb9f8fd0898d11cbe1e446c9e2f6a6a6625d14d2f5d11076b0\",
+  \"type\": \"TRADE\",
+  \"size\": 681.81818,
+  \"usdcSize\": 381.818181,
+  \"transactionHash\": \"0x83be67b480b5eb7844f5c037e4d35320a8bd94ef503d9ccb455eaae5cddca981\",
+  \"price\": 0.5600000002933333,
+  \"asset\": \"94719178329437561812686798398332953413813172005132613157137814482919328264366\",
+  \"side\": \"BUY\",
+  \"outcomeIndex\": 1,
+  \"title\": \"AS Roma vs. AC Milan: O/U 2.5\",
+  \"slug\": \"sea-rom-mil-2026-01-25-total-2pt5\",
+  \"icon\": \"https://polymarket-upload.s3.us-east-2.amazonaws.com/Serie-A-Logo.png\",
+  \"eventSlug\": \"sea-rom-mil-2026-01-25-more-markets\",
+  \"outcome\": \"Under\",
+  \"name\": \"432614799197\",
+  \"pseudonym\": \"Sorrowful-Shallows\",
+  \"bio\": \"\",
+  \"profileImage\": \"\",
+  \"profileImageOptimized\": \"\"
+}"
+[Log] Matched buys with closed positions: – 646
+[Log] Filtered out by min bet amount: – 0
+[Log] Filtered out by price range: – 0
+[Log] Final resolved buys after filters: – 646
+[Log] Unmatched BUY trades (still open): – 2222
+[Log] ==============================
+[Log] Received closed positions: – 500
+[Log] 🔥🔥🔥 getResolvedBuysWithStreaks CALLED
+[Log]   - activity.length: – 10000
+[Log]   - closedPositions.length: – 500
+[Log] === Resolved Buys Analysis ===
+[Log] Total activity items: – 10000
+[Log] Total BUY trades (with duplicates): – 2869
+[Log] Unique BUY trades (after deduplication): – 2868
+[Log] Duplicates removed: – 1
+[Log] Closed positions available: – 500
+[Log] Activity breakdown by type: – {TRADE: 2869, REDEEM: 7131}
+[Log] Trade sides breakdown: – {BUY: 2869}
+[Log] Closed positions map size (unique keys): – 830
+[Log] 🔍 CONDITION ID OVERLAP CHECK:
+[Log]   - Unique conditionIds in closed positions: – 330
+[Log]   - Unique conditionIds in buy trades: – 105
+[Log]   - conditionIds that exist in BOTH: – 34
+[Log] Sample closed positions (first 3): – [{asset: "20279811483260328512...", conditionId: "0x13483bbf591ab98c59..."}, {asset: "10338068268174499817...", conditionId: "0x447acfbdfe535357e7..."}, {asset: "11018653134274601278...", conditionId: "0x9f00daaefe50599159..."}] (3)
+[Log] Sample BUY trades (first 3): – [{asset: "94719178329437561812...", conditionId: "0xc5b46a56b2d904eb9f...", transactionHash: "0x83be67b480b5eb7844..."}, {asset: "42363451248419962323...", conditionId: "0xbe2f5a7905f2d9d98f...", transactionHash: "0x62cb7514dc83941d0a..."}, {asset: "42363451248419962323...", conditionId: "0xbe2f5a7905f2d9d98f...", transactionHash: "0xa45e9e6584d236355f..."}] (3)
+[Log] 🔍 MATCHING ANALYSIS:
+[Log]   - Trades matching by asset: – 646
+[Log]   - Trades matching by conditionId: – 0
+[Log]   - Trades with NO match: – 2222
+[Log]   - Sample unmatched assets: – ["94719178329437561812686798398332953413813172005132613157137814482919328264366", "42363451248419962323383174574228169839104175998123506308497753121046307880987", "78297393943884645746584923838818473472194832976174173983095953916405403607485", …] (5)
+["94719178329437561812686798398332953413813172005132613157137814482919328264366", "42363451248419962323383174574228169839104175998123506308497753121046307880987", "78297393943884645746584923838818473472194832976174173983095953916405403607485", "110341334888276263354956840170446866499566337580422797125271184650055382549508", "15188919936253802816117227770415416690675420537782784887775174067509274453451"]Array (5)
+[Log]   - Sample unmatched conditionIds: – ["0xc5b46a56b2d904eb9f8fd0898d11cbe1e446c9e2f6a6a6625d14d2f5d11076b0", "0xbe2f5a7905f2d9d98f58f0cb784a44848c230309dad12db6e1d390e5fa94ed8d", "0x3516d1f9aca57ef0398782467cdf5d3c7c8171f78b4518de94ae0eccfcc669d5", …] (5)
+["0xc5b46a56b2d904eb9f8fd0898d11cbe1e446c9e2f6a6a6625d14d2f5d11076b0", "0xbe2f5a7905f2d9d98f58f0cb784a44848c230309dad12db6e1d390e5fa94ed8d", "0x3516d1f9aca57ef0398782467cdf5d3c7c8171f78b4518de94ae0eccfcc669d5", "0x14f8b1859749fdff7903cbad81c0c310de963596e28951e1387401608e8976cb", "0xce8507bec57b999d9cb8150d306b42696aa9cc6c8728605b3e84a52679a2beda"]Array (5)
+[Log] 🔍 CLOSED POSITIONS FIELD CHECK:
+[Log]   - Sample closed position keys: – ["proxyWallet", "asset", "conditionId", …] (17)
+["proxyWallet", "asset", "conditionId", "avgPrice", "totalBought", "realizedPnl", "curPrice", "title", "slug", "icon", …]Array (17)
+[Log]   - Has asset? – true
+[Log]   - Has conditionId? – true
+[Log]   - FULL sample closed position: – "{↵  \"proxyWallet\": \"0xdc876e6873772d38716fda7f2452a78d426d7ab6\",↵  \"asset\"…"
+"{
+  \"proxyWallet\": \"0xdc876e6873772d38716fda7f2452a78d426d7ab6\",
+  \"asset\": \"20279811483260328512907125236742450693828964599453213376897569415321346588783\",
+  \"conditionId\": \"0x13483bbf591ab98c595831415a00d91c72ce1465852781fa52331a3c77316174\",
+  \"avgPrice\": 0.5,
+  \"totalBought\": 5640.249999999999,
+  \"realizedPnl\": 2820.1249999999995,
+  \"curPrice\": 1,
+  \"title\": \"Portsmouth FC vs. Southampton FC: O/U 2.5\",
+  \"slug\": \"elc-por-sot-2026-01-25-total-2pt5\",
+  \"icon\": \"https://polymarket-upload.s3.us-east-2.amazonaws.com/efl-championship-logo.png\",
+  \"eventSlug\": \"elc-por-sot-2026-01-25-more-markets\",
+  \"outcome\": \"Under\",
+  \"outcomeIndex\": 1,
+  \"oppositeOutcome\": \"Over\",
+  \"oppositeAsset\": \"68375505679629779306575553076569847600824073981393967695181780280859795235601\",
+  \"endDate\": \"2026-01-25T00:00:00Z\",
+  \"timestamp\": 1769358882
+}"
+[Log] 🔍 BUY TRADES FIELD CHECK:
+[Log]   - Sample buy trade keys: – ["proxyWallet", "timestamp", "conditionId", …] (21)
+["proxyWallet", "timestamp", "conditionId", "type", "size", "usdcSize", "transactionHash", "price", "asset", "side", …]Array (21)
+[Log]   - Has asset? – true
+[Log]   - Has conditionId? – true
+[Log]   - FULL sample buy trade: – "{↵  \"proxyWallet\": \"0xdc876e6873772d38716fda7f2452a78d426d7ab6\",↵  \"timestamp\": 1769365258,↵  \"conditionId\"…"
+"{
+  \"proxyWallet\": \"0xdc876e6873772d38716fda7f2452a78d426d7ab6\",
+  \"timestamp\": 1769365258,
+  \"conditionId\": \"0xc5b46a56b2d904eb9f8fd0898d11cbe1e446c9e2f6a6a6625d14d2f5d11076b0\",
+  \"type\": \"TRADE\",
+  \"size\": 681.81818,
+  \"usdcSize\": 381.818181,
+  \"transactionHash\": \"0x83be67b480b5eb7844f5c037e4d35320a8bd94ef503d9ccb455eaae5cddca981\",
+  \"price\": 0.5600000002933333,
+  \"asset\": \"94719178329437561812686798398332953413813172005132613157137814482919328264366\",
+  \"side\": \"BUY\",
+  \"outcomeIndex\": 1,
+  \"title\": \"AS Roma vs. AC Milan: O/U 2.5\",
+  \"slug\": \"sea-rom-mil-2026-01-25-total-2pt5\",
+  \"icon\": \"https://polymarket-upload.s3.us-east-2.amazonaws.com/Serie-A-Logo.png\",
+  \"eventSlug\": \"sea-rom-mil-2026-01-25-more-markets\",
+  \"outcome\": \"Under\",
+  \"name\": \"432614799197\",
+  \"pseudonym\": \"Sorrowful-Shallows\",
+  \"bio\": \"\",
+  \"profileImage\": \"\",
+  \"profileImageOptimized\": \"\"
+}"
+[Log] Matched buys with closed positions: – 646
+[Log] Filtered out by min bet amount: – 0
+[Log] Filtered out by price range: – 0
+[Log] Final resolved buys after filters: – 646
+[Log] Unmatched BUY trades (still open): – 2222
+[Log] ==============================
+[Log] === Deduplication Analysis ===
+[Log] Resolved buys before deduplication: – 646
+[Log] Unique resolved buys after deduplication: – 646
+[Log] Duplicates removed: – 0
+[Log] Top 5 most duplicated trades: – [] (0)
+[Log] ==============================
+[Log] 🔥🔥🔥 getResolvedBuysWithStreaks CALLED
+[Log]   - activity.length: – 10000
+[Log]   - closedPositions.length: – 500
+[Log] === Resolved Buys Analysis ===
+[Log] Total activity items: – 10000
+[Log] Total BUY trades (with duplicates): – 2869
+[Log] Unique BUY trades (after deduplication): – 2868
+[Log] Duplicates removed: – 1
+[Log] Closed positions available: – 500
+[Log] Activity breakdown by type: – {TRADE: 2869, REDEEM: 7131}
+[Log] Trade sides breakdown: – {BUY: 2869}
+[Log] Closed positions map size (unique keys): – 830
+[Log] 🔍 CONDITION ID OVERLAP CHECK:
+[Log]   - Unique conditionIds in closed positions: – 330
+[Log]   - Unique conditionIds in buy trades: – 105
+[Log]   - conditionIds that exist in BOTH: – 34
+[Log] Sample closed positions (first 3): – [{asset: "20279811483260328512...", conditionId: "0x13483bbf591ab98c59..."}, {asset: "10338068268174499817...", conditionId: "0x447acfbdfe535357e7..."}, {asset: "11018653134274601278...", conditionId: "0x9f00daaefe50599159..."}] (3)
+[Log] Sample BUY trades (first 3): – [{asset: "94719178329437561812...", conditionId: "0xc5b46a56b2d904eb9f...", transactionHash: "0x83be67b480b5eb7844..."}, {asset: "42363451248419962323...", conditionId: "0xbe2f5a7905f2d9d98f...", transactionHash: "0x62cb7514dc83941d0a..."}, {asset: "42363451248419962323...", conditionId: "0xbe2f5a7905f2d9d98f...", transactionHash: "0xa45e9e6584d236355f..."}] (3)
+[Log] 🔍 MATCHING ANALYSIS:
+[Log]   - Trades matching by asset: – 646
+[Log]   - Trades matching by conditionId: – 0
+[Log]   - Trades with NO match: – 2222
+[Log]   - Sample unmatched assets: – ["94719178329437561812686798398332953413813172005132613157137814482919328264366", "42363451248419962323383174574228169839104175998123506308497753121046307880987", "78297393943884645746584923838818473472194832976174173983095953916405403607485", …] (5)
+["94719178329437561812686798398332953413813172005132613157137814482919328264366", "42363451248419962323383174574228169839104175998123506308497753121046307880987", "78297393943884645746584923838818473472194832976174173983095953916405403607485", "110341334888276263354956840170446866499566337580422797125271184650055382549508", "15188919936253802816117227770415416690675420537782784887775174067509274453451"]Array (5)
+[Log]   - Sample unmatched conditionIds: – ["0xc5b46a56b2d904eb9f8fd0898d11cbe1e446c9e2f6a6a6625d14d2f5d11076b0", "0xbe2f5a7905f2d9d98f58f0cb784a44848c230309dad12db6e1d390e5fa94ed8d", "0x3516d1f9aca57ef0398782467cdf5d3c7c8171f78b4518de94ae0eccfcc669d5", …] (5)
+["0xc5b46a56b2d904eb9f8fd0898d11cbe1e446c9e2f6a6a6625d14d2f5d11076b0", "0xbe2f5a7905f2d9d98f58f0cb784a44848c230309dad12db6e1d390e5fa94ed8d", "0x3516d1f9aca57ef0398782467cdf5d3c7c8171f78b4518de94ae0eccfcc669d5", "0x14f8b1859749fdff7903cbad81c0c310de963596e28951e1387401608e8976cb", "0xce8507bec57b999d9cb8150d306b42696aa9cc6c8728605b3e84a52679a2beda"]Array (5)
+[Log] 🔍 CLOSED POSITIONS FIELD CHECK:
+[Log]   - Sample closed position keys: – ["proxyWallet", "asset", "conditionId", …] (17)
+["proxyWallet", "asset", "conditionId", "avgPrice", "totalBought", "realizedPnl", "curPrice", "title", "slug", "icon", …]Array (17)
+[Log]   - Has asset? – true
+[Log]   - Has conditionId? – true
+[Log]   - FULL sample closed position: – "{↵  \"proxyWallet\": \"0xdc876e6873772d38716fda7f2452a78d426d7ab6\",↵  \"asset\"…"
+"{
+  \"proxyWallet\": \"0xdc876e6873772d38716fda7f2452a78d426d7ab6\",
+  \"asset\": \"20279811483260328512907125236742450693828964599453213376897569415321346588783\",
+  \"conditionId\": \"0x13483bbf591ab98c595831415a00d91c72ce1465852781fa52331a3c77316174\",
+  \"avgPrice\": 0.5,
+  \"totalBought\": 5640.249999999999,
+  \"realizedPnl\": 2820.1249999999995,
+  \"curPrice\": 1,
+  \"title\": \"Portsmouth FC vs. Southampton FC: O/U 2.5\",
+  \"slug\": \"elc-por-sot-2026-01-25-total-2pt5\",
+  \"icon\": \"https://polymarket-upload.s3.us-east-2.amazonaws.com/efl-championship-logo.png\",
+  \"eventSlug\": \"elc-por-sot-2026-01-25-more-markets\",
+  \"outcome\": \"Under\",
+  \"outcomeIndex\": 1,
+  \"oppositeOutcome\": \"Over\",
+  \"oppositeAsset\": \"68375505679629779306575553076569847600824073981393967695181780280859795235601\",
+  \"endDate\": \"2026-01-25T00:00:00Z\",
+  \"timestamp\": 1769358882
+}"
+[Log] 🔍 BUY TRADES FIELD CHECK:
+[Log]   - Sample buy trade keys: – ["proxyWallet", "timestamp", "conditionId", …] (21)
+["proxyWallet", "timestamp", "conditionId", "type", "size", "usdcSize", "transactionHash", "price", "asset", "side", …]Array (21)
+[Log]   - Has asset? – true
+[Log]   - Has conditionId? – true
+[Log]   - FULL sample buy trade: – "{↵  \"proxyWallet\": \"0xdc876e6873772d38716fda7f2452a78d426d7ab6\",↵  \"timestamp\": 1769365258,↵  \"conditionId\"…"
+"{
+  \"proxyWallet\": \"0xdc876e6873772d38716fda7f2452a78d426d7ab6\",
+  \"timestamp\": 1769365258,
+  \"conditionId\": \"0xc5b46a56b2d904eb9f8fd0898d11cbe1e446c9e2f6a6a6625d14d2f5d11076b0\",
+  \"type\": \"TRADE\",
+  \"size\": 681.81818,
+  \"usdcSize\": 381.818181,
+  \"transactionHash\": \"0x83be67b480b5eb7844f5c037e4d35320a8bd94ef503d9ccb455eaae5cddca981\",
+  \"price\": 0.5600000002933333,
+  \"asset\": \"94719178329437561812686798398332953413813172005132613157137814482919328264366\",
+  \"side\": \"BUY\",
+  \"outcomeIndex\": 1,
+  \"title\": \"AS Roma vs. AC Milan: O/U 2.5\",
+  \"slug\": \"sea-rom-mil-2026-01-25-total-2pt5\",
+  \"icon\": \"https://polymarket-upload.s3.us-east-2.amazonaws.com/Serie-A-Logo.png\",
+  \"eventSlug\": \"sea-rom-mil-2026-01-25-more-markets\",
+  \"outcome\": \"Under\",
+  \"name\": \"432614799197\",
+  \"pseudonym\": \"Sorrowful-Shallows\",
+  \"bio\": \"\",
+  \"profileImage\": \"\",
+  \"profileImageOptimized\": \"\"
+}"
+[Log] Matched buys with closed positions: – 646
+[Log] Filtered out by min bet amount: – 0
+[Log] Filtered out by price range: – 0
+[Log] Final resolved buys after filters: – 646
+[Log] Unmatched BUY trades (still open): – 2222
+[Log] ==============================
+[Log] 🔥🔥🔥 getResolvedBuysWithStreaks CALLED
+[Log]   - activity.length: – 10000
+[Log]   - closedPositions.length: – 500
+[Log] === Resolved Buys Analysis ===
+[Log] Total activity items: – 10000
+[Log] Total BUY trades (with duplicates): – 2869
+[Log] Unique BUY trades (after deduplication): – 2868
+[Log] Duplicates removed: – 1
+[Log] Closed positions available: – 500
+[Log] Activity breakdown by type: – {TRADE: 2869, REDEEM: 7131}
+[Log] Trade sides breakdown: – {BUY: 2869}
+[Log] Closed positions map size (unique keys): – 830
+[Log] 🔍 CONDITION ID OVERLAP CHECK:
+[Log]   - Unique conditionIds in closed positions: – 330
+[Log]   - Unique conditionIds in buy trades: – 105
+[Log]   - conditionIds that exist in BOTH: – 34
+[Log] Sample closed positions (first 3): – [{asset: "20279811483260328512...", conditionId: "0x13483bbf591ab98c59..."}, {asset: "10338068268174499817...", conditionId: "0x447acfbdfe535357e7..."}, {asset: "11018653134274601278...", conditionId: "0x9f00daaefe50599159..."}] (3)
+[Log] Sample BUY trades (first 3): – [{asset: "94719178329437561812...", conditionId: "0xc5b46a56b2d904eb9f...", transactionHash: "0x83be67b480b5eb7844..."}, {asset: "42363451248419962323...", conditionId: "0xbe2f5a7905f2d9d98f...", transactionHash: "0x62cb7514dc83941d0a..."}, {asset: "42363451248419962323...", conditionId: "0xbe2f5a7905f2d9d98f...", transactionHash: "0xa45e9e6584d236355f..."}] (3)
+[Log] 🔍 MATCHING ANALYSIS:
+[Log]   - Trades matching by asset: – 646
+[Log]   - Trades matching by conditionId: – 0
+[Log]   - Trades with NO match: – 2222
+[Log]   - Sample unmatched assets: – ["94719178329437561812686798398332953413813172005132613157137814482919328264366", "42363451248419962323383174574228169839104175998123506308497753121046307880987", "78297393943884645746584923838818473472194832976174173983095953916405403607485", …] (5)
+["94719178329437561812686798398332953413813172005132613157137814482919328264366", "42363451248419962323383174574228169839104175998123506308497753121046307880987", "78297393943884645746584923838818473472194832976174173983095953916405403607485", "110341334888276263354956840170446866499566337580422797125271184650055382549508", "15188919936253802816117227770415416690675420537782784887775174067509274453451"]Array (5)
+[Log]   - Sample unmatched conditionIds: – ["0xc5b46a56b2d904eb9f8fd0898d11cbe1e446c9e2f6a6a6625d14d2f5d11076b0", "0xbe2f5a7905f2d9d98f58f0cb784a44848c230309dad12db6e1d390e5fa94ed8d", "0x3516d1f9aca57ef0398782467cdf5d3c7c8171f78b4518de94ae0eccfcc669d5", …] (5)
+["0xc5b46a56b2d904eb9f8fd0898d11cbe1e446c9e2f6a6a6625d14d2f5d11076b0", "0xbe2f5a7905f2d9d98f58f0cb784a44848c230309dad12db6e1d390e5fa94ed8d", "0x3516d1f9aca57ef0398782467cdf5d3c7c8171f78b4518de94ae0eccfcc669d5", "0x14f8b1859749fdff7903cbad81c0c310de963596e28951e1387401608e8976cb", "0xce8507bec57b999d9cb8150d306b42696aa9cc6c8728605b3e84a52679a2beda"]Array (5)
+[Log] 🔍 CLOSED POSITIONS FIELD CHECK:
+[Log]   - Sample closed position keys: – ["proxyWallet", "asset", "conditionId", …] (17)
+["proxyWallet", "asset", "conditionId", "avgPrice", "totalBought", "realizedPnl", "curPrice", "title", "slug", "icon", …]Array (17)
+[Log]   - Has asset? – true
+[Log]   - Has conditionId? – true
+[Log]   - FULL sample closed position: – "{↵  \"proxyWallet\": \"0xdc876e6873772d38716fda7f2452a78d426d7ab6\",↵  \"asset\"…"
+"{
+  \"proxyWallet\": \"0xdc876e6873772d38716fda7f2452a78d426d7ab6\",
+  \"asset\": \"20279811483260328512907125236742450693828964599453213376897569415321346588783\",
+  \"conditionId\": \"0x13483bbf591ab98c595831415a00d91c72ce1465852781fa52331a3c77316174\",
+  \"avgPrice\": 0.5,
+  \"totalBought\": 5640.249999999999,
+  \"realizedPnl\": 2820.1249999999995,
+  \"curPrice\": 1,
+  \"title\": \"Portsmouth FC vs. Southampton FC: O/U 2.5\",
+  \"slug\": \"elc-por-sot-2026-01-25-total-2pt5\",
+  \"icon\": \"https://polymarket-upload.s3.us-east-2.amazonaws.com/efl-championship-logo.png\",
+  \"eventSlug\": \"elc-por-sot-2026-01-25-more-markets\",
+  \"outcome\": \"Under\",
+  \"outcomeIndex\": 1,
+  \"oppositeOutcome\": \"Over\",
+  \"oppositeAsset\": \"68375505679629779306575553076569847600824073981393967695181780280859795235601\",
+  \"endDate\": \"2026-01-25T00:00:00Z\",
+  \"timestamp\": 1769358882
+}"
+[Log] 🔍 BUY TRADES FIELD CHECK:
+[Log]   - Sample buy trade keys: – ["proxyWallet", "timestamp", "conditionId", …] (21)
+["proxyWallet", "timestamp", "conditionId", "type", "size", "usdcSize", "transactionHash", "price", "asset", "side", …]Array (21)
+[Log]   - Has asset? – true
+[Log]   - Has conditionId? – true
+[Log]   - FULL sample buy trade: – "{↵  \"proxyWallet\": \"0xdc876e6873772d38716fda7f2452a78d426d7ab6\",↵  \"timestamp\": 1769365258,↵  \"conditionId\"…"
+"{
+  \"proxyWallet\": \"0xdc876e6873772d38716fda7f2452a78d426d7ab6\",
+  \"timestamp\": 1769365258,
+  \"conditionId\": \"0xc5b46a56b2d904eb9f8fd0898d11cbe1e446c9e2f6a6a6625d14d2f5d11076b0\",
+  \"type\": \"TRADE\",
+  \"size\": 681.81818,
+  \"usdcSize\": 381.818181,
+  \"transactionHash\": \"0x83be67b480b5eb7844f5c037e4d35320a8bd94ef503d9ccb455eaae5cddca981\",
+  \"price\": 0.5600000002933333,
+  \"asset\": \"94719178329437561812686798398332953413813172005132613157137814482919328264366\",
+  \"side\": \"BUY\",
+  \"outcomeIndex\": 1,
+  \"title\": \"AS Roma vs. AC Milan: O/U 2.5\",
+  \"slug\": \"sea-rom-mil-2026-01-25-total-2pt5\",
+  \"icon\": \"https://polymarket-upload.s3.us-east-2.amazonaws.com/Serie-A-Logo.png\",
+  \"eventSlug\": \"sea-rom-mil-2026-01-25-more-markets\",
+  \"outcome\": \"Under\",
+  \"name\": \"432614799197\",
+  \"pseudonym\": \"Sorrowful-Shallows\",
+  \"bio\": \"\",
+  \"profileImage\": \"\",
+  \"profileImageOptimized\": \"\"
+}"
+[Log] Matched buys with closed positions: – 646
+[Log] Filtered out by min bet amount: – 0
+[Log] Filtered out by price range: – 0
+[Log] Final resolved buys after filters: – 646
+[Log] Unmatched BUY trades (still open): – 2222
+[Log] ==============================
+[Log] === Deduplication Analysis ===
+[Log] Resolved buys before deduplication: – 646
+[Log] Unique resolved buys after deduplication: – 646
+[Log] Duplicates removed: – 0
+[Log] Top 5 most duplicated trades: – [] (0)
+[Log] ==============================
+[Log] 🔥🔥🔥 getResolvedBuysWithStreaks CALLED
+[Log]   - activity.length: – 10000
+[Log]   - closedPositions.length: – 500
+[Log] === Resolved Buys Analysis ===
+[Log] Total activity items: – 10000
+[Log] Total BUY trades (with duplicates): – 2869
+[Log] Unique BUY trades (after deduplication): – 2868
+[Log] Duplicates removed: – 1
+[Log] Closed positions available: – 500
+[Log] Activity breakdown by type: – {TRADE: 2869, REDEEM: 7131}
+[Log] Trade sides breakdown: – {BUY: 2869}
+[Log] Closed positions map size (unique keys): – 830
+[Log] 🔍 CONDITION ID OVERLAP CHECK:
+[Log]   - Unique conditionIds in closed positions: – 330
+[Log]   - Unique conditionIds in buy trades: – 105
+[Log]   - conditionIds that exist in BOTH: – 34
+[Log] Sample closed positions (first 3): – [{asset: "20279811483260328512...", conditionId: "0x13483bbf591ab98c59..."}, {asset: "10338068268174499817...", conditionId: "0x447acfbdfe535357e7..."}, {asset: "11018653134274601278...", conditionId: "0x9f00daaefe50599159..."}] (3)
+[Log] Sample BUY trades (first 3): – [{asset: "94719178329437561812...", conditionId: "0xc5b46a56b2d904eb9f...", transactionHash: "0x83be67b480b5eb7844..."}, {asset: "42363451248419962323...", conditionId: "0xbe2f5a7905f2d9d98f...", transactionHash: "0x62cb7514dc83941d0a..."}, {asset: "42363451248419962323...", conditionId: "0xbe2f5a7905f2d9d98f...", transactionHash: "0xa45e9e6584d236355f..."}] (3)
+[Log] 🔍 MATCHING ANALYSIS:
+[Log]   - Trades matching by asset: – 646
+[Log]   - Trades matching by conditionId: – 0
+[Log]   - Trades with NO match: – 2222
+[Log]   - Sample unmatched assets: – ["94719178329437561812686798398332953413813172005132613157137814482919328264366", "42363451248419962323383174574228169839104175998123506308497753121046307880987", "78297393943884645746584923838818473472194832976174173983095953916405403607485", …] (5)
+["94719178329437561812686798398332953413813172005132613157137814482919328264366", "42363451248419962323383174574228169839104175998123506308497753121046307880987", "78297393943884645746584923838818473472194832976174173983095953916405403607485", "110341334888276263354956840170446866499566337580422797125271184650055382549508", "15188919936253802816117227770415416690675420537782784887775174067509274453451"]Array (5)
+[Log]   - Sample unmatched conditionIds: – ["0xc5b46a56b2d904eb9f8fd0898d11cbe1e446c9e2f6a6a6625d14d2f5d11076b0", "0xbe2f5a7905f2d9d98f58f0cb784a44848c230309dad12db6e1d390e5fa94ed8d", "0x3516d1f9aca57ef0398782467cdf5d3c7c8171f78b4518de94ae0eccfcc669d5", …] (5)
+["0xc5b46a56b2d904eb9f8fd0898d11cbe1e446c9e2f6a6a6625d14d2f5d11076b0", "0xbe2f5a7905f2d9d98f58f0cb784a44848c230309dad12db6e1d390e5fa94ed8d", "0x3516d1f9aca57ef0398782467cdf5d3c7c8171f78b4518de94ae0eccfcc669d5", "0x14f8b1859749fdff7903cbad81c0c310de963596e28951e1387401608e8976cb", "0xce8507bec57b999d9cb8150d306b42696aa9cc6c8728605b3e84a52679a2beda"]Array (5)
+[Log] 🔍 CLOSED POSITIONS FIELD CHECK:
+[Log]   - Sample closed position keys: – ["proxyWallet", "asset", "conditionId", …] (17)
+["proxyWallet", "asset", "conditionId", "avgPrice", "totalBought", "realizedPnl", "curPrice", "title", "slug", "icon", …]Array (17)
+[Log]   - Has asset? – true
+[Log]   - Has conditionId? – true
+[Log]   - FULL sample closed position: – "{↵  \"proxyWallet\": \"0xdc876e6873772d38716fda7f2452a78d426d7ab6\",↵  \"asset\"…"
+"{
+  \"proxyWallet\": \"0xdc876e6873772d38716fda7f2452a78d426d7ab6\",
+  \"asset\": \"20279811483260328512907125236742450693828964599453213376897569415321346588783\",
+  \"conditionId\": \"0x13483bbf591ab98c595831415a00d91c72ce1465852781fa52331a3c77316174\",
+  \"avgPrice\": 0.5,
+  \"totalBought\": 5640.249999999999,
+  \"realizedPnl\": 2820.1249999999995,
+  \"curPrice\": 1,
+  \"title\": \"Portsmouth FC vs. Southampton FC: O/U 2.5\",
+  \"slug\": \"elc-por-sot-2026-01-25-total-2pt5\",
+  \"icon\": \"https://polymarket-upload.s3.us-east-2.amazonaws.com/efl-championship-logo.png\",
+  \"eventSlug\": \"elc-por-sot-2026-01-25-more-markets\",
+  \"outcome\": \"Under\",
+  \"outcomeIndex\": 1,
+  \"oppositeOutcome\": \"Over\",
+  \"oppositeAsset\": \"68375505679629779306575553076569847600824073981393967695181780280859795235601\",
+  \"endDate\": \"2026-01-25T00:00:00Z\",
+  \"timestamp\": 1769358882
+}"
+[Log] 🔍 BUY TRADES FIELD CHECK:
+[Log]   - Sample buy trade keys: – ["proxyWallet", "timestamp", "conditionId", …] (21)
+["proxyWallet", "timestamp", "conditionId", "type", "size", "usdcSize", "transactionHash", "price", "asset", "side", …]Array (21)
+[Log]   - Has asset? – true
+[Log]   - Has conditionId? – true
+[Log]   - FULL sample buy trade: – "{↵  \"proxyWallet\": \"0xdc876e6873772d38716fda7f2452a78d426d7ab6\",↵  \"timestamp\": 1769365258,↵  \"conditionId\"…"
+"{
+  \"proxyWallet\": \"0xdc876e6873772d38716fda7f2452a78d426d7ab6\",
+  \"timestamp\": 1769365258,
+  \"conditionId\": \"0xc5b46a56b2d904eb9f8fd0898d11cbe1e446c9e2f6a6a6625d14d2f5d11076b0\",
+  \"type\": \"TRADE\",
+  \"size\": 681.81818,
+  \"usdcSize\": 381.818181,
+  \"transactionHash\": \"0x83be67b480b5eb7844f5c037e4d35320a8bd94ef503d9ccb455eaae5cddca981\",
+  \"price\": 0.5600000002933333,
+  \"asset\": \"94719178329437561812686798398332953413813172005132613157137814482919328264366\",
+  \"side\": \"BUY\",
+  \"outcomeIndex\": 1,
+  \"title\": \"AS Roma vs. AC Milan: O/U 2.5\",
+  \"slug\": \"sea-rom-mil-2026-01-25-total-2pt5\",
+  \"icon\": \"https://polymarket-upload.s3.us-east-2.amazonaws.com/Serie-A-Logo.png\",
+  \"eventSlug\": \"sea-rom-mil-2026-01-25-more-markets\",
+  \"outcome\": \"Under\",
+  \"name\": \"432614799197\",
+  \"pseudonym\": \"Sorrowful-Shallows\",
+  \"bio\": \"\",
+  \"profileImage\": \"\",
+  \"profileImageOptimized\": \"\"
+}"
+[Log] Matched buys with closed positions: – 646
+[Log] Filtered out by min bet amount: – 0
+[Log] Filtered out by price range: – 0
+[Log] Final resolved buys after filters: – 646
+[Log] Unmatched BUY trades (still open): – 2222
+[Log] ==============================
+[Log] 🔥🔥🔥 getResolvedBuysWithStreaks CALLED
+[Log]   - activity.length: – 10000
+[Log]   - closedPositions.length: – 500
+[Log] === Resolved Buys Analysis ===
+[Log] Total activity items: – 10000
+[Log] Total BUY trades (with duplicates): – 2869
+[Log] Unique BUY trades (after deduplication): – 2868
+[Log] Duplicates removed: – 1
+[Log] Closed positions available: – 500
+[Log] Activity breakdown by type: – {TRADE: 2869, REDEEM: 7131}
+[Log] Trade sides breakdown: – {BUY: 2869}
+[Log] Closed positions map size (unique keys): – 830
+[Log] 🔍 CONDITION ID OVERLAP CHECK:
+[Log]   - Unique conditionIds in closed positions: – 330
+[Log]   - Unique conditionIds in buy trades: – 105
+[Log]   - conditionIds that exist in BOTH: – 34
+[Log] Sample closed positions (first 3): – [{asset: "20279811483260328512...", conditionId: "0x13483bbf591ab98c59..."}, {asset: "10338068268174499817...", conditionId: "0x447acfbdfe535357e7..."}, {asset: "11018653134274601278...", conditionId: "0x9f00daaefe50599159..."}] (3)
+[Log] Sample BUY trades (first 3): – [{asset: "94719178329437561812...", conditionId: "0xc5b46a56b2d904eb9f...", transactionHash: "0x83be67b480b5eb7844..."}, {asset: "42363451248419962323...", conditionId: "0xbe2f5a7905f2d9d98f...", transactionHash: "0x62cb7514dc83941d0a..."}, {asset: "42363451248419962323...", conditionId: "0xbe2f5a7905f2d9d98f...", transactionHash: "0xa45e9e6584d236355f..."}] (3)
+[Log] 🔍 MATCHING ANALYSIS:
+[Log]   - Trades matching by asset: – 646
+[Log]   - Trades matching by conditionId: – 0
+[Log]   - Trades with NO match: – 2222
+[Log]   - Sample unmatched assets: – ["94719178329437561812686798398332953413813172005132613157137814482919328264366", "42363451248419962323383174574228169839104175998123506308497753121046307880987", "78297393943884645746584923838818473472194832976174173983095953916405403607485", …] (5)
+["94719178329437561812686798398332953413813172005132613157137814482919328264366", "42363451248419962323383174574228169839104175998123506308497753121046307880987", "78297393943884645746584923838818473472194832976174173983095953916405403607485", "110341334888276263354956840170446866499566337580422797125271184650055382549508", "15188919936253802816117227770415416690675420537782784887775174067509274453451"]Array (5)
+[Log]   - Sample unmatched conditionIds: – ["0xc5b46a56b2d904eb9f8fd0898d11cbe1e446c9e2f6a6a6625d14d2f5d11076b0", "0xbe2f5a7905f2d9d98f58f0cb784a44848c230309dad12db6e1d390e5fa94ed8d", "0x3516d1f9aca57ef0398782467cdf5d3c7c8171f78b4518de94ae0eccfcc669d5", …] (5)
+["0xc5b46a56b2d904eb9f8fd0898d11cbe1e446c9e2f6a6a6625d14d2f5d11076b0", "0xbe2f5a7905f2d9d98f58f0cb784a44848c230309dad12db6e1d390e5fa94ed8d", "0x3516d1f9aca57ef0398782467cdf5d3c7c8171f78b4518de94ae0eccfcc669d5", "0x14f8b1859749fdff7903cbad81c0c310de963596e28951e1387401608e8976cb", "0xce8507bec57b999d9cb8150d306b42696aa9cc6c8728605b3e84a52679a2beda"]Array (5)
+[Log] 🔍 CLOSED POSITIONS FIELD CHECK:
+[Log]   - Sample closed position keys: – ["proxyWallet", "asset", "conditionId", …] (17)
+["proxyWallet", "asset", "conditionId", "avgPrice", "totalBought", "realizedPnl", "curPrice", "title", "slug", "icon", …]Array (17)
+[Log]   - Has asset? – true
+[Log]   - Has conditionId? – true
+[Log]   - FULL sample closed position: – "{↵  \"proxyWallet\": \"0xdc876e6873772d38716fda7f2452a78d426d7ab6\",↵  \"asset\"…"
+"{
+  \"proxyWallet\": \"0xdc876e6873772d38716fda7f2452a78d426d7ab6\",
+  \"asset\": \"20279811483260328512907125236742450693828964599453213376897569415321346588783\",
+  \"conditionId\": \"0x13483bbf591ab98c595831415a00d91c72ce1465852781fa52331a3c77316174\",
+  \"avgPrice\": 0.5,
+  \"totalBought\": 5640.249999999999,
+  \"realizedPnl\": 2820.1249999999995,
+  \"curPrice\": 1,
+  \"title\": \"Portsmouth FC vs. Southampton FC: O/U 2.5\",
+  \"slug\": \"elc-por-sot-2026-01-25-total-2pt5\",
+  \"icon\": \"https://polymarket-upload.s3.us-east-2.amazonaws.com/efl-championship-logo.png\",
+  \"eventSlug\": \"elc-por-sot-2026-01-25-more-markets\",
+  \"outcome\": \"Under\",
+  \"outcomeIndex\": 1,
+  \"oppositeOutcome\": \"Over\",
+  \"oppositeAsset\": \"68375505679629779306575553076569847600824073981393967695181780280859795235601\",
+  \"endDate\": \"2026-01-25T00:00:00Z\",
+  \"timestamp\": 1769358882
+}"
+[Log] 🔍 BUY TRADES FIELD CHECK:
+[Log]   - Sample buy trade keys: – ["proxyWallet", "timestamp", "conditionId", …] (21)
+["proxyWallet", "timestamp", "conditionId", "type", "size", "usdcSize", "transactionHash", "price", "asset", "side", …]Array (21)
+[Log]   - Has asset? – true
+[Log]   - Has conditionId? – true
+[Log]   - FULL sample buy trade: – "{↵  \"proxyWallet\": \"0xdc876e6873772d38716fda7f2452a78d426d7ab6\",↵  \"timestamp\": 1769365258,↵  \"conditionId\"…"
+"{
+  \"proxyWallet\": \"0xdc876e6873772d38716fda7f2452a78d426d7ab6\",
+  \"timestamp\": 1769365258,
+  \"conditionId\": \"0xc5b46a56b2d904eb9f8fd0898d11cbe1e446c9e2f6a6a6625d14d2f5d11076b0\",
+  \"type\": \"TRADE\",
+  \"size\": 681.81818,
+  \"usdcSize\": 381.818181,
+  \"transactionHash\": \"0x83be67b480b5eb7844f5c037e4d35320a8bd94ef503d9ccb455eaae5cddca981\",
+  \"price\": 0.5600000002933333,
+  \"asset\": \"94719178329437561812686798398332953413813172005132613157137814482919328264366\",
+  \"side\": \"BUY\",
+  \"outcomeIndex\": 1,
+  \"title\": \"AS Roma vs. AC Milan: O/U 2.5\",
+  \"slug\": \"sea-rom-mil-2026-01-25-total-2pt5\",
+  \"icon\": \"https://polymarket-upload.s3.us-east-2.amazonaws.com/Serie-A-Logo.png\",
+  \"eventSlug\": \"sea-rom-mil-2026-01-25-more-markets\",
+  \"outcome\": \"Under\",
+  \"name\": \"432614799197\",
+  \"pseudonym\": \"Sorrowful-Shallows\",
+  \"bio\": \"\",
+  \"profileImage\": \"\",
+  \"profileImageOptimized\": \"\"
+}"
+[Log] Matched buys with closed positions: – 646
+[Log] Filtered out by min bet amount: – 0
+[Log] Filtered out by price range: – 0
+[Log] Final resolved buys after filters: – 646
+[Log] Unmatched BUY trades (still open): – 2222
+[Log] ==============================
+[Log] === Deduplication Analysis ===
+[Log] Resolved buys before deduplication: – 646
+[Log] Unique resolved buys after deduplication: – 646
+[Log] Duplicates removed: – 0
+[Log] Top 5 most duplicated trades: – [] (0)
+[Log] ==============================
+[Log] 🔥🔥🔥 getResolvedBuysWithStreaks CALLED
+[Log]   - activity.length: – 10000
+[Log]   - closedPositions.length: – 500
+[Log] === Resolved Buys Analysis ===
+[Log] Total activity items: – 10000
+[Log] Total BUY trades (with duplicates): – 2869
+[Log] Unique BUY trades (after deduplication): – 2868
+[Log] Duplicates removed: – 1
+[Log] Closed positions available: – 500
+[Log] Activity breakdown by type: – {TRADE: 2869, REDEEM: 7131}
+[Log] Trade sides breakdown: – {BUY: 2869}
+[Log] Closed positions map size (unique keys): – 830
+[Log] 🔍 CONDITION ID OVERLAP CHECK:
+[Log]   - Unique conditionIds in closed positions: – 330
+[Log]   - Unique conditionIds in buy trades: – 105
+[Log]   - conditionIds that exist in BOTH: – 34
+[Log] Sample closed positions (first 3): – [{asset: "20279811483260328512...", conditionId: "0x13483bbf591ab98c59..."}, {asset: "10338068268174499817...", conditionId: "0x447acfbdfe535357e7..."}, {asset: "11018653134274601278...", conditionId: "0x9f00daaefe50599159..."}] (3)
+[Log] Sample BUY trades (first 3): – [{asset: "94719178329437561812...", conditionId: "0xc5b46a56b2d904eb9f...", transactionHash: "0x83be67b480b5eb7844..."}, {asset: "42363451248419962323...", conditionId: "0xbe2f5a7905f2d9d98f...", transactionHash: "0x62cb7514dc83941d0a..."}, {asset: "42363451248419962323...", conditionId: "0xbe2f5a7905f2d9d98f...", transactionHash: "0xa45e9e6584d236355f..."}] (3)
+[Log] 🔍 MATCHING ANALYSIS:
+[Log]   - Trades matching by asset: – 646
+[Log]   - Trades matching by conditionId: – 0
+[Log]   - Trades with NO match: – 2222
+[Log]   - Sample unmatched assets: – ["94719178329437561812686798398332953413813172005132613157137814482919328264366", "42363451248419962323383174574228169839104175998123506308497753121046307880987", "78297393943884645746584923838818473472194832976174173983095953916405403607485", …] (5)
+["94719178329437561812686798398332953413813172005132613157137814482919328264366", "42363451248419962323383174574228169839104175998123506308497753121046307880987", "78297393943884645746584923838818473472194832976174173983095953916405403607485", "110341334888276263354956840170446866499566337580422797125271184650055382549508", "15188919936253802816117227770415416690675420537782784887775174067509274453451"]Array (5)
+[Log]   - Sample unmatched conditionIds: – ["0xc5b46a56b2d904eb9f8fd0898d11cbe1e446c9e2f6a6a6625d14d2f5d11076b0", "0xbe2f5a7905f2d9d98f58f0cb784a44848c230309dad12db6e1d390e5fa94ed8d", "0x3516d1f9aca57ef0398782467cdf5d3c7c8171f78b4518de94ae0eccfcc669d5", …] (5)
+["0xc5b46a56b2d904eb9f8fd0898d11cbe1e446c9e2f6a6a6625d14d2f5d11076b0", "0xbe2f5a7905f2d9d98f58f0cb784a44848c230309dad12db6e1d390e5fa94ed8d", "0x3516d1f9aca57ef0398782467cdf5d3c7c8171f78b4518de94ae0eccfcc669d5", "0x14f8b1859749fdff7903cbad81c0c310de963596e28951e1387401608e8976cb", "0xce8507bec57b999d9cb8150d306b42696aa9cc6c8728605b3e84a52679a2beda"]Array (5)
+[Log] 🔍 CLOSED POSITIONS FIELD CHECK:
+[Log]   - Sample closed position keys: – ["proxyWallet", "asset", "conditionId", …] (17)
+["proxyWallet", "asset", "conditionId", "avgPrice", "totalBought", "realizedPnl", "curPrice", "title", "slug", "icon", …]Array (17)
+[Log]   - Has asset? – true
+[Log]   - Has conditionId? – true
+[Log]   - FULL sample closed position: – "{↵  \"proxyWallet\": \"0xdc876e6873772d38716fda7f2452a78d426d7ab6\",↵  \"asset\"…"
+"{
+  \"proxyWallet\": \"0xdc876e6873772d38716fda7f2452a78d426d7ab6\",
+  \"asset\": \"20279811483260328512907125236742450693828964599453213376897569415321346588783\",
+  \"conditionId\": \"0x13483bbf591ab98c595831415a00d91c72ce1465852781fa52331a3c77316174\",
+  \"avgPrice\": 0.5,
+  \"totalBought\": 5640.249999999999,
+  \"realizedPnl\": 2820.1249999999995,
+  \"curPrice\": 1,
+  \"title\": \"Portsmouth FC vs. Southampton FC: O/U 2.5\",
+  \"slug\": \"elc-por-sot-2026-01-25-total-2pt5\",
+  \"icon\": \"https://polymarket-upload.s3.us-east-2.amazonaws.com/efl-championship-logo.png\",
+  \"eventSlug\": \"elc-por-sot-2026-01-25-more-markets\",
+  \"outcome\": \"Under\",
+  \"outcomeIndex\": 1,
+  \"oppositeOutcome\": \"Over\",
+  \"oppositeAsset\": \"68375505679629779306575553076569847600824073981393967695181780280859795235601\",
+  \"endDate\": \"2026-01-25T00:00:00Z\",
+  \"timestamp\": 1769358882
+}"
+[Log] 🔍 BUY TRADES FIELD CHECK:
+[Log]   - Sample buy trade keys: – ["proxyWallet", "timestamp", "conditionId", …] (21)
+["proxyWallet", "timestamp", "conditionId", "type", "size", "usdcSize", "transactionHash", "price", "asset", "side", …]Array (21)
+[Log]   - Has asset? – true
+[Log]   - Has conditionId? – true
+[Log]   - FULL sample buy trade: – "{↵  \"proxyWallet\": \"0xdc876e6873772d38716fda7f2452a78d426d7ab6\",↵  \"timestamp\": 1769365258,↵  \"conditionId\"…"
+"{
+  \"proxyWallet\": \"0xdc876e6873772d38716fda7f2452a78d426d7ab6\",
+  \"timestamp\": 1769365258,
+  \"conditionId\": \"0xc5b46a56b2d904eb9f8fd0898d11cbe1e446c9e2f6a6a6625d14d2f5d11076b0\",
+  \"type\": \"TRADE\",
+  \"size\": 681.81818,
+  \"usdcSize\": 381.818181,
+  \"transactionHash\": \"0x83be67b480b5eb7844f5c037e4d35320a8bd94ef503d9ccb455eaae5cddca981\",
+  \"price\": 0.5600000002933333,
+  \"asset\": \"94719178329437561812686798398332953413813172005132613157137814482919328264366\",
+  \"side\": \"BUY\",
+  \"outcomeIndex\": 1,
+  \"title\": \"AS Roma vs. AC Milan: O/U 2.5\",
+  \"slug\": \"sea-rom-mil-2026-01-25-total-2pt5\",
+  \"icon\": \"https://polymarket-upload.s3.us-east-2.amazonaws.com/Serie-A-Logo.png\",
+  \"eventSlug\": \"sea-rom-mil-2026-01-25-more-markets\",
+  \"outcome\": \"Under\",
+  \"name\": \"432614799197\",
+  \"pseudonym\": \"Sorrowful-Shallows\",
+  \"bio\": \"\",
+  \"profileImage\": \"\",
+  \"profileImageOptimized\": \"\"
+}"
+[Log] Matched buys with closed positions: – 646
+[Log] Filtered out by min bet amount: – 0
+[Log] Filtered out by price range: – 0
+[Log] Final resolved buys after filters: – 646
+[Log] Unmatched BUY trades (still open): – 2222
+[Log] ==============================
+[Log] 🔥🔥🔥 getResolvedBuysWithStreaks CALLED
+[Log]   - activity.length: – 10000
+[Log]   - closedPositions.length: – 500
+[Log] === Resolved Buys Analysis ===
+[Log] Total activity items: – 10000
+[Log] Total BUY trades (with duplicates): – 2869
+[Log] Unique BUY trades (after deduplication): – 2868
+[Log] Duplicates removed: – 1
+[Log] Closed positions available: – 500
+[Log] Activity breakdown by type: – {TRADE: 2869, REDEEM: 7131}
+[Log] Trade sides breakdown: – {BUY: 2869}
+[Log] Closed positions map size (unique keys): – 830
+[Log] 🔍 CONDITION ID OVERLAP CHECK:
+[Log]   - Unique conditionIds in closed positions: – 330
+[Log]   - Unique conditionIds in buy trades: – 105
+[Log]   - conditionIds that exist in BOTH: – 34
+[Log] Sample closed positions (first 3): – [{asset: "20279811483260328512...", conditionId: "0x13483bbf591ab98c59..."}, {asset: "10338068268174499817...", conditionId: "0x447acfbdfe535357e7..."}, {asset: "11018653134274601278...", conditionId: "0x9f00daaefe50599159..."}] (3)
+[Log] Sample BUY trades (first 3): – [{asset: "94719178329437561812...", conditionId: "0xc5b46a56b2d904eb9f...", transactionHash: "0x83be67b480b5eb7844..."}, {asset: "42363451248419962323...", conditionId: "0xbe2f5a7905f2d9d98f...", transactionHash: "0x62cb7514dc83941d0a..."}, {asset: "42363451248419962323...", conditionId: "0xbe2f5a7905f2d9d98f...", transactionHash: "0xa45e9e6584d236355f..."}] (3)
+[Log] 🔍 MATCHING ANALYSIS:
+[Log]   - Trades matching by asset: – 646
+[Log]   - Trades matching by conditionId: – 0
+[Log]   - Trades with NO match: – 2222
+[Log]   - Sample unmatched assets: – ["94719178329437561812686798398332953413813172005132613157137814482919328264366", "42363451248419962323383174574228169839104175998123506308497753121046307880987", "78297393943884645746584923838818473472194832976174173983095953916405403607485", …] (5)
+["94719178329437561812686798398332953413813172005132613157137814482919328264366", "42363451248419962323383174574228169839104175998123506308497753121046307880987", "78297393943884645746584923838818473472194832976174173983095953916405403607485", "110341334888276263354956840170446866499566337580422797125271184650055382549508", "15188919936253802816117227770415416690675420537782784887775174067509274453451"]Array (5)
+[Log]   - Sample unmatched conditionIds: – ["0xc5b46a56b2d904eb9f8fd0898d11cbe1e446c9e2f6a6a6625d14d2f5d11076b0", "0xbe2f5a7905f2d9d98f58f0cb784a44848c230309dad12db6e1d390e5fa94ed8d", "0x3516d1f9aca57ef0398782467cdf5d3c7c8171f78b4518de94ae0eccfcc669d5", …] (5)
+["0xc5b46a56b2d904eb9f8fd0898d11cbe1e446c9e2f6a6a6625d14d2f5d11076b0", "0xbe2f5a7905f2d9d98f58f0cb784a44848c230309dad12db6e1d390e5fa94ed8d", "0x3516d1f9aca57ef0398782467cdf5d3c7c8171f78b4518de94ae0eccfcc669d5", "0x14f8b1859749fdff7903cbad81c0c310de963596e28951e1387401608e8976cb", "0xce8507bec57b999d9cb8150d306b42696aa9cc6c8728605b3e84a52679a2beda"]Array (5)
+[Log] 🔍 CLOSED POSITIONS FIELD CHECK:
+[Log]   - Sample closed position keys: – ["proxyWallet", "asset", "conditionId", …] (17)
+["proxyWallet", "asset", "conditionId", "avgPrice", "totalBought", "realizedPnl", "curPrice", "title", "slug", "icon", …]Array (17)
+[Log]   - Has asset? – true
+[Log]   - Has conditionId? – true
+[Log]   - FULL sample closed position: – "{↵  \"proxyWallet\": \"0xdc876e6873772d38716fda7f2452a78d426d7ab6\",↵  \"asset\"…"
+"{
+  \"proxyWallet\": \"0xdc876e6873772d38716fda7f2452a78d426d7ab6\",
+  \"asset\": \"20279811483260328512907125236742450693828964599453213376897569415321346588783\",
+  \"conditionId\": \"0x13483bbf591ab98c595831415a00d91c72ce1465852781fa52331a3c77316174\",
+  \"avgPrice\": 0.5,
+  \"totalBought\": 5640.249999999999,
+  \"realizedPnl\": 2820.1249999999995,
+  \"curPrice\": 1,
+  \"title\": \"Portsmouth FC vs. Southampton FC: O/U 2.5\",
+  \"slug\": \"elc-por-sot-2026-01-25-total-2pt5\",
+  \"icon\": \"https://polymarket-upload.s3.us-east-2.amazonaws.com/efl-championship-logo.png\",
+  \"eventSlug\": \"elc-por-sot-2026-01-25-more-markets\",
+  \"outcome\": \"Under\",
+  \"outcomeIndex\": 1,
+  \"oppositeOutcome\": \"Over\",
+  \"oppositeAsset\": \"68375505679629779306575553076569847600824073981393967695181780280859795235601\",
+  \"endDate\": \"2026-01-25T00:00:00Z\",
+  \"timestamp\": 1769358882
+}"
+[Log] 🔍 BUY TRADES FIELD CHECK:
+[Log]   - Sample buy trade keys: – ["proxyWallet", "timestamp", "conditionId", …] (21)
+["proxyWallet", "timestamp", "conditionId", "type", "size", "usdcSize", "transactionHash", "price", "asset", "side", …]Array (21)
+[Log]   - Has asset? – true
+[Log]   - Has conditionId? – true
+[Log]   - FULL sample buy trade: – "{↵  \"proxyWallet\": \"0xdc876e6873772d38716fda7f2452a78d426d7ab6\",↵  \"timestamp\": 1769365258,↵  \"conditionId\"…"
+"{
+  \"proxyWallet\": \"0xdc876e6873772d38716fda7f2452a78d426d7ab6\",
+  \"timestamp\": 1769365258,
+  \"conditionId\": \"0xc5b46a56b2d904eb9f8fd0898d11cbe1e446c9e2f6a6a6625d14d2f5d11076b0\",
+  \"type\": \"TRADE\",
+  \"size\": 681.81818,
+  \"usdcSize\": 381.818181,
+  \"transactionHash\": \"0x83be67b480b5eb7844f5c037e4d35320a8bd94ef503d9ccb455eaae5cddca981\",
+  \"price\": 0.5600000002933333,
+  \"asset\": \"94719178329437561812686798398332953413813172005132613157137814482919328264366\",
+  \"side\": \"BUY\",
+  \"outcomeIndex\": 1,
+  \"title\": \"AS Roma vs. AC Milan: O/U 2.5\",
+  \"slug\": \"sea-rom-mil-2026-01-25-total-2pt5\",
+  \"icon\": \"https://polymarket-upload.s3.us-east-2.amazonaws.com/Serie-A-Logo.png\",
+  \"eventSlug\": \"sea-rom-mil-2026-01-25-more-markets\",
+  \"outcome\": \"Under\",
+  \"name\": \"432614799197\",
+  \"pseudonym\": \"Sorrowful-Shallows\",
+  \"bio\": \"\",
+  \"profileImage\": \"\",
+  \"profileImageOptimized\": \"\"
+}"
+[Log] Matched buys with closed positions: – 646
+[Log] Filtered out by min bet amount: – 0
+[Log] Filtered out by price range: – 0
+[Log] Final resolved buys after filters: – 646
+[Log] Unmatched BUY trades (still open): – 2222
+[Log] ==============================
+[Log] === Deduplication Analysis ===
+[Log] Resolved buys before deduplication: – 646
+[Log] Unique resolved buys after deduplication: – 646
+[Log] Duplicates removed: – 0
+[Log] Top 5 most duplicated trades: – [] (0)
+[Log] ==============================
+[Log] 🔥🔥🔥 getResolvedBuysWithStreaks CALLED
+[Log]   - activity.length: – 10000
+[Log]   - closedPositions.length: – 500
+[Log] === Resolved Buys Analysis ===
+[Log] Total activity items: – 10000
+[Log] Total BUY trades (with duplicates): – 2869
+[Log] Unique BUY trades (after deduplication): – 2868
+[Log] Duplicates removed: – 1
+[Log] Closed positions available: – 500
+[Log] Activity breakdown by type: – {TRADE: 2869, REDEEM: 7131}
+[Log] Trade sides breakdown: – {BUY: 2869}
+[Log] Closed positions map size (unique keys): – 830
+[Log] 🔍 CONDITION ID OVERLAP CHECK:
+[Log]   - Unique conditionIds in closed positions: – 330
+[Log]   - Unique conditionIds in buy trades: – 105
+[Log]   - conditionIds that exist in BOTH: – 34
+[Log] Sample closed positions (first 3): – [{asset: "20279811483260328512...", conditionId: "0x13483bbf591ab98c59..."}, {asset: "10338068268174499817...", conditionId: "0x447acfbdfe535357e7..."}, {asset: "11018653134274601278...", conditionId: "0x9f00daaefe50599159..."}] (3)
+[Log] Sample BUY trades (first 3): – [{asset: "94719178329437561812...", conditionId: "0xc5b46a56b2d904eb9f...", transactionHash: "0x83be67b480b5eb7844..."}, {asset: "42363451248419962323...", conditionId: "0xbe2f5a7905f2d9d98f...", transactionHash: "0x62cb7514dc83941d0a..."}, {asset: "42363451248419962323...", conditionId: "0xbe2f5a7905f2d9d98f...", transactionHash: "0xa45e9e6584d236355f..."}] (3)
+[Log] 🔍 MATCHING ANALYSIS:
+[Log]   - Trades matching by asset: – 646
+[Log]   - Trades matching by conditionId: – 0
+[Log]   - Trades with NO match: – 2222
+[Log]   - Sample unmatched assets: – ["94719178329437561812686798398332953413813172005132613157137814482919328264366", "42363451248419962323383174574228169839104175998123506308497753121046307880987", "78297393943884645746584923838818473472194832976174173983095953916405403607485", …] (5)
+["94719178329437561812686798398332953413813172005132613157137814482919328264366", "42363451248419962323383174574228169839104175998123506308497753121046307880987", "78297393943884645746584923838818473472194832976174173983095953916405403607485", "110341334888276263354956840170446866499566337580422797125271184650055382549508", "15188919936253802816117227770415416690675420537782784887775174067509274453451"]Array (5)
+[Log]   - Sample unmatched conditionIds: – ["0xc5b46a56b2d904eb9f8fd0898d11cbe1e446c9e2f6a6a6625d14d2f5d11076b0", "0xbe2f5a7905f2d9d98f58f0cb784a44848c230309dad12db6e1d390e5fa94ed8d", "0x3516d1f9aca57ef0398782467cdf5d3c7c8171f78b4518de94ae0eccfcc669d5", …] (5)
+["0xc5b46a56b2d904eb9f8fd0898d11cbe1e446c9e2f6a6a6625d14d2f5d11076b0", "0xbe2f5a7905f2d9d98f58f0cb784a44848c230309dad12db6e1d390e5fa94ed8d", "0x3516d1f9aca57ef0398782467cdf5d3c7c8171f78b4518de94ae0eccfcc669d5", "0x14f8b1859749fdff7903cbad81c0c310de963596e28951e1387401608e8976cb", "0xce8507bec57b999d9cb8150d306b42696aa9cc6c8728605b3e84a52679a2beda"]Array (5)
+[Log] 🔍 CLOSED POSITIONS FIELD CHECK:
+[Log]   - Sample closed position keys: – ["proxyWallet", "asset", "conditionId", …] (17)
+["proxyWallet", "asset", "conditionId", "avgPrice", "totalBought", "realizedPnl", "curPrice", "title", "slug", "icon", …]Array (17)
+[Log]   - Has asset? – true
+[Log]   - Has conditionId? – true
+[Log]   - FULL sample closed position: – "{↵  \"proxyWallet\": \"0xdc876e6873772d38716fda7f2452a78d426d7ab6\",↵  \"asset\"…"
+"{
+  \"proxyWallet\": \"0xdc876e6873772d38716fda7f2452a78d426d7ab6\",
+  \"asset\": \"20279811483260328512907125236742450693828964599453213376897569415321346588783\",
+  \"conditionId\": \"0x13483bbf591ab98c595831415a00d91c72ce1465852781fa52331a3c77316174\",
+  \"avgPrice\": 0.5,
+  \"totalBought\": 5640.249999999999,
+  \"realizedPnl\": 2820.1249999999995,
+  \"curPrice\": 1,
+  \"title\": \"Portsmouth FC vs. Southampton FC: O/U 2.5\",
+  \"slug\": \"elc-por-sot-2026-01-25-total-2pt5\",
+  \"icon\": \"https://polymarket-upload.s3.us-east-2.amazonaws.com/efl-championship-logo.png\",
+  \"eventSlug\": \"elc-por-sot-2026-01-25-more-markets\",
+  \"outcome\": \"Under\",
+  \"outcomeIndex\": 1,
+  \"oppositeOutcome\": \"Over\",
+  \"oppositeAsset\": \"68375505679629779306575553076569847600824073981393967695181780280859795235601\",
+  \"endDate\": \"2026-01-25T00:00:00Z\",
+  \"timestamp\": 1769358882
+}"
+[Log] 🔍 BUY TRADES FIELD CHECK:
+[Log]   - Sample buy trade keys: – ["proxyWallet", "timestamp", "conditionId", …] (21)
+["proxyWallet", "timestamp", "conditionId", "type", "size", "usdcSize", "transactionHash", "price", "asset", "side", …]Array (21)
+[Log]   - Has asset? – true
+[Log]   - Has conditionId? – true
+[Log]   - FULL sample buy trade: – "{↵  \"proxyWallet\": \"0xdc876e6873772d38716fda7f2452a78d426d7ab6\",↵  \"timestamp\": 1769365258,↵  \"conditionId\"…"
+"{
+  \"proxyWallet\": \"0xdc876e6873772d38716fda7f2452a78d426d7ab6\",
+  \"timestamp\": 1769365258,
+  \"conditionId\": \"0xc5b46a56b2d904eb9f8fd0898d11cbe1e446c9e2f6a6a6625d14d2f5d11076b0\",
+  \"type\": \"TRADE\",
+  \"size\": 681.81818,
+  \"usdcSize\": 381.818181,
+  \"transactionHash\": \"0x83be67b480b5eb7844f5c037e4d35320a8bd94ef503d9ccb455eaae5cddca981\",
+  \"price\": 0.5600000002933333,
+  \"asset\": \"94719178329437561812686798398332953413813172005132613157137814482919328264366\",
+  \"side\": \"BUY\",
+  \"outcomeIndex\": 1,
+  \"title\": \"AS Roma vs. AC Milan: O/U 2.5\",
+  \"slug\": \"sea-rom-mil-2026-01-25-total-2pt5\",
+  \"icon\": \"https://polymarket-upload.s3.us-east-2.amazonaws.com/Serie-A-Logo.png\",
+  \"eventSlug\": \"sea-rom-mil-2026-01-25-more-markets\",
+  \"outcome\": \"Under\",
+  \"name\": \"432614799197\",
+  \"pseudonym\": \"Sorrowful-Shallows\",
+  \"bio\": \"\",
+  \"profileImage\": \"\",
+  \"profileImageOptimized\": \"\"
+}"
+[Log] Matched buys with closed positions: – 646
+[Log] Filtered out by min bet amount: – 0
+[Log] Filtered out by price range: – 0
+[Log] Final resolved buys after filters: – 646
+[Log] Unmatched BUY trades (still open): – 2222
+[Log] ==============================

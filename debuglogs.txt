@@ -1,0 +1,929 @@
+[Log] 🚀 FETCHING ACTIVITY with limit: – 5000
+[Log] 📦 RAW ACTIVITY DATA RECEIVED:
+[Log]   - Total items: – 5000
+[Log]   - Requested limit: – 5000
+[Log]   - Got what we requested? – "YES ✅"
+[Log]   - Type breakdown: – {TRADE: 4858, REDEEM: 142}
+[Log]   - BUY trades (with duplicates): – 4649
+[Log]   - Duplicate transaction hashes: – 2155
+[Log]   - Unique transactions: – 2845
+[Log] ✅ Activity data set successfully
+[Log] 📦 RAW ACTIVITY DATA RECEIVED:
+[Log]   - Total items: – 5000
+[Log]   - Requested limit: – 5000
+[Log]   - Got what we requested? – "YES ✅"
+[Log]   - Type breakdown: – {TRADE: 4858, REDEEM: 142}
+[Log]   - BUY trades (with duplicates): – 4649
+[Log]   - Duplicate transaction hashes: – 2155
+[Log]   - Unique transactions: – 2845
+[Log] ✅ Activity data set successfully
+[Log] 📦 RAW ACTIVITY DATA RECEIVED:
+[Log]   - Total items: – 5000
+[Log]   - Requested limit: – 5000
+[Log]   - Got what we requested? – "YES ✅"
+[Log]   - Type breakdown: – {TRADE: 4858, REDEEM: 142}
+[Log]   - BUY trades (with duplicates): – 4649
+[Log]   - Duplicate transaction hashes: – 2155
+[Log]   - Unique transactions: – 2845
+[Log] ✅ Activity data set successfully
+[Log] Received closed positions: – 10000
+[Log] 🔥🔥🔥 getResolvedBuysWithStreaks CALLED
+[Log]   - activity.length: – 5000
+[Log]   - closedPositions.length: – 10000
+[Log] === Resolved Buys Analysis ===
+[Log] Total activity items: – 5000
+[Log] Total BUY trades (with duplicates): – 4649
+[Log] Unique BUY trades (after deduplication): – 2682
+[Log] Duplicates removed: – 1967
+[Log] Closed positions available: – 10000
+[Log] Activity breakdown by type: – {TRADE: 4858, REDEEM: 142}
+[Log] Trade sides breakdown: – {SELL: 209, BUY: 4649}
+[Log] Closed positions map size (unique keys): – 20244
+[Log] 🔍 CONDITION ID OVERLAP CHECK:
+[Log]   - Unique conditionIds in closed positions: – 5126
+[Log]   - Unique conditionIds in buy trades: – 36
+[Log]   - conditionIds that exist in BOTH: – 22
+[Log] Sample closed positions (first 3): – [{asset: "10404582496726857736...", conditionId: "0x067d708ad8d099176c..."}, {asset: "10955320665198517043...", conditionId: "0x067d708ad8d099176c..."}, {asset: "11412687709713286066...", conditionId: "0x15e73b52e091079409..."}] (3)
+[Log] Sample BUY trades (first 3): – [{asset: "87841033211064223972...", conditionId: "0x4f3a504cc0418f9856...", transactionHash: "0xce150dfe91e6c3532e..."}, {asset: "87841033211064223972...", conditionId: "0x4f3a504cc0418f9856...", transactionHash: "0x27ba3c87bbd92fe294..."}, {asset: "24159146873697990783...", conditionId: "0x8911c5d067145e4ad5...", transactionHash: "0x1408b1790163ea5d23..."}] (3)
+[Log] 🔍 MATCHING ANALYSIS:
+[Log]   - Trades matching by asset: – 1977
+[Log]   - Trades matching by conditionId: – 0
+[Log]   - Trades with NO match: – 705
+[Log]   - Sample unmatched assets: – ["87841033211064223972246144382374301099572118962647279634365408646891963440852", "24159146873697990783116301812385609238053216369478844816361377777455680144858", "109573110665908294678914508158517720672178338798060612175920937090925090626410", …] (5)
+["87841033211064223972246144382374301099572118962647279634365408646891963440852", "24159146873697990783116301812385609238053216369478844816361377777455680144858", "109573110665908294678914508158517720672178338798060612175920937090925090626410", "4221500134712487255849015197055227162427618960104515133440696169210963867453", "41691746872099511154459086534663548493742144311217317096236903122244233697496"]Array (5)
+[Log]   - Sample unmatched conditionIds: – ["0x4f3a504cc0418f9856654102666bbfc2b7107401bf0ddf2c48fdde7a86aca606", "0x8911c5d067145e4ad508263c6160c78d6790b2e86316cd5c67952b2b2f02c85c", "0xfed80ca7fa158f5b1fd6935e2c16acc70073b2287be69fd44ae1e64baea39b06", …] (5)
+["0x4f3a504cc0418f9856654102666bbfc2b7107401bf0ddf2c48fdde7a86aca606", "0x8911c5d067145e4ad508263c6160c78d6790b2e86316cd5c67952b2b2f02c85c", "0xfed80ca7fa158f5b1fd6935e2c16acc70073b2287be69fd44ae1e64baea39b06", "0x565ba85e80158b6be3748553451473efb5fab903d1b9b6b534268eed5c2629e5", "0x573dd7c67d742325759a70dbacb9356a4e075f65555629997574d2b8c05ce542"]Array (5)
+[Log] 🔍 CLOSED POSITIONS FIELD CHECK:
+[Log]   - Sample closed position keys: – ["proxyWallet", "asset", "conditionId", …] (17)
+["proxyWallet", "asset", "conditionId", "avgPrice", "totalBought", "realizedPnl", "curPrice", "title", "slug", "icon", …]Array (17)
+[Log]   - Has asset? – true
+[Log]   - Has conditionId? – true
+[Log]   - FULL sample closed position: – "{↵  \"proxyWallet\": \"0xd0d6053c3c37e727402d84c14069780d360993aa\",↵  \"asset\"…"
+"{
+  \"proxyWallet\": \"0xd0d6053c3c37e727402d84c14069780d360993aa\",
+  \"asset\": \"104045824967268577364917666298819144808660480667121506270402548657788162413305\",
+  \"conditionId\": \"0x067d708ad8d099176cb3b7c9553fa98a8676d532b0a438306ea0fb7daaf9e279\",
+  \"avgPrice\": 0.270758,
+  \"totalBought\": 331.928288,
+  \"realizedPnl\": -89.872239,
+  \"curPrice\": 0,
+  \"title\": \"XRP Up or Down - February 1, 6:30AM-6:45AM ET\",
+  \"slug\": \"xrp-updown-15m-1769945400\",
+  \"icon\": \"https://polymarket-upload.s3.us-east-2.amazonaws.com/XRP-logo.png\",
+  \"eventSlug\": \"xrp-updown-15m-1769945400\",
+  \"outcome\": \"Down\",
+  \"outcomeIndex\": 1,
+  \"oppositeOutcome\": \"Up\",
+  \"oppositeAsset\": \"109553206651985170430213994663638431365581600778772066678848771751757783243752\",
+  \"endDate\": \"2026-02-01T00:00:00Z\",
+  \"timestamp\": 1769946519
+}"
+[Log] 🔍 BUY TRADES FIELD CHECK:
+[Log]   - Sample buy trade keys: – ["proxyWallet", "timestamp", "conditionId", …] (21)
+["proxyWallet", "timestamp", "conditionId", "type", "size", "usdcSize", "transactionHash", "price", "asset", "side", …]Array (21)
+[Log]   - Has asset? – true
+[Log]   - Has conditionId? – true
+[Log]   - FULL sample buy trade: – "{↵  \"proxyWallet\": \"0xd0d6053c3c37e727402d84c14069780d360993aa\",↵  \"timestamp\": 1769947316,↵  \"conditionId\"…"
+"{
+  \"proxyWallet\": \"0xd0d6053c3c37e727402d84c14069780d360993aa\",
+  \"timestamp\": 1769947316,
+  \"conditionId\": \"0x4f3a504cc0418f9856654102666bbfc2b7107401bf0ddf2c48fdde7a86aca606\",
+  \"type\": \"TRADE\",
+  \"size\": 9.58904,
+  \"usdcSize\": 2.589041,
+  \"transactionHash\": \"0xce150dfe91e6c3532e71e101f9a87df903f4ce0624a78ab572294318d09f0884\",
+  \"price\": 0.27000002085714525,
+  \"asset\": \"87841033211064223972246144382374301099572118962647279634365408646891963440852\",
+  \"side\": \"BUY\",
+  \"outcomeIndex\": 0,
+  \"title\": \"Ethereum Up or Down - February 1, 7:00AM-7:15AM ET\",
+  \"slug\": \"eth-updown-15m-1769947200\",
+  \"icon\": \"https://polymarket-upload.s3.us-east-2.amazonaws.com/ETH+fullsize.jpg\",
+  \"eventSlug\": \"eth-updown-15m-1769947200\",
+  \"outcome\": \"Up\",
+  \"name\": \"k9Q2mX4L8A7ZP3R\",
+  \"pseudonym\": \"Uncommon-Oat\",
+  \"bio\": \"\",
+  \"profileImage\": \"\",
+  \"profileImageOptimized\": \"\"
+}"
+[Log] Matched buys with closed positions: – 1977
+[Log] Filtered out by min bet amount: – 0
+[Log] Filtered out by price range: – 0
+[Log] Final resolved buys after filters: – 1977
+[Log] Unmatched BUY trades (still open): – 705
+[Log] ==============================
+[Log] === Deduplication Analysis ===
+[Log] Resolved buys before deduplication: – 1977
+[Log] Unique resolved buys after deduplication: – 1977
+[Log] Duplicates removed: – 0
+[Log] Top 5 most duplicated trades: – [] (0)
+[Log] ==============================
+[Log] 🔥🔥🔥 getResolvedBuysWithStreaks CALLED
+[Log]   - activity.length: – 5000
+[Log]   - closedPositions.length: – 10000
+[Log] === Resolved Buys Analysis ===
+[Log] Total activity items: – 5000
+[Log] Total BUY trades (with duplicates): – 4649
+[Log] Unique BUY trades (after deduplication): – 2682
+[Log] Duplicates removed: – 1967
+[Log] Closed positions available: – 10000
+[Log] Activity breakdown by type: – {TRADE: 4858, REDEEM: 142}
+[Log] Trade sides breakdown: – {SELL: 209, BUY: 4649}
+[Log] Closed positions map size (unique keys): – 20244
+[Log] 🔍 CONDITION ID OVERLAP CHECK:
+[Log]   - Unique conditionIds in closed positions: – 5126
+[Log]   - Unique conditionIds in buy trades: – 36
+[Log]   - conditionIds that exist in BOTH: – 22
+[Log] Sample closed positions (first 3): – [{asset: "10404582496726857736...", conditionId: "0x067d708ad8d099176c..."}, {asset: "10955320665198517043...", conditionId: "0x067d708ad8d099176c..."}, {asset: "11412687709713286066...", conditionId: "0x15e73b52e091079409..."}] (3)
+[Log] Sample BUY trades (first 3): – [{asset: "87841033211064223972...", conditionId: "0x4f3a504cc0418f9856...", transactionHash: "0xce150dfe91e6c3532e..."}, {asset: "87841033211064223972...", conditionId: "0x4f3a504cc0418f9856...", transactionHash: "0x27ba3c87bbd92fe294..."}, {asset: "24159146873697990783...", conditionId: "0x8911c5d067145e4ad5...", transactionHash: "0x1408b1790163ea5d23..."}] (3)
+[Log] 🔍 MATCHING ANALYSIS:
+[Log]   - Trades matching by asset: – 1977
+[Log]   - Trades matching by conditionId: – 0
+[Log]   - Trades with NO match: – 705
+[Log]   - Sample unmatched assets: – ["87841033211064223972246144382374301099572118962647279634365408646891963440852", "24159146873697990783116301812385609238053216369478844816361377777455680144858", "109573110665908294678914508158517720672178338798060612175920937090925090626410", …] (5)
+["87841033211064223972246144382374301099572118962647279634365408646891963440852", "24159146873697990783116301812385609238053216369478844816361377777455680144858", "109573110665908294678914508158517720672178338798060612175920937090925090626410", "4221500134712487255849015197055227162427618960104515133440696169210963867453", "41691746872099511154459086534663548493742144311217317096236903122244233697496"]Array (5)
+[Log]   - Sample unmatched conditionIds: – ["0x4f3a504cc0418f9856654102666bbfc2b7107401bf0ddf2c48fdde7a86aca606", "0x8911c5d067145e4ad508263c6160c78d6790b2e86316cd5c67952b2b2f02c85c", "0xfed80ca7fa158f5b1fd6935e2c16acc70073b2287be69fd44ae1e64baea39b06", …] (5)
+["0x4f3a504cc0418f9856654102666bbfc2b7107401bf0ddf2c48fdde7a86aca606", "0x8911c5d067145e4ad508263c6160c78d6790b2e86316cd5c67952b2b2f02c85c", "0xfed80ca7fa158f5b1fd6935e2c16acc70073b2287be69fd44ae1e64baea39b06", "0x565ba85e80158b6be3748553451473efb5fab903d1b9b6b534268eed5c2629e5", "0x573dd7c67d742325759a70dbacb9356a4e075f65555629997574d2b8c05ce542"]Array (5)
+[Log] 🔍 CLOSED POSITIONS FIELD CHECK:
+[Log]   - Sample closed position keys: – ["proxyWallet", "asset", "conditionId", …] (17)
+["proxyWallet", "asset", "conditionId", "avgPrice", "totalBought", "realizedPnl", "curPrice", "title", "slug", "icon", …]Array (17)
+[Log]   - Has asset? – true
+[Log]   - Has conditionId? – true
+[Log]   - FULL sample closed position: – "{↵  \"proxyWallet\": \"0xd0d6053c3c37e727402d84c14069780d360993aa\",↵  \"asset\"…"
+"{
+  \"proxyWallet\": \"0xd0d6053c3c37e727402d84c14069780d360993aa\",
+  \"asset\": \"104045824967268577364917666298819144808660480667121506270402548657788162413305\",
+  \"conditionId\": \"0x067d708ad8d099176cb3b7c9553fa98a8676d532b0a438306ea0fb7daaf9e279\",
+  \"avgPrice\": 0.270758,
+  \"totalBought\": 331.928288,
+  \"realizedPnl\": -89.872239,
+  \"curPrice\": 0,
+  \"title\": \"XRP Up or Down - February 1, 6:30AM-6:45AM ET\",
+  \"slug\": \"xrp-updown-15m-1769945400\",
+  \"icon\": \"https://polymarket-upload.s3.us-east-2.amazonaws.com/XRP-logo.png\",
+  \"eventSlug\": \"xrp-updown-15m-1769945400\",
+  \"outcome\": \"Down\",
+  \"outcomeIndex\": 1,
+  \"oppositeOutcome\": \"Up\",
+  \"oppositeAsset\": \"109553206651985170430213994663638431365581600778772066678848771751757783243752\",
+  \"endDate\": \"2026-02-01T00:00:00Z\",
+  \"timestamp\": 1769946519
+}"
+[Log] 🔍 BUY TRADES FIELD CHECK:
+[Log]   - Sample buy trade keys: – ["proxyWallet", "timestamp", "conditionId", …] (21)
+["proxyWallet", "timestamp", "conditionId", "type", "size", "usdcSize", "transactionHash", "price", "asset", "side", …]Array (21)
+[Log]   - Has asset? – true
+[Log]   - Has conditionId? – true
+[Log]   - FULL sample buy trade: – "{↵  \"proxyWallet\": \"0xd0d6053c3c37e727402d84c14069780d360993aa\",↵  \"timestamp\": 1769947316,↵  \"conditionId\"…"
+"{
+  \"proxyWallet\": \"0xd0d6053c3c37e727402d84c14069780d360993aa\",
+  \"timestamp\": 1769947316,
+  \"conditionId\": \"0x4f3a504cc0418f9856654102666bbfc2b7107401bf0ddf2c48fdde7a86aca606\",
+  \"type\": \"TRADE\",
+  \"size\": 9.58904,
+  \"usdcSize\": 2.589041,
+  \"transactionHash\": \"0xce150dfe91e6c3532e71e101f9a87df903f4ce0624a78ab572294318d09f0884\",
+  \"price\": 0.27000002085714525,
+  \"asset\": \"87841033211064223972246144382374301099572118962647279634365408646891963440852\",
+  \"side\": \"BUY\",
+  \"outcomeIndex\": 0,
+  \"title\": \"Ethereum Up or Down - February 1, 7:00AM-7:15AM ET\",
+  \"slug\": \"eth-updown-15m-1769947200\",
+  \"icon\": \"https://polymarket-upload.s3.us-east-2.amazonaws.com/ETH+fullsize.jpg\",
+  \"eventSlug\": \"eth-updown-15m-1769947200\",
+  \"outcome\": \"Up\",
+  \"name\": \"k9Q2mX4L8A7ZP3R\",
+  \"pseudonym\": \"Uncommon-Oat\",
+  \"bio\": \"\",
+  \"profileImage\": \"\",
+  \"profileImageOptimized\": \"\"
+}"
+[Log] Matched buys with closed positions: – 1977
+[Log] Filtered out by min bet amount: – 0
+[Log] Filtered out by price range: – 0
+[Log] Final resolved buys after filters: – 1977
+[Log] Unmatched BUY trades (still open): – 705
+[Log] ==============================
+[Log] 🔥🔥🔥 getResolvedBuysWithStreaks CALLED
+[Log]   - activity.length: – 5000
+[Log]   - closedPositions.length: – 10000
+[Log] === Resolved Buys Analysis ===
+[Log] Total activity items: – 5000
+[Log] Total BUY trades (with duplicates): – 4649
+[Log] Unique BUY trades (after deduplication): – 2682
+[Log] Duplicates removed: – 1967
+[Log] Closed positions available: – 10000
+[Log] Activity breakdown by type: – {TRADE: 4858, REDEEM: 142}
+[Log] Trade sides breakdown: – {SELL: 209, BUY: 4649}
+[Log] Closed positions map size (unique keys): – 20244
+[Log] 🔍 CONDITION ID OVERLAP CHECK:
+[Log]   - Unique conditionIds in closed positions: – 5126
+[Log]   - Unique conditionIds in buy trades: – 36
+[Log]   - conditionIds that exist in BOTH: – 22
+[Log] Sample closed positions (first 3): – [{asset: "10404582496726857736...", conditionId: "0x067d708ad8d099176c..."}, {asset: "10955320665198517043...", conditionId: "0x067d708ad8d099176c..."}, {asset: "11412687709713286066...", conditionId: "0x15e73b52e091079409..."}] (3)
+[Log] Sample BUY trades (first 3): – [{asset: "87841033211064223972...", conditionId: "0x4f3a504cc0418f9856...", transactionHash: "0xce150dfe91e6c3532e..."}, {asset: "87841033211064223972...", conditionId: "0x4f3a504cc0418f9856...", transactionHash: "0x27ba3c87bbd92fe294..."}, {asset: "24159146873697990783...", conditionId: "0x8911c5d067145e4ad5...", transactionHash: "0x1408b1790163ea5d23..."}] (3)
+[Log] 🔍 MATCHING ANALYSIS:
+[Log]   - Trades matching by asset: – 1977
+[Log]   - Trades matching by conditionId: – 0
+[Log]   - Trades with NO match: – 705
+[Log]   - Sample unmatched assets: – ["87841033211064223972246144382374301099572118962647279634365408646891963440852", "24159146873697990783116301812385609238053216369478844816361377777455680144858", "109573110665908294678914508158517720672178338798060612175920937090925090626410", …] (5)
+["87841033211064223972246144382374301099572118962647279634365408646891963440852", "24159146873697990783116301812385609238053216369478844816361377777455680144858", "109573110665908294678914508158517720672178338798060612175920937090925090626410", "4221500134712487255849015197055227162427618960104515133440696169210963867453", "41691746872099511154459086534663548493742144311217317096236903122244233697496"]Array (5)
+[Log]   - Sample unmatched conditionIds: – ["0x4f3a504cc0418f9856654102666bbfc2b7107401bf0ddf2c48fdde7a86aca606", "0x8911c5d067145e4ad508263c6160c78d6790b2e86316cd5c67952b2b2f02c85c", "0xfed80ca7fa158f5b1fd6935e2c16acc70073b2287be69fd44ae1e64baea39b06", …] (5)
+["0x4f3a504cc0418f9856654102666bbfc2b7107401bf0ddf2c48fdde7a86aca606", "0x8911c5d067145e4ad508263c6160c78d6790b2e86316cd5c67952b2b2f02c85c", "0xfed80ca7fa158f5b1fd6935e2c16acc70073b2287be69fd44ae1e64baea39b06", "0x565ba85e80158b6be3748553451473efb5fab903d1b9b6b534268eed5c2629e5", "0x573dd7c67d742325759a70dbacb9356a4e075f65555629997574d2b8c05ce542"]Array (5)
+[Log] 🔍 CLOSED POSITIONS FIELD CHECK:
+[Log]   - Sample closed position keys: – ["proxyWallet", "asset", "conditionId", …] (17)
+["proxyWallet", "asset", "conditionId", "avgPrice", "totalBought", "realizedPnl", "curPrice", "title", "slug", "icon", …]Array (17)
+[Log]   - Has asset? – true
+[Log]   - Has conditionId? – true
+[Log]   - FULL sample closed position: – "{↵  \"proxyWallet\": \"0xd0d6053c3c37e727402d84c14069780d360993aa\",↵  \"asset\"…"
+"{
+  \"proxyWallet\": \"0xd0d6053c3c37e727402d84c14069780d360993aa\",
+  \"asset\": \"104045824967268577364917666298819144808660480667121506270402548657788162413305\",
+  \"conditionId\": \"0x067d708ad8d099176cb3b7c9553fa98a8676d532b0a438306ea0fb7daaf9e279\",
+  \"avgPrice\": 0.270758,
+  \"totalBought\": 331.928288,
+  \"realizedPnl\": -89.872239,
+  \"curPrice\": 0,
+  \"title\": \"XRP Up or Down - February 1, 6:30AM-6:45AM ET\",
+  \"slug\": \"xrp-updown-15m-1769945400\",
+  \"icon\": \"https://polymarket-upload.s3.us-east-2.amazonaws.com/XRP-logo.png\",
+  \"eventSlug\": \"xrp-updown-15m-1769945400\",
+  \"outcome\": \"Down\",
+  \"outcomeIndex\": 1,
+  \"oppositeOutcome\": \"Up\",
+  \"oppositeAsset\": \"109553206651985170430213994663638431365581600778772066678848771751757783243752\",
+  \"endDate\": \"2026-02-01T00:00:00Z\",
+  \"timestamp\": 1769946519
+}"
+[Log] 🔍 BUY TRADES FIELD CHECK:
+[Log]   - Sample buy trade keys: – ["proxyWallet", "timestamp", "conditionId", …] (21)
+["proxyWallet", "timestamp", "conditionId", "type", "size", "usdcSize", "transactionHash", "price", "asset", "side", …]Array (21)
+[Log]   - Has asset? – true
+[Log]   - Has conditionId? – true
+[Log]   - FULL sample buy trade: – "{↵  \"proxyWallet\": \"0xd0d6053c3c37e727402d84c14069780d360993aa\",↵  \"timestamp\": 1769947316,↵  \"conditionId\"…"
+"{
+  \"proxyWallet\": \"0xd0d6053c3c37e727402d84c14069780d360993aa\",
+  \"timestamp\": 1769947316,
+  \"conditionId\": \"0x4f3a504cc0418f9856654102666bbfc2b7107401bf0ddf2c48fdde7a86aca606\",
+  \"type\": \"TRADE\",
+  \"size\": 9.58904,
+  \"usdcSize\": 2.589041,
+  \"transactionHash\": \"0xce150dfe91e6c3532e71e101f9a87df903f4ce0624a78ab572294318d09f0884\",
+  \"price\": 0.27000002085714525,
+  \"asset\": \"87841033211064223972246144382374301099572118962647279634365408646891963440852\",
+  \"side\": \"BUY\",
+  \"outcomeIndex\": 0,
+  \"title\": \"Ethereum Up or Down - February 1, 7:00AM-7:15AM ET\",
+  \"slug\": \"eth-updown-15m-1769947200\",
+  \"icon\": \"https://polymarket-upload.s3.us-east-2.amazonaws.com/ETH+fullsize.jpg\",
+  \"eventSlug\": \"eth-updown-15m-1769947200\",
+  \"outcome\": \"Up\",
+  \"name\": \"k9Q2mX4L8A7ZP3R\",
+  \"pseudonym\": \"Uncommon-Oat\",
+  \"bio\": \"\",
+  \"profileImage\": \"\",
+  \"profileImageOptimized\": \"\"
+}"
+[Log] Matched buys with closed positions: – 1977
+[Log] Filtered out by min bet amount: – 0
+[Log] Filtered out by price range: – 0
+[Log] Final resolved buys after filters: – 1977
+[Log] Unmatched BUY trades (still open): – 705
+[Log] ==============================
+[Log] === Deduplication Analysis ===
+[Log] Resolved buys before deduplication: – 1977
+[Log] Unique resolved buys after deduplication: – 1977
+[Log] Duplicates removed: – 0
+[Log] Top 5 most duplicated trades: – [] (0)
+[Log] ==============================
+[Log] 🔥🔥🔥 getResolvedBuysWithStreaks CALLED
+[Log]   - activity.length: – 5000
+[Log]   - closedPositions.length: – 10000
+[Log] === Resolved Buys Analysis ===
+[Log] Total activity items: – 5000
+[Log] Total BUY trades (with duplicates): – 4649
+[Log] Unique BUY trades (after deduplication): – 2682
+[Log] Duplicates removed: – 1967
+[Log] Closed positions available: – 10000
+[Log] Activity breakdown by type: – {TRADE: 4858, REDEEM: 142}
+[Log] Trade sides breakdown: – {SELL: 209, BUY: 4649}
+[Log] Closed positions map size (unique keys): – 20244
+[Log] 🔍 CONDITION ID OVERLAP CHECK:
+[Log]   - Unique conditionIds in closed positions: – 5126
+[Log]   - Unique conditionIds in buy trades: – 36
+[Log]   - conditionIds that exist in BOTH: – 22
+[Log] Sample closed positions (first 3): – [{asset: "10404582496726857736...", conditionId: "0x067d708ad8d099176c..."}, {asset: "10955320665198517043...", conditionId: "0x067d708ad8d099176c..."}, {asset: "11412687709713286066...", conditionId: "0x15e73b52e091079409..."}] (3)
+[Log] Sample BUY trades (first 3): – [{asset: "87841033211064223972...", conditionId: "0x4f3a504cc0418f9856...", transactionHash: "0xce150dfe91e6c3532e..."}, {asset: "87841033211064223972...", conditionId: "0x4f3a504cc0418f9856...", transactionHash: "0x27ba3c87bbd92fe294..."}, {asset: "24159146873697990783...", conditionId: "0x8911c5d067145e4ad5...", transactionHash: "0x1408b1790163ea5d23..."}] (3)
+[Log] 🔍 MATCHING ANALYSIS:
+[Log]   - Trades matching by asset: – 1977
+[Log]   - Trades matching by conditionId: – 0
+[Log]   - Trades with NO match: – 705
+[Log]   - Sample unmatched assets: – ["87841033211064223972246144382374301099572118962647279634365408646891963440852", "24159146873697990783116301812385609238053216369478844816361377777455680144858", "109573110665908294678914508158517720672178338798060612175920937090925090626410", …] (5)
+["87841033211064223972246144382374301099572118962647279634365408646891963440852", "24159146873697990783116301812385609238053216369478844816361377777455680144858", "109573110665908294678914508158517720672178338798060612175920937090925090626410", "4221500134712487255849015197055227162427618960104515133440696169210963867453", "41691746872099511154459086534663548493742144311217317096236903122244233697496"]Array (5)
+[Log]   - Sample unmatched conditionIds: – ["0x4f3a504cc0418f9856654102666bbfc2b7107401bf0ddf2c48fdde7a86aca606", "0x8911c5d067145e4ad508263c6160c78d6790b2e86316cd5c67952b2b2f02c85c", "0xfed80ca7fa158f5b1fd6935e2c16acc70073b2287be69fd44ae1e64baea39b06", …] (5)
+["0x4f3a504cc0418f9856654102666bbfc2b7107401bf0ddf2c48fdde7a86aca606", "0x8911c5d067145e4ad508263c6160c78d6790b2e86316cd5c67952b2b2f02c85c", "0xfed80ca7fa158f5b1fd6935e2c16acc70073b2287be69fd44ae1e64baea39b06", "0x565ba85e80158b6be3748553451473efb5fab903d1b9b6b534268eed5c2629e5", "0x573dd7c67d742325759a70dbacb9356a4e075f65555629997574d2b8c05ce542"]Array (5)
+[Log] 🔍 CLOSED POSITIONS FIELD CHECK:
+[Log]   - Sample closed position keys: – ["proxyWallet", "asset", "conditionId", …] (17)
+["proxyWallet", "asset", "conditionId", "avgPrice", "totalBought", "realizedPnl", "curPrice", "title", "slug", "icon", …]Array (17)
+[Log]   - Has asset? – true
+[Log]   - Has conditionId? – true
+[Log]   - FULL sample closed position: – "{↵  \"proxyWallet\": \"0xd0d6053c3c37e727402d84c14069780d360993aa\",↵  \"asset\"…"
+"{
+  \"proxyWallet\": \"0xd0d6053c3c37e727402d84c14069780d360993aa\",
+  \"asset\": \"104045824967268577364917666298819144808660480667121506270402548657788162413305\",
+  \"conditionId\": \"0x067d708ad8d099176cb3b7c9553fa98a8676d532b0a438306ea0fb7daaf9e279\",
+  \"avgPrice\": 0.270758,
+  \"totalBought\": 331.928288,
+  \"realizedPnl\": -89.872239,
+  \"curPrice\": 0,
+  \"title\": \"XRP Up or Down - February 1, 6:30AM-6:45AM ET\",
+  \"slug\": \"xrp-updown-15m-1769945400\",
+  \"icon\": \"https://polymarket-upload.s3.us-east-2.amazonaws.com/XRP-logo.png\",
+  \"eventSlug\": \"xrp-updown-15m-1769945400\",
+  \"outcome\": \"Down\",
+  \"outcomeIndex\": 1,
+  \"oppositeOutcome\": \"Up\",
+  \"oppositeAsset\": \"109553206651985170430213994663638431365581600778772066678848771751757783243752\",
+  \"endDate\": \"2026-02-01T00:00:00Z\",
+  \"timestamp\": 1769946519
+}"
+[Log] 🔍 BUY TRADES FIELD CHECK:
+[Log]   - Sample buy trade keys: – ["proxyWallet", "timestamp", "conditionId", …] (21)
+["proxyWallet", "timestamp", "conditionId", "type", "size", "usdcSize", "transactionHash", "price", "asset", "side", …]Array (21)
+[Log]   - Has asset? – true
+[Log]   - Has conditionId? – true
+[Log]   - FULL sample buy trade: – "{↵  \"proxyWallet\": \"0xd0d6053c3c37e727402d84c14069780d360993aa\",↵  \"timestamp\": 1769947316,↵  \"conditionId\"…"
+"{
+  \"proxyWallet\": \"0xd0d6053c3c37e727402d84c14069780d360993aa\",
+  \"timestamp\": 1769947316,
+  \"conditionId\": \"0x4f3a504cc0418f9856654102666bbfc2b7107401bf0ddf2c48fdde7a86aca606\",
+  \"type\": \"TRADE\",
+  \"size\": 9.58904,
+  \"usdcSize\": 2.589041,
+  \"transactionHash\": \"0xce150dfe91e6c3532e71e101f9a87df903f4ce0624a78ab572294318d09f0884\",
+  \"price\": 0.27000002085714525,
+  \"asset\": \"87841033211064223972246144382374301099572118962647279634365408646891963440852\",
+  \"side\": \"BUY\",
+  \"outcomeIndex\": 0,
+  \"title\": \"Ethereum Up or Down - February 1, 7:00AM-7:15AM ET\",
+  \"slug\": \"eth-updown-15m-1769947200\",
+  \"icon\": \"https://polymarket-upload.s3.us-east-2.amazonaws.com/ETH+fullsize.jpg\",
+  \"eventSlug\": \"eth-updown-15m-1769947200\",
+  \"outcome\": \"Up\",
+  \"name\": \"k9Q2mX4L8A7ZP3R\",
+  \"pseudonym\": \"Uncommon-Oat\",
+  \"bio\": \"\",
+  \"profileImage\": \"\",
+  \"profileImageOptimized\": \"\"
+}"
+[Log] Matched buys with closed positions: – 1977
+[Log] Filtered out by min bet amount: – 0
+[Log] Filtered out by price range: – 0
+[Log] Final resolved buys after filters: – 1977
+[Log] Unmatched BUY trades (still open): – 705
+[Log] ==============================
+[Log] 🔥 CLOSED POSITIONS EFFECT TRIGGERED
+[Log]   - positionsTab: – "active"
+[Log]   - closedPositionsLimit: – 10000
+[Log]   - activeTab: – "activity"
+[Log]   - showResolvedOnly: – true
+[Log] ✅ Conditions met - fetching closed positions
+[Log] Fetching closed positions with limit: – 10000
+[Log] API URL: – "/api/closed-positions?user=0xd0d6053c3c37e727402d84c14069780d360993aa&limit=10000&sortBy=TIMESTAMP&sortDirection=DESC"
+[Log] 🔥🔥🔥 getResolvedBuysWithStreaks CALLED
+[Log]   - activity.length: – 5000
+[Log]   - closedPositions.length: – 10000
+[Log] === Resolved Buys Analysis ===
+[Log] Total activity items: – 5000
+[Log] Total BUY trades (with duplicates): – 4649
+[Log] Unique BUY trades (after deduplication): – 2682
+[Log] Duplicates removed: – 1967
+[Log] Closed positions available: – 10000
+[Log] Activity breakdown by type: – {TRADE: 4858, REDEEM: 142}
+[Log] Trade sides breakdown: – {SELL: 209, BUY: 4649}
+[Log] Closed positions map size (unique keys): – 20244
+[Log] 🔍 CONDITION ID OVERLAP CHECK:
+[Log]   - Unique conditionIds in closed positions: – 5126
+[Log]   - Unique conditionIds in buy trades: – 36
+[Log]   - conditionIds that exist in BOTH: – 22
+[Log] Sample closed positions (first 3): – [{asset: "10404582496726857736...", conditionId: "0x067d708ad8d099176c..."}, {asset: "10955320665198517043...", conditionId: "0x067d708ad8d099176c..."}, {asset: "11412687709713286066...", conditionId: "0x15e73b52e091079409..."}] (3)
+[Log] Sample BUY trades (first 3): – [{asset: "87841033211064223972...", conditionId: "0x4f3a504cc0418f9856...", transactionHash: "0xce150dfe91e6c3532e..."}, {asset: "87841033211064223972...", conditionId: "0x4f3a504cc0418f9856...", transactionHash: "0x27ba3c87bbd92fe294..."}, {asset: "24159146873697990783...", conditionId: "0x8911c5d067145e4ad5...", transactionHash: "0x1408b1790163ea5d23..."}] (3)
+[Log] 🔍 MATCHING ANALYSIS:
+[Log]   - Trades matching by asset: – 1977
+[Log]   - Trades matching by conditionId: – 0
+[Log]   - Trades with NO match: – 705
+[Log]   - Sample unmatched assets: – ["87841033211064223972246144382374301099572118962647279634365408646891963440852", "24159146873697990783116301812385609238053216369478844816361377777455680144858", "109573110665908294678914508158517720672178338798060612175920937090925090626410", …] (5)
+["87841033211064223972246144382374301099572118962647279634365408646891963440852", "24159146873697990783116301812385609238053216369478844816361377777455680144858", "109573110665908294678914508158517720672178338798060612175920937090925090626410", "4221500134712487255849015197055227162427618960104515133440696169210963867453", "41691746872099511154459086534663548493742144311217317096236903122244233697496"]Array (5)
+[Log]   - Sample unmatched conditionIds: – ["0x4f3a504cc0418f9856654102666bbfc2b7107401bf0ddf2c48fdde7a86aca606", "0x8911c5d067145e4ad508263c6160c78d6790b2e86316cd5c67952b2b2f02c85c", "0xfed80ca7fa158f5b1fd6935e2c16acc70073b2287be69fd44ae1e64baea39b06", …] (5)
+["0x4f3a504cc0418f9856654102666bbfc2b7107401bf0ddf2c48fdde7a86aca606", "0x8911c5d067145e4ad508263c6160c78d6790b2e86316cd5c67952b2b2f02c85c", "0xfed80ca7fa158f5b1fd6935e2c16acc70073b2287be69fd44ae1e64baea39b06", "0x565ba85e80158b6be3748553451473efb5fab903d1b9b6b534268eed5c2629e5", "0x573dd7c67d742325759a70dbacb9356a4e075f65555629997574d2b8c05ce542"]Array (5)
+[Log] 🔍 CLOSED POSITIONS FIELD CHECK:
+[Log]   - Sample closed position keys: – ["proxyWallet", "asset", "conditionId", …] (17)
+["proxyWallet", "asset", "conditionId", "avgPrice", "totalBought", "realizedPnl", "curPrice", "title", "slug", "icon", …]Array (17)
+[Log]   - Has asset? – true
+[Log]   - Has conditionId? – true
+[Log]   - FULL sample closed position: – "{↵  \"proxyWallet\": \"0xd0d6053c3c37e727402d84c14069780d360993aa\",↵  \"asset\"…"
+"{
+  \"proxyWallet\": \"0xd0d6053c3c37e727402d84c14069780d360993aa\",
+  \"asset\": \"104045824967268577364917666298819144808660480667121506270402548657788162413305\",
+  \"conditionId\": \"0x067d708ad8d099176cb3b7c9553fa98a8676d532b0a438306ea0fb7daaf9e279\",
+  \"avgPrice\": 0.270758,
+  \"totalBought\": 331.928288,
+  \"realizedPnl\": -89.872239,
+  \"curPrice\": 0,
+  \"title\": \"XRP Up or Down - February 1, 6:30AM-6:45AM ET\",
+  \"slug\": \"xrp-updown-15m-1769945400\",
+  \"icon\": \"https://polymarket-upload.s3.us-east-2.amazonaws.com/XRP-logo.png\",
+  \"eventSlug\": \"xrp-updown-15m-1769945400\",
+  \"outcome\": \"Down\",
+  \"outcomeIndex\": 1,
+  \"oppositeOutcome\": \"Up\",
+  \"oppositeAsset\": \"109553206651985170430213994663638431365581600778772066678848771751757783243752\",
+  \"endDate\": \"2026-02-01T00:00:00Z\",
+  \"timestamp\": 1769946519
+}"
+[Log] 🔍 BUY TRADES FIELD CHECK:
+[Log]   - Sample buy trade keys: – ["proxyWallet", "timestamp", "conditionId", …] (21)
+["proxyWallet", "timestamp", "conditionId", "type", "size", "usdcSize", "transactionHash", "price", "asset", "side", …]Array (21)
+[Log]   - Has asset? – true
+[Log]   - Has conditionId? – true
+[Log]   - FULL sample buy trade: – "{↵  \"proxyWallet\": \"0xd0d6053c3c37e727402d84c14069780d360993aa\",↵  \"timestamp\": 1769947316,↵  \"conditionId\"…"
+"{
+  \"proxyWallet\": \"0xd0d6053c3c37e727402d84c14069780d360993aa\",
+  \"timestamp\": 1769947316,
+  \"conditionId\": \"0x4f3a504cc0418f9856654102666bbfc2b7107401bf0ddf2c48fdde7a86aca606\",
+  \"type\": \"TRADE\",
+  \"size\": 9.58904,
+  \"usdcSize\": 2.589041,
+  \"transactionHash\": \"0xce150dfe91e6c3532e71e101f9a87df903f4ce0624a78ab572294318d09f0884\",
+  \"price\": 0.27000002085714525,
+  \"asset\": \"87841033211064223972246144382374301099572118962647279634365408646891963440852\",
+  \"side\": \"BUY\",
+  \"outcomeIndex\": 0,
+  \"title\": \"Ethereum Up or Down - February 1, 7:00AM-7:15AM ET\",
+  \"slug\": \"eth-updown-15m-1769947200\",
+  \"icon\": \"https://polymarket-upload.s3.us-east-2.amazonaws.com/ETH+fullsize.jpg\",
+  \"eventSlug\": \"eth-updown-15m-1769947200\",
+  \"outcome\": \"Up\",
+  \"name\": \"k9Q2mX4L8A7ZP3R\",
+  \"pseudonym\": \"Uncommon-Oat\",
+  \"bio\": \"\",
+  \"profileImage\": \"\",
+  \"profileImageOptimized\": \"\"
+}"
+[Log] Matched buys with closed positions: – 1977
+[Log] Filtered out by min bet amount: – 0
+[Log] Filtered out by price range: – 0
+[Log] Final resolved buys after filters: – 1977
+[Log] Unmatched BUY trades (still open): – 705
+[Log] ==============================
+[Log] === Deduplication Analysis ===
+[Log] Resolved buys before deduplication: – 1977
+[Log] Unique resolved buys after deduplication: – 1977
+[Log] Duplicates removed: – 0
+[Log] Top 5 most duplicated trades: – [] (0)
+[Log] ==============================
+[Log] 🔥🔥🔥 getResolvedBuysWithStreaks CALLED
+[Log]   - activity.length: – 5000
+[Log]   - closedPositions.length: – 10000
+[Log] === Resolved Buys Analysis ===
+[Log] Total activity items: – 5000
+[Log] Total BUY trades (with duplicates): – 4649
+[Log] Unique BUY trades (after deduplication): – 2682
+[Log] Duplicates removed: – 1967
+[Log] Closed positions available: – 10000
+[Log] Activity breakdown by type: – {TRADE: 4858, REDEEM: 142}
+[Log] Trade sides breakdown: – {SELL: 209, BUY: 4649}
+[Log] Closed positions map size (unique keys): – 20244
+[Log] 🔍 CONDITION ID OVERLAP CHECK:
+[Log]   - Unique conditionIds in closed positions: – 5126
+[Log]   - Unique conditionIds in buy trades: – 36
+[Log]   - conditionIds that exist in BOTH: – 22
+[Log] Sample closed positions (first 3): – [{asset: "10404582496726857736...", conditionId: "0x067d708ad8d099176c..."}, {asset: "10955320665198517043...", conditionId: "0x067d708ad8d099176c..."}, {asset: "11412687709713286066...", conditionId: "0x15e73b52e091079409..."}] (3)
+[Log] Sample BUY trades (first 3): – [{asset: "87841033211064223972...", conditionId: "0x4f3a504cc0418f9856...", transactionHash: "0xce150dfe91e6c3532e..."}, {asset: "87841033211064223972...", conditionId: "0x4f3a504cc0418f9856...", transactionHash: "0x27ba3c87bbd92fe294..."}, {asset: "24159146873697990783...", conditionId: "0x8911c5d067145e4ad5...", transactionHash: "0x1408b1790163ea5d23..."}] (3)
+[Log] 🔍 MATCHING ANALYSIS:
+[Log]   - Trades matching by asset: – 1977
+[Log]   - Trades matching by conditionId: – 0
+[Log]   - Trades with NO match: – 705
+[Log]   - Sample unmatched assets: – ["87841033211064223972246144382374301099572118962647279634365408646891963440852", "24159146873697990783116301812385609238053216369478844816361377777455680144858", "109573110665908294678914508158517720672178338798060612175920937090925090626410", …] (5)
+["87841033211064223972246144382374301099572118962647279634365408646891963440852", "24159146873697990783116301812385609238053216369478844816361377777455680144858", "109573110665908294678914508158517720672178338798060612175920937090925090626410", "4221500134712487255849015197055227162427618960104515133440696169210963867453", "41691746872099511154459086534663548493742144311217317096236903122244233697496"]Array (5)
+[Log]   - Sample unmatched conditionIds: – ["0x4f3a504cc0418f9856654102666bbfc2b7107401bf0ddf2c48fdde7a86aca606", "0x8911c5d067145e4ad508263c6160c78d6790b2e86316cd5c67952b2b2f02c85c", "0xfed80ca7fa158f5b1fd6935e2c16acc70073b2287be69fd44ae1e64baea39b06", …] (5)
+["0x4f3a504cc0418f9856654102666bbfc2b7107401bf0ddf2c48fdde7a86aca606", "0x8911c5d067145e4ad508263c6160c78d6790b2e86316cd5c67952b2b2f02c85c", "0xfed80ca7fa158f5b1fd6935e2c16acc70073b2287be69fd44ae1e64baea39b06", "0x565ba85e80158b6be3748553451473efb5fab903d1b9b6b534268eed5c2629e5", "0x573dd7c67d742325759a70dbacb9356a4e075f65555629997574d2b8c05ce542"]Array (5)
+[Log] 🔍 CLOSED POSITIONS FIELD CHECK:
+[Log]   - Sample closed position keys: – ["proxyWallet", "asset", "conditionId", …] (17)
+["proxyWallet", "asset", "conditionId", "avgPrice", "totalBought", "realizedPnl", "curPrice", "title", "slug", "icon", …]Array (17)
+[Log]   - Has asset? – true
+[Log]   - Has conditionId? – true
+[Log]   - FULL sample closed position: – "{↵  \"proxyWallet\": \"0xd0d6053c3c37e727402d84c14069780d360993aa\",↵  \"asset\"…"
+"{
+  \"proxyWallet\": \"0xd0d6053c3c37e727402d84c14069780d360993aa\",
+  \"asset\": \"104045824967268577364917666298819144808660480667121506270402548657788162413305\",
+  \"conditionId\": \"0x067d708ad8d099176cb3b7c9553fa98a8676d532b0a438306ea0fb7daaf9e279\",
+  \"avgPrice\": 0.270758,
+  \"totalBought\": 331.928288,
+  \"realizedPnl\": -89.872239,
+  \"curPrice\": 0,
+  \"title\": \"XRP Up or Down - February 1, 6:30AM-6:45AM ET\",
+  \"slug\": \"xrp-updown-15m-1769945400\",
+  \"icon\": \"https://polymarket-upload.s3.us-east-2.amazonaws.com/XRP-logo.png\",
+  \"eventSlug\": \"xrp-updown-15m-1769945400\",
+  \"outcome\": \"Down\",
+  \"outcomeIndex\": 1,
+  \"oppositeOutcome\": \"Up\",
+  \"oppositeAsset\": \"109553206651985170430213994663638431365581600778772066678848771751757783243752\",
+  \"endDate\": \"2026-02-01T00:00:00Z\",
+  \"timestamp\": 1769946519
+}"
+[Log] 🔍 BUY TRADES FIELD CHECK:
+[Log]   - Sample buy trade keys: – ["proxyWallet", "timestamp", "conditionId", …] (21)
+["proxyWallet", "timestamp", "conditionId", "type", "size", "usdcSize", "transactionHash", "price", "asset", "side", …]Array (21)
+[Log]   - Has asset? – true
+[Log]   - Has conditionId? – true
+[Log]   - FULL sample buy trade: – "{↵  \"proxyWallet\": \"0xd0d6053c3c37e727402d84c14069780d360993aa\",↵  \"timestamp\": 1769947316,↵  \"conditionId\"…"
+"{
+  \"proxyWallet\": \"0xd0d6053c3c37e727402d84c14069780d360993aa\",
+  \"timestamp\": 1769947316,
+  \"conditionId\": \"0x4f3a504cc0418f9856654102666bbfc2b7107401bf0ddf2c48fdde7a86aca606\",
+  \"type\": \"TRADE\",
+  \"size\": 9.58904,
+  \"usdcSize\": 2.589041,
+  \"transactionHash\": \"0xce150dfe91e6c3532e71e101f9a87df903f4ce0624a78ab572294318d09f0884\",
+  \"price\": 0.27000002085714525,
+  \"asset\": \"87841033211064223972246144382374301099572118962647279634365408646891963440852\",
+  \"side\": \"BUY\",
+  \"outcomeIndex\": 0,
+  \"title\": \"Ethereum Up or Down - February 1, 7:00AM-7:15AM ET\",
+  \"slug\": \"eth-updown-15m-1769947200\",
+  \"icon\": \"https://polymarket-upload.s3.us-east-2.amazonaws.com/ETH+fullsize.jpg\",
+  \"eventSlug\": \"eth-updown-15m-1769947200\",
+  \"outcome\": \"Up\",
+  \"name\": \"k9Q2mX4L8A7ZP3R\",
+  \"pseudonym\": \"Uncommon-Oat\",
+  \"bio\": \"\",
+  \"profileImage\": \"\",
+  \"profileImageOptimized\": \"\"
+}"
+[Log] Matched buys with closed positions: – 1977
+[Log] Filtered out by min bet amount: – 0
+[Log] Filtered out by price range: – 0
+[Log] Final resolved buys after filters: – 1977
+[Log] Unmatched BUY trades (still open): – 705
+[Log] ==============================
+[Log] 🔥🔥🔥 getResolvedBuysWithStreaks CALLED
+[Log]   - activity.length: – 5000
+[Log]   - closedPositions.length: – 10000
+[Log] === Resolved Buys Analysis ===
+[Log] Total activity items: – 5000
+[Log] Total BUY trades (with duplicates): – 4649
+[Log] Unique BUY trades (after deduplication): – 2682
+[Log] Duplicates removed: – 1967
+[Log] Closed positions available: – 10000
+[Log] Activity breakdown by type: – {TRADE: 4858, REDEEM: 142}
+[Log] Trade sides breakdown: – {SELL: 209, BUY: 4649}
+[Log] Closed positions map size (unique keys): – 20244
+[Log] 🔍 CONDITION ID OVERLAP CHECK:
+[Log]   - Unique conditionIds in closed positions: – 5126
+[Log]   - Unique conditionIds in buy trades: – 36
+[Log]   - conditionIds that exist in BOTH: – 22
+[Log] Sample closed positions (first 3): – [{asset: "10404582496726857736...", conditionId: "0x067d708ad8d099176c..."}, {asset: "10955320665198517043...", conditionId: "0x067d708ad8d099176c..."}, {asset: "11412687709713286066...", conditionId: "0x15e73b52e091079409..."}] (3)
+[Log] Sample BUY trades (first 3): – [{asset: "87841033211064223972...", conditionId: "0x4f3a504cc0418f9856...", transactionHash: "0xce150dfe91e6c3532e..."}, {asset: "87841033211064223972...", conditionId: "0x4f3a504cc0418f9856...", transactionHash: "0x27ba3c87bbd92fe294..."}, {asset: "24159146873697990783...", conditionId: "0x8911c5d067145e4ad5...", transactionHash: "0x1408b1790163ea5d23..."}] (3)
+[Log] 🔍 MATCHING ANALYSIS:
+[Log]   - Trades matching by asset: – 1977
+[Log]   - Trades matching by conditionId: – 0
+[Log]   - Trades with NO match: – 705
+[Log]   - Sample unmatched assets: – ["87841033211064223972246144382374301099572118962647279634365408646891963440852", "24159146873697990783116301812385609238053216369478844816361377777455680144858", "109573110665908294678914508158517720672178338798060612175920937090925090626410", …] (5)
+["87841033211064223972246144382374301099572118962647279634365408646891963440852", "24159146873697990783116301812385609238053216369478844816361377777455680144858", "109573110665908294678914508158517720672178338798060612175920937090925090626410", "4221500134712487255849015197055227162427618960104515133440696169210963867453", "41691746872099511154459086534663548493742144311217317096236903122244233697496"]Array (5)
+[Log]   - Sample unmatched conditionIds: – ["0x4f3a504cc0418f9856654102666bbfc2b7107401bf0ddf2c48fdde7a86aca606", "0x8911c5d067145e4ad508263c6160c78d6790b2e86316cd5c67952b2b2f02c85c", "0xfed80ca7fa158f5b1fd6935e2c16acc70073b2287be69fd44ae1e64baea39b06", …] (5)
+["0x4f3a504cc0418f9856654102666bbfc2b7107401bf0ddf2c48fdde7a86aca606", "0x8911c5d067145e4ad508263c6160c78d6790b2e86316cd5c67952b2b2f02c85c", "0xfed80ca7fa158f5b1fd6935e2c16acc70073b2287be69fd44ae1e64baea39b06", "0x565ba85e80158b6be3748553451473efb5fab903d1b9b6b534268eed5c2629e5", "0x573dd7c67d742325759a70dbacb9356a4e075f65555629997574d2b8c05ce542"]Array (5)
+[Log] 🔍 CLOSED POSITIONS FIELD CHECK:
+[Log]   - Sample closed position keys: – ["proxyWallet", "asset", "conditionId", …] (17)
+["proxyWallet", "asset", "conditionId", "avgPrice", "totalBought", "realizedPnl", "curPrice", "title", "slug", "icon", …]Array (17)
+[Log]   - Has asset? – true
+[Log]   - Has conditionId? – true
+[Log]   - FULL sample closed position: – "{↵  \"proxyWallet\": \"0xd0d6053c3c37e727402d84c14069780d360993aa\",↵  \"asset\"…"
+"{
+  \"proxyWallet\": \"0xd0d6053c3c37e727402d84c14069780d360993aa\",
+  \"asset\": \"104045824967268577364917666298819144808660480667121506270402548657788162413305\",
+  \"conditionId\": \"0x067d708ad8d099176cb3b7c9553fa98a8676d532b0a438306ea0fb7daaf9e279\",
+  \"avgPrice\": 0.270758,
+  \"totalBought\": 331.928288,
+  \"realizedPnl\": -89.872239,
+  \"curPrice\": 0,
+  \"title\": \"XRP Up or Down - February 1, 6:30AM-6:45AM ET\",
+  \"slug\": \"xrp-updown-15m-1769945400\",
+  \"icon\": \"https://polymarket-upload.s3.us-east-2.amazonaws.com/XRP-logo.png\",
+  \"eventSlug\": \"xrp-updown-15m-1769945400\",
+  \"outcome\": \"Down\",
+  \"outcomeIndex\": 1,
+  \"oppositeOutcome\": \"Up\",
+  \"oppositeAsset\": \"109553206651985170430213994663638431365581600778772066678848771751757783243752\",
+  \"endDate\": \"2026-02-01T00:00:00Z\",
+  \"timestamp\": 1769946519
+}"
+[Log] 🔍 BUY TRADES FIELD CHECK:
+[Log]   - Sample buy trade keys: – ["proxyWallet", "timestamp", "conditionId", …] (21)
+["proxyWallet", "timestamp", "conditionId", "type", "size", "usdcSize", "transactionHash", "price", "asset", "side", …]Array (21)
+[Log]   - Has asset? – true
+[Log]   - Has conditionId? – true
+[Log]   - FULL sample buy trade: – "{↵  \"proxyWallet\": \"0xd0d6053c3c37e727402d84c14069780d360993aa\",↵  \"timestamp\": 1769947316,↵  \"conditionId\"…"
+"{
+  \"proxyWallet\": \"0xd0d6053c3c37e727402d84c14069780d360993aa\",
+  \"timestamp\": 1769947316,
+  \"conditionId\": \"0x4f3a504cc0418f9856654102666bbfc2b7107401bf0ddf2c48fdde7a86aca606\",
+  \"type\": \"TRADE\",
+  \"size\": 9.58904,
+  \"usdcSize\": 2.589041,
+  \"transactionHash\": \"0xce150dfe91e6c3532e71e101f9a87df903f4ce0624a78ab572294318d09f0884\",
+  \"price\": 0.27000002085714525,
+  \"asset\": \"87841033211064223972246144382374301099572118962647279634365408646891963440852\",
+  \"side\": \"BUY\",
+  \"outcomeIndex\": 0,
+  \"title\": \"Ethereum Up or Down - February 1, 7:00AM-7:15AM ET\",
+  \"slug\": \"eth-updown-15m-1769947200\",
+  \"icon\": \"https://polymarket-upload.s3.us-east-2.amazonaws.com/ETH+fullsize.jpg\",
+  \"eventSlug\": \"eth-updown-15m-1769947200\",
+  \"outcome\": \"Up\",
+  \"name\": \"k9Q2mX4L8A7ZP3R\",
+  \"pseudonym\": \"Uncommon-Oat\",
+  \"bio\": \"\",
+  \"profileImage\": \"\",
+  \"profileImageOptimized\": \"\"
+}"
+[Log] Matched buys with closed positions: – 1977
+[Log] Filtered out by min bet amount: – 0
+[Log] Filtered out by price range: – 0
+[Log] Final resolved buys after filters: – 1977
+[Log] Unmatched BUY trades (still open): – 705
+[Log] ==============================
+[Log] === Deduplication Analysis ===
+[Log] Resolved buys before deduplication: – 1977
+[Log] Unique resolved buys after deduplication: – 1977
+[Log] Duplicates removed: – 0
+[Log] Top 5 most duplicated trades: – [] (0)
+[Log] ==============================
+[Log] 🔥🔥🔥 getResolvedBuysWithStreaks CALLED
+[Log]   - activity.length: – 5000
+[Log]   - closedPositions.length: – 10000
+[Log] === Resolved Buys Analysis ===
+[Log] Total activity items: – 5000
+[Log] Total BUY trades (with duplicates): – 4649
+[Log] Unique BUY trades (after deduplication): – 2682
+[Log] Duplicates removed: – 1967
+[Log] Closed positions available: – 10000
+[Log] Activity breakdown by type: – {TRADE: 4858, REDEEM: 142}
+[Log] Trade sides breakdown: – {SELL: 209, BUY: 4649}
+[Log] Closed positions map size (unique keys): – 20244
+[Log] 🔍 CONDITION ID OVERLAP CHECK:
+[Log]   - Unique conditionIds in closed positions: – 5126
+[Log]   - Unique conditionIds in buy trades: – 36
+[Log]   - conditionIds that exist in BOTH: – 22
+[Log] Sample closed positions (first 3): – [{asset: "10404582496726857736...", conditionId: "0x067d708ad8d099176c..."}, {asset: "10955320665198517043...", conditionId: "0x067d708ad8d099176c..."}, {asset: "11412687709713286066...", conditionId: "0x15e73b52e091079409..."}] (3)
+[Log] Sample BUY trades (first 3): – [{asset: "87841033211064223972...", conditionId: "0x4f3a504cc0418f9856...", transactionHash: "0xce150dfe91e6c3532e..."}, {asset: "87841033211064223972...", conditionId: "0x4f3a504cc0418f9856...", transactionHash: "0x27ba3c87bbd92fe294..."}, {asset: "24159146873697990783...", conditionId: "0x8911c5d067145e4ad5...", transactionHash: "0x1408b1790163ea5d23..."}] (3)
+[Log] 🔍 MATCHING ANALYSIS:
+[Log]   - Trades matching by asset: – 1977
+[Log]   - Trades matching by conditionId: – 0
+[Log]   - Trades with NO match: – 705
+[Log]   - Sample unmatched assets: – ["87841033211064223972246144382374301099572118962647279634365408646891963440852", "24159146873697990783116301812385609238053216369478844816361377777455680144858", "109573110665908294678914508158517720672178338798060612175920937090925090626410", …] (5)
+["87841033211064223972246144382374301099572118962647279634365408646891963440852", "24159146873697990783116301812385609238053216369478844816361377777455680144858", "109573110665908294678914508158517720672178338798060612175920937090925090626410", "4221500134712487255849015197055227162427618960104515133440696169210963867453", "41691746872099511154459086534663548493742144311217317096236903122244233697496"]Array (5)
+[Log]   - Sample unmatched conditionIds: – ["0x4f3a504cc0418f9856654102666bbfc2b7107401bf0ddf2c48fdde7a86aca606", "0x8911c5d067145e4ad508263c6160c78d6790b2e86316cd5c67952b2b2f02c85c", "0xfed80ca7fa158f5b1fd6935e2c16acc70073b2287be69fd44ae1e64baea39b06", …] (5)
+["0x4f3a504cc0418f9856654102666bbfc2b7107401bf0ddf2c48fdde7a86aca606", "0x8911c5d067145e4ad508263c6160c78d6790b2e86316cd5c67952b2b2f02c85c", "0xfed80ca7fa158f5b1fd6935e2c16acc70073b2287be69fd44ae1e64baea39b06", "0x565ba85e80158b6be3748553451473efb5fab903d1b9b6b534268eed5c2629e5", "0x573dd7c67d742325759a70dbacb9356a4e075f65555629997574d2b8c05ce542"]Array (5)
+[Log] 🔍 CLOSED POSITIONS FIELD CHECK:
+[Log]   - Sample closed position keys: – ["proxyWallet", "asset", "conditionId", …] (17)
+["proxyWallet", "asset", "conditionId", "avgPrice", "totalBought", "realizedPnl", "curPrice", "title", "slug", "icon", …]Array (17)
+[Log]   - Has asset? – true
+[Log]   - Has conditionId? – true
+[Log]   - FULL sample closed position: – "{↵  \"proxyWallet\": \"0xd0d6053c3c37e727402d84c14069780d360993aa\",↵  \"asset\"…"
+"{
+  \"proxyWallet\": \"0xd0d6053c3c37e727402d84c14069780d360993aa\",
+  \"asset\": \"104045824967268577364917666298819144808660480667121506270402548657788162413305\",
+  \"conditionId\": \"0x067d708ad8d099176cb3b7c9553fa98a8676d532b0a438306ea0fb7daaf9e279\",
+  \"avgPrice\": 0.270758,
+  \"totalBought\": 331.928288,
+  \"realizedPnl\": -89.872239,
+  \"curPrice\": 0,
+  \"title\": \"XRP Up or Down - February 1, 6:30AM-6:45AM ET\",
+  \"slug\": \"xrp-updown-15m-1769945400\",
+  \"icon\": \"https://polymarket-upload.s3.us-east-2.amazonaws.com/XRP-logo.png\",
+  \"eventSlug\": \"xrp-updown-15m-1769945400\",
+  \"outcome\": \"Down\",
+  \"outcomeIndex\": 1,
+  \"oppositeOutcome\": \"Up\",
+  \"oppositeAsset\": \"109553206651985170430213994663638431365581600778772066678848771751757783243752\",
+  \"endDate\": \"2026-02-01T00:00:00Z\",
+  \"timestamp\": 1769946519
+}"
+[Log] 🔍 BUY TRADES FIELD CHECK:
+[Log]   - Sample buy trade keys: – ["proxyWallet", "timestamp", "conditionId", …] (21)
+["proxyWallet", "timestamp", "conditionId", "type", "size", "usdcSize", "transactionHash", "price", "asset", "side", …]Array (21)
+[Log]   - Has asset? – true
+[Log]   - Has conditionId? – true
+[Log]   - FULL sample buy trade: – "{↵  \"proxyWallet\": \"0xd0d6053c3c37e727402d84c14069780d360993aa\",↵  \"timestamp\": 1769947316,↵  \"conditionId\"…"
+"{
+  \"proxyWallet\": \"0xd0d6053c3c37e727402d84c14069780d360993aa\",
+  \"timestamp\": 1769947316,
+  \"conditionId\": \"0x4f3a504cc0418f9856654102666bbfc2b7107401bf0ddf2c48fdde7a86aca606\",
+  \"type\": \"TRADE\",
+  \"size\": 9.58904,
+  \"usdcSize\": 2.589041,
+  \"transactionHash\": \"0xce150dfe91e6c3532e71e101f9a87df903f4ce0624a78ab572294318d09f0884\",
+  \"price\": 0.27000002085714525,
+  \"asset\": \"87841033211064223972246144382374301099572118962647279634365408646891963440852\",
+  \"side\": \"BUY\",
+  \"outcomeIndex\": 0,
+  \"title\": \"Ethereum Up or Down - February 1, 7:00AM-7:15AM ET\",
+  \"slug\": \"eth-updown-15m-1769947200\",
+  \"icon\": \"https://polymarket-upload.s3.us-east-2.amazonaws.com/ETH+fullsize.jpg\",
+  \"eventSlug\": \"eth-updown-15m-1769947200\",
+  \"outcome\": \"Up\",
+  \"name\": \"k9Q2mX4L8A7ZP3R\",
+  \"pseudonym\": \"Uncommon-Oat\",
+  \"bio\": \"\",
+  \"profileImage\": \"\",
+  \"profileImageOptimized\": \"\"
+}"
+[Log] Matched buys with closed positions: – 1977
+[Log] Filtered out by min bet amount: – 0
+[Log] Filtered out by price range: – 0
+[Log] Final resolved buys after filters: – 1977
+[Log] Unmatched BUY trades (still open): – 705
+[Log] ==============================
+[Log] 🔥🔥🔥 getResolvedBuysWithStreaks CALLED
+[Log]   - activity.length: – 5000
+[Log]   - closedPositions.length: – 10000
+[Log] === Resolved Buys Analysis ===
+[Log] Total activity items: – 5000
+[Log] Total BUY trades (with duplicates): – 4649
+[Log] Unique BUY trades (after deduplication): – 2682
+[Log] Duplicates removed: – 1967
+[Log] Closed positions available: – 10000
+[Log] Activity breakdown by type: – {TRADE: 4858, REDEEM: 142}
+[Log] Trade sides breakdown: – {SELL: 209, BUY: 4649}
+[Log] Closed positions map size (unique keys): – 20244
+[Log] 🔍 CONDITION ID OVERLAP CHECK:
+[Log]   - Unique conditionIds in closed positions: – 5126
+[Log]   - Unique conditionIds in buy trades: – 36
+[Log]   - conditionIds that exist in BOTH: – 22
+[Log] Sample closed positions (first 3): – [{asset: "10404582496726857736...", conditionId: "0x067d708ad8d099176c..."}, {asset: "10955320665198517043...", conditionId: "0x067d708ad8d099176c..."}, {asset: "11412687709713286066...", conditionId: "0x15e73b52e091079409..."}] (3)
+[Log] Sample BUY trades (first 3): – [{asset: "87841033211064223972...", conditionId: "0x4f3a504cc0418f9856...", transactionHash: "0xce150dfe91e6c3532e..."}, {asset: "87841033211064223972...", conditionId: "0x4f3a504cc0418f9856...", transactionHash: "0x27ba3c87bbd92fe294..."}, {asset: "24159146873697990783...", conditionId: "0x8911c5d067145e4ad5...", transactionHash: "0x1408b1790163ea5d23..."}] (3)
+[Log] 🔍 MATCHING ANALYSIS:
+[Log]   - Trades matching by asset: – 1977
+[Log]   - Trades matching by conditionId: – 0
+[Log]   - Trades with NO match: – 705
+[Log]   - Sample unmatched assets: – ["87841033211064223972246144382374301099572118962647279634365408646891963440852", "24159146873697990783116301812385609238053216369478844816361377777455680144858", "109573110665908294678914508158517720672178338798060612175920937090925090626410", …] (5)
+["87841033211064223972246144382374301099572118962647279634365408646891963440852", "24159146873697990783116301812385609238053216369478844816361377777455680144858", "109573110665908294678914508158517720672178338798060612175920937090925090626410", "4221500134712487255849015197055227162427618960104515133440696169210963867453", "41691746872099511154459086534663548493742144311217317096236903122244233697496"]Array (5)
+[Log]   - Sample unmatched conditionIds: – ["0x4f3a504cc0418f9856654102666bbfc2b7107401bf0ddf2c48fdde7a86aca606", "0x8911c5d067145e4ad508263c6160c78d6790b2e86316cd5c67952b2b2f02c85c", "0xfed80ca7fa158f5b1fd6935e2c16acc70073b2287be69fd44ae1e64baea39b06", …] (5)
+["0x4f3a504cc0418f9856654102666bbfc2b7107401bf0ddf2c48fdde7a86aca606", "0x8911c5d067145e4ad508263c6160c78d6790b2e86316cd5c67952b2b2f02c85c", "0xfed80ca7fa158f5b1fd6935e2c16acc70073b2287be69fd44ae1e64baea39b06", "0x565ba85e80158b6be3748553451473efb5fab903d1b9b6b534268eed5c2629e5", "0x573dd7c67d742325759a70dbacb9356a4e075f65555629997574d2b8c05ce542"]Array (5)
+[Log] 🔍 CLOSED POSITIONS FIELD CHECK:
+[Log]   - Sample closed position keys: – ["proxyWallet", "asset", "conditionId", …] (17)
+["proxyWallet", "asset", "conditionId", "avgPrice", "totalBought", "realizedPnl", "curPrice", "title", "slug", "icon", …]Array (17)
+[Log]   - Has asset? – true
+[Log]   - Has conditionId? – true
+[Log]   - FULL sample closed position: – "{↵  \"proxyWallet\": \"0xd0d6053c3c37e727402d84c14069780d360993aa\",↵  \"asset\"…"
+"{
+  \"proxyWallet\": \"0xd0d6053c3c37e727402d84c14069780d360993aa\",
+  \"asset\": \"104045824967268577364917666298819144808660480667121506270402548657788162413305\",
+  \"conditionId\": \"0x067d708ad8d099176cb3b7c9553fa98a8676d532b0a438306ea0fb7daaf9e279\",
+  \"avgPrice\": 0.270758,
+  \"totalBought\": 331.928288,
+  \"realizedPnl\": -89.872239,
+  \"curPrice\": 0,
+  \"title\": \"XRP Up or Down - February 1, 6:30AM-6:45AM ET\",
+  \"slug\": \"xrp-updown-15m-1769945400\",
+  \"icon\": \"https://polymarket-upload.s3.us-east-2.amazonaws.com/XRP-logo.png\",
+  \"eventSlug\": \"xrp-updown-15m-1769945400\",
+  \"outcome\": \"Down\",
+  \"outcomeIndex\": 1,
+  \"oppositeOutcome\": \"Up\",
+  \"oppositeAsset\": \"109553206651985170430213994663638431365581600778772066678848771751757783243752\",
+  \"endDate\": \"2026-02-01T00:00:00Z\",
+  \"timestamp\": 1769946519
+}"
+[Log] 🔍 BUY TRADES FIELD CHECK:
+[Log]   - Sample buy trade keys: – ["proxyWallet", "timestamp", "conditionId", …] (21)
+["proxyWallet", "timestamp", "conditionId", "type", "size", "usdcSize", "transactionHash", "price", "asset", "side", …]Array (21)
+[Log]   - Has asset? – true
+[Log]   - Has conditionId? – true
+[Log]   - FULL sample buy trade: – "{↵  \"proxyWallet\": \"0xd0d6053c3c37e727402d84c14069780d360993aa\",↵  \"timestamp\": 1769947316,↵  \"conditionId\"…"
+"{
+  \"proxyWallet\": \"0xd0d6053c3c37e727402d84c14069780d360993aa\",
+  \"timestamp\": 1769947316,
+  \"conditionId\": \"0x4f3a504cc0418f9856654102666bbfc2b7107401bf0ddf2c48fdde7a86aca606\",
+  \"type\": \"TRADE\",
+  \"size\": 9.58904,
+  \"usdcSize\": 2.589041,
+  \"transactionHash\": \"0xce150dfe91e6c3532e71e101f9a87df903f4ce0624a78ab572294318d09f0884\",
+  \"price\": 0.27000002085714525,
+  \"asset\": \"87841033211064223972246144382374301099572118962647279634365408646891963440852\",
+  \"side\": \"BUY\",
+  \"outcomeIndex\": 0,
+  \"title\": \"Ethereum Up or Down - February 1, 7:00AM-7:15AM ET\",
+  \"slug\": \"eth-updown-15m-1769947200\",
+  \"icon\": \"https://polymarket-upload.s3.us-east-2.amazonaws.com/ETH+fullsize.jpg\",
+  \"eventSlug\": \"eth-updown-15m-1769947200\",
+  \"outcome\": \"Up\",
+  \"name\": \"k9Q2mX4L8A7ZP3R\",
+  \"pseudonym\": \"Uncommon-Oat\",
+  \"bio\": \"\",
+  \"profileImage\": \"\",
+  \"profileImageOptimized\": \"\"
+}"
+[Log] Matched buys with closed positions: – 1977
+[Log] Filtered out by min bet amount: – 0
+[Log] Filtered out by price range: – 0
+[Log] Final resolved buys after filters: – 1977
+[Log] Unmatched BUY trades (still open): – 705
+[Log] ==============================
+[Log] === Deduplication Analysis ===
+[Log] Resolved buys before deduplication: – 1977
+[Log] Unique resolved buys after deduplication: – 1977
+[Log] Duplicates removed: – 0
+[Log] Top 5 most duplicated trades: – [] (0)
+[Log] ==============================
+[Log] 🔥🔥🔥 getResolvedBuysWithStreaks CALLED
+[Log]   - activity.length: – 5000
+[Log]   - closedPositions.length: – 10000
+[Log] === Resolved Buys Analysis ===
+[Log] Total activity items: – 5000
+[Log] Total BUY trades (with duplicates): – 4649
+[Log] Unique BUY trades (after deduplication): – 2682
+[Log] Duplicates removed: – 1967
+[Log] Closed positions available: – 10000
+[Log] Activity breakdown by type: – {TRADE: 4858, REDEEM: 142}
+[Log] Trade sides breakdown: – {SELL: 209, BUY: 4649}
+[Log] Closed positions map size (unique keys): – 20244
+[Log] 🔍 CONDITION ID OVERLAP CHECK:
+[Log]   - Unique conditionIds in closed positions: – 5126
+[Log]   - Unique conditionIds in buy trades: – 36
+[Log]   - conditionIds that exist in BOTH: – 22
+[Log] Sample closed positions (first 3): – [{asset: "10404582496726857736...", conditionId: "0x067d708ad8d099176c..."}, {asset: "10955320665198517043...", conditionId: "0x067d708ad8d099176c..."}, {asset: "11412687709713286066...", conditionId: "0x15e73b52e091079409..."}] (3)
+[Log] Sample BUY trades (first 3): – [{asset: "87841033211064223972...", conditionId: "0x4f3a504cc0418f9856...", transactionHash: "0xce150dfe91e6c3532e..."}, {asset: "87841033211064223972...", conditionId: "0x4f3a504cc0418f9856...", transactionHash: "0x27ba3c87bbd92fe294..."}, {asset: "24159146873697990783...", conditionId: "0x8911c5d067145e4ad5...", transactionHash: "0x1408b1790163ea5d23..."}] (3)
+[Log] 🔍 MATCHING ANALYSIS:
+[Log]   - Trades matching by asset: – 1977
+[Log]   - Trades matching by conditionId: – 0
+[Log]   - Trades with NO match: – 705
+[Log]   - Sample unmatched assets: – ["87841033211064223972246144382374301099572118962647279634365408646891963440852", "24159146873697990783116301812385609238053216369478844816361377777455680144858", "109573110665908294678914508158517720672178338798060612175920937090925090626410", …] (5)
+["87841033211064223972246144382374301099572118962647279634365408646891963440852", "24159146873697990783116301812385609238053216369478844816361377777455680144858", "109573110665908294678914508158517720672178338798060612175920937090925090626410", "4221500134712487255849015197055227162427618960104515133440696169210963867453", "41691746872099511154459086534663548493742144311217317096236903122244233697496"]Array (5)
+[Log]   - Sample unmatched conditionIds: – ["0x4f3a504cc0418f9856654102666bbfc2b7107401bf0ddf2c48fdde7a86aca606", "0x8911c5d067145e4ad508263c6160c78d6790b2e86316cd5c67952b2b2f02c85c", "0xfed80ca7fa158f5b1fd6935e2c16acc70073b2287be69fd44ae1e64baea39b06", …] (5)
+["0x4f3a504cc0418f9856654102666bbfc2b7107401bf0ddf2c48fdde7a86aca606", "0x8911c5d067145e4ad508263c6160c78d6790b2e86316cd5c67952b2b2f02c85c", "0xfed80ca7fa158f5b1fd6935e2c16acc70073b2287be69fd44ae1e64baea39b06", "0x565ba85e80158b6be3748553451473efb5fab903d1b9b6b534268eed5c2629e5", "0x573dd7c67d742325759a70dbacb9356a4e075f65555629997574d2b8c05ce542"]Array (5)
+[Log] 🔍 CLOSED POSITIONS FIELD CHECK:
+[Log]   - Sample closed position keys: – ["proxyWallet", "asset", "conditionId", …] (17)
+["proxyWallet", "asset", "conditionId", "avgPrice", "totalBought", "realizedPnl", "curPrice", "title", "slug", "icon", …]Array (17)
+[Log]   - Has asset? – true
+[Log]   - Has conditionId? – true
+[Log]   - FULL sample closed position: – "{↵  \"proxyWallet\": \"0xd0d6053c3c37e727402d84c14069780d360993aa\",↵  \"asset\"…"
+"{
+  \"proxyWallet\": \"0xd0d6053c3c37e727402d84c14069780d360993aa\",
+  \"asset\": \"104045824967268577364917666298819144808660480667121506270402548657788162413305\",
+  \"conditionId\": \"0x067d708ad8d099176cb3b7c9553fa98a8676d532b0a438306ea0fb7daaf9e279\",
+  \"avgPrice\": 0.270758,
+  \"totalBought\": 331.928288,
+  \"realizedPnl\": -89.872239,
+  \"curPrice\": 0,
+  \"title\": \"XRP Up or Down - February 1, 6:30AM-6:45AM ET\",
+  \"slug\": \"xrp-updown-15m-1769945400\",
+  \"icon\": \"https://polymarket-upload.s3.us-east-2.amazonaws.com/XRP-logo.png\",
+  \"eventSlug\": \"xrp-updown-15m-1769945400\",
+  \"outcome\": \"Down\",
+  \"outcomeIndex\": 1,
+  \"oppositeOutcome\": \"Up\",
+  \"oppositeAsset\": \"109553206651985170430213994663638431365581600778772066678848771751757783243752\",
+  \"endDate\": \"2026-02-01T00:00:00Z\",
+  \"timestamp\": 1769946519
+}"
+[Log] 🔍 BUY TRADES FIELD CHECK:
+[Log]   - Sample buy trade keys: – ["proxyWallet", "timestamp", "conditionId", …] (21)
+["proxyWallet", "timestamp", "conditionId", "type", "size", "usdcSize", "transactionHash", "price", "asset", "side", …]Array (21)
+[Log]   - Has asset? – true
+[Log]   - Has conditionId? – true
+[Log]   - FULL sample buy trade: – "{↵  \"proxyWallet\": \"0xd0d6053c3c37e727402d84c14069780d360993aa\",↵  \"timestamp\": 1769947316,↵  \"conditionId\"…"
+"{
+  \"proxyWallet\": \"0xd0d6053c3c37e727402d84c14069780d360993aa\",
+  \"timestamp\": 1769947316,
+  \"conditionId\": \"0x4f3a504cc0418f9856654102666bbfc2b7107401bf0ddf2c48fdde7a86aca606\",
+  \"type\": \"TRADE\",
+  \"size\": 9.58904,
+  \"usdcSize\": 2.589041,
+  \"transactionHash\": \"0xce150dfe91e6c3532e71e101f9a87df903f4ce0624a78ab572294318d09f0884\",
+  \"price\": 0.27000002085714525,
+  \"asset\": \"87841033211064223972246144382374301099572118962647279634365408646891963440852\",
+  \"side\": \"BUY\",
+  \"outcomeIndex\": 0,
+  \"title\": \"Ethereum Up or Down - February 1, 7:00AM-7:15AM ET\",
+  \"slug\": \"eth-updown-15m-1769947200\",
+  \"icon\": \"https://polymarket-upload.s3.us-east-2.amazonaws.com/ETH+fullsize.jpg\",
+  \"eventSlug\": \"eth-updown-15m-1769947200\",
+  \"outcome\": \"Up\",
+  \"name\": \"k9Q2mX4L8A7ZP3R\",
+  \"pseudonym\": \"Uncommon-Oat\",
+  \"bio\": \"\",
+  \"profileImage\": \"\",
+  \"profileImageOptimized\": \"\"
+}"
+[Log] Matched buys with closed positions: – 1977
+[Log] Filtered out by min bet amount: – 0
+[Log] Filtered out by price range: – 0
+[Log] Final resolved buys after filters: – 1977
+[Log] Unmatched BUY trades (still open): – 705
+[Log] ==============================
+[Log] 🔥🔥🔥 getResolvedBuysWithStreaks CALLED
+[Log]   - activity.length: – 5000
