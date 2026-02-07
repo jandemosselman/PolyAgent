@@ -110,18 +110,28 @@ function saveStats(stats: Map<string, ConfigStats>) {
 
 const statsCache = loadStats()
 
-export async function checkResolutionsForTrader(address: string) {
-  console.log(`🔍 Checking ${address.slice(0, 8)}...`)
+export function getMonitoredConfigurations(): Configuration[] {
+  return loadConfigurations()
+}
+
+export async function checkResolutionsForConfig(config: Configuration) {
+  console.log(`🔍 Checking config: ${config.name} (${config.traderAddress.slice(0, 8)}...)`)
   
   try {
     // Fetch activity and closed positions
     const [activity, closedPositions] = await Promise.all([
-      fetchActivity(address, 5000),
-      fetchClosedPositions(address, 10000)
+      fetchActivity(config.traderAddress, 5000),
+      fetchClosedPositions(config.traderAddress, 10000)
     ])
     
-    // Match and calculate stats
-    const { trades, stats } = matchResolvedBuys(activity, closedPositions)
+    // Match and calculate stats with config filters applied
+    const { trades, stats } = matchResolvedBuysWithFilters(
+      activity, 
+      closedPositions,
+      config.minTriggerAmount,
+      config.minPrice,
+      config.maxPrice
+    )
     
     const newWinRate = stats.winRate
     const totalTrades = trades.length
@@ -130,15 +140,18 @@ export async function checkResolutionsForTrader(address: string) {
     const avgPnL = stats.avgPnL
     const totalPnL = stats.totalPnL
     
-    // Check if this is first time tracking this trader
-    const oldStats = statsCache.get(address)
+    // Check if this is first time tracking this config
+    const oldStats = statsCache.get(config.id)
     
     if (!oldStats) {
       // First check - send initial stats
       await sendTelegramUpdate(`
-🎯 *Now tracking trader*
+🎯 *Now tracking configuration*
 
-Address: \`${address.slice(0, 10)}...\`
+Name: *${config.name}*
+Trader: \`${config.traderAddress.slice(0, 10)}...\`
+Filters: $${config.minTriggerAmount}+ | ${(config.minPrice * 100).toFixed(0)}-${(config.maxPrice * 100).toFixed(0)}%
+
 Win Rate: *${newWinRate.toFixed(1)}%*
 Total Trades: ${totalTrades}
 Wins: ${wins} | Losses: ${losses}
@@ -152,29 +165,33 @@ Total P&L: $${totalPnL.toFixed(2)}
       
       // Notify if win rate changed by >1% OR 5+ new trades
       if (winRateChange > 1) {
-        await notifyWinRateChange(
-          address,
-          oldStats.winRate,
-          newWinRate,
-          totalTrades,
-          wins,
-          losses,
-          avgPnL
-        )
+        await sendTelegramUpdate(`
+📈 *Win Rate Update*
+
+Config: *${config.name}*
+Win Rate: *${newWinRate.toFixed(1)}%* (${newWinRate >= oldStats.winRate ? '+' : ''}${(newWinRate - oldStats.winRate).toFixed(1)}%)
+Total Trades: ${totalTrades}
+W/L: ${wins}/${losses}
+Avg P&L: $${avgPnL.toFixed(2)}
+        `.trim())
       } else if (newTradesCount >= 5) {
-        await notifyNewTrades(
-          address,
-          newTradesCount,
-          newWinRate,
-          totalTrades,
-          avgPnL
-        )
+        await sendTelegramUpdate(`
+🔔 *New Trades Detected*
+
+Config: *${config.name}*
+New Trades: *${newTradesCount}*
+Current Win Rate: ${newWinRate.toFixed(1)}%
+Total Trades: ${totalTrades}
+Avg P&L: $${avgPnL.toFixed(2)}
+        `.trim())
       }
     }
     
     // Update cache
-    statsCache.set(address, {
-      address,
+    statsCache.set(config.id, {
+      configId: config.id,
+      configName: config.name,
+      traderAddress: config.traderAddress,
       winRate: newWinRate,
       totalTrades,
       wins,
@@ -187,11 +204,11 @@ Total P&L: $${totalPnL.toFixed(2)}
     // Save to disk
     saveStats(statsCache)
     
-    console.log(`✅ ${address.slice(0, 8)}: ${newWinRate.toFixed(1)}% WR (${totalTrades} trades)`)
+    console.log(`✅ ${config.name}: ${newWinRate.toFixed(1)}% WR (${totalTrades} trades)`)
     
   } catch (error: any) {
-    console.error(`❌ Error checking ${address}:`, error.message)
-    await notifyError(address, error.message)
+    console.error(`❌ Error checking ${config.name}:`, error.message)
+    await notifyError(config.name, error.message)
   }
 }
 
