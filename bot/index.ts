@@ -1,7 +1,7 @@
 import 'dotenv/config'
 import cron from 'node-cron'
 import TelegramBot from 'node-telegram-bot-api'
-import { checkResolutionsForConfig, getMonitoredConfigurations } from './resolution-checker.js'
+import { performFullCheckCycle, getMonitoredConfigurations, initializeCopyTrades } from './copy-trade-manager.js'
 import { notifyBotStarted } from './telegram-notifier.js'
 
 // Initialize Telegram Bot
@@ -62,7 +62,7 @@ Or use \`/checkall\` to check everything
       console.log(`📱 Received /check${configNum} command from Telegram`)
       
       try {
-        await checkResolutionsForConfig(config)
+        await performFullCheckCycle(config)
         await bot!.sendMessage(chatId, `✅ Check completed for *${config.name}*`, { parse_mode: 'Markdown' })
       } catch (error: any) {
         await bot!.sendMessage(chatId, `❌ Error checking ${config.name}: ${error.message}`, { parse_mode: 'Markdown' })
@@ -116,6 +116,9 @@ if (configurations.length === 0) {
   process.exit(1)
 }
 
+// Initialize copy trade storage from configurations
+initializeCopyTrades()
+
 console.log(`📊 Monitoring ${configurations.length} configuration(s)`)
 configurations.forEach((config, i) => {
   console.log(`   ${i + 1}. ${config.name} - ${config.traderAddress.slice(0, 10)}... (${config.minTriggerAmount >= 0 ? `$${config.minTriggerAmount}+` : 'any'} | ${(config.minPrice * 100).toFixed(0)}-${(config.maxPrice * 100).toFixed(0)}%)`)
@@ -137,7 +140,7 @@ async function runCheck() {
   
   for (const config of configurations) {
     try {
-      await checkResolutionsForConfig(config)
+      await performFullCheckCycle(config)
       
       // Wait 3 seconds between configs to avoid rate limits
       await new Promise(resolve => setTimeout(resolve, 3000))

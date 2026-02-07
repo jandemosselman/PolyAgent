@@ -1,4 +1,7 @@
 import { sendTelegramUpdate, notifyWinRateChange, notifyNewTrades, notifyError } from './telegram-notifier.js'
+import { loadCopyTrades, saveCopyTrades, CopyTradeRun, updateCopyTrade } from './trade-storage.js'
+import { scanForNewTrades } from './trade-scanner.js'
+import { checkResolutionsForStoredTrades } from './trade-resolver.js'
 import fs from 'fs'
 import path from 'path'
 
