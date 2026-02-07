@@ -3,9 +3,9 @@ import { CopyTradeRun, StoredTrade } from './trade-storage.js'
 interface Market {
   conditionId: string
   closed: boolean
-  outcomes: Array<{
-    price: string
-  }>
+  question?: string
+  outcomePrices: string  // JSON string like '["0", "1"]'
+  outcomes: string       // JSON string like '["Yes", "No"]'
 }
 
 export async function checkResolutionsForStoredTrades(
@@ -51,15 +51,33 @@ export async function checkResolutionsForStoredTrades(
     }
     
     if (market.closed) {
-      // Determine if won or lost
-      const outcomeIndex = trade.outcome === 'Yes' ? 0 : 1
-      const finalPrice = parseFloat(market.outcomes[outcomeIndex]?.price || '0')
+      console.log(`  🔍 Resolving: ${trade.market} (${market.question || 'Unknown'})`)
+      console.log(`     Outcome prices: ${market.outcomePrices}`)
+      console.log(`     Outcomes: ${market.outcomes}`)
       
-      const won = finalPrice > 0.99 // Winner if price is ~1.0
+      // Parse outcome prices and outcomes
+      const outcomePrices = JSON.parse(market.outcomePrices)
+      const outcomes = JSON.parse(market.outcomes)
+      
+      // Find which outcome has price = 1 (the winner)
+      const winningIndex = outcomePrices.findIndex((price: string) => parseFloat(price) === 1)
+      
+      if (winningIndex === -1) {
+        console.log(`     ⚠️ Could not determine winner from prices: ${market.outcomePrices}`)
+        continue
+      }
+      
+      const winningOutcome = outcomes[winningIndex]
+      console.log(`     Winner: ${winningOutcome}`)
+      console.log(`     Trade bet on: ${trade.outcome}`)
+      
+      // Check if our trade won
+      const won = trade.outcome === winningOutcome
       
       if (won) {
         // Calculate profit
-        const payout = trade.amount / trade.price
+        const shares = trade.amount / trade.price
+        const payout = shares * 1.0
         const profit = payout - trade.amount
         trade.pnl = profit
         trade.status = 'won'
