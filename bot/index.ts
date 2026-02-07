@@ -10,6 +10,8 @@ const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || ''
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID || ''
 
 let bot: TelegramBot | null = null
+let currentCronJob: cron.ScheduledTask | null = null
+let currentInterval = 10 // minutes
 
 if (TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID) {
   bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true })
@@ -90,10 +92,11 @@ Monitoring: *${configs.length} configuration(s)*
 
 ${configList}
 
-Schedule: Every 10 minutes
+Schedule: Every ${currentInterval} minute${currentInterval > 1 ? 's' : ''}
 
 Commands:
 • /refresh - Full cycle: check → scan → check (all configs)
+• /setinterval <minutes> - Change automatic check interval
 • /checkall - Check all configs
 • /check1, /check2, etc - Check specific config
 • /cleardata - Delete all stored trade data (requires confirmation)
@@ -117,6 +120,58 @@ Commands:
     await runCheck()
     
     await bot!.sendMessage(chatId, '✅ Full refresh cycle completed!', { parse_mode: 'Markdown' })
+  })
+  
+  // Handle /setinterval command - Change automatic check interval
+  bot.onText(/\/setinterval\s*(.*)/, async (msg, match) => {
+    const chatId = msg.chat.id.toString()
+    
+    if (chatId !== TELEGRAM_CHAT_ID) {
+      console.log(`❌ Unauthorized command from chat ID: ${chatId}`)
+      return
+    }
+    
+    const input = match?.[1]?.trim() || ''
+    
+    // If no input, show current interval and options
+    if (!input) {
+      await bot!.sendMessage(chatId, `
+⏰ *Current Interval*: ${currentInterval} minutes
+
+*Usage:* \`/setinterval <minutes>\`
+
+*Examples:*
+• \`/setinterval 5\` - Every 5 minutes
+• \`/setinterval 10\` - Every 10 minutes
+• \`/setinterval 15\` - Every 15 minutes
+• \`/setinterval 30\` - Every 30 minutes
+• \`/setinterval 60\` - Every hour
+
+*Note:* Minimum 1 minute, maximum 1440 minutes (24 hours)
+      `.trim(), { parse_mode: 'Markdown' })
+      return
+    }
+    
+    const minutes = parseInt(input)
+    
+    if (isNaN(minutes) || minutes < 1 || minutes > 1440) {
+      await bot!.sendMessage(chatId, '❌ Invalid interval. Please enter a number between 1 and 1440 minutes.', { parse_mode: 'Markdown' })
+      return
+    }
+    
+    // Stop current cron job
+    if (currentCronJob) {
+      currentCronJob.stop()
+      console.log(`⏹️ Stopped previous cron job (${currentInterval} minutes)`)
+    }
+    
+    // Create new cron schedule
+    const cronSchedule = `*/${minutes} * * * *`
+    currentInterval = minutes
+    currentCronJob = cron.schedule(cronSchedule, runCheck)
+    
+    await bot!.sendMessage(chatId, `✅ Interval updated to *${minutes} minute${minutes > 1 ? 's' : ''}*!\n\nNext check will run in ${minutes} minute${minutes > 1 ? 's' : ''}.`, { parse_mode: 'Markdown' })
+    console.log(`✅ Cron interval updated to ${minutes} minutes (${cronSchedule})`)
   })
   
   // Handle /cleardata command - Delete all stored trade data
@@ -160,7 +215,7 @@ Commands:
     }
   })
   
-  console.log('✅ Telegram bot commands initialized (/refresh, /checkall, /cleardata, /status)')
+  console.log('✅ Telegram bot commands initialized (/refresh, /setinterval, /checkall, /cleardata, /status)')
 } else {
   console.log('⚠️  Telegram bot commands disabled (missing credentials)')
 }
@@ -186,12 +241,9 @@ configurations.forEach((config, i) => {
   console.log(`   ${i + 1}. ${config.name} - ${config.traderAddress.slice(0, 10)}... (${config.minTriggerAmount >= 0 ? `$${config.minTriggerAmount}+` : 'any'} | ${(config.minPrice * 100).toFixed(0)}-${(config.maxPrice * 100).toFixed(0)}%)`)
 })
 
-// Cron schedule - Every 10 minutes (change as needed)
-// '*/5 * * * *'   = Every 5 minutes
-// '*/10 * * * *'  = Every 10 minutes (CURRENT)
-// '*/30 * * * *'  = Every 30 minutes
-// '0 * * * *'     = Every hour
-cron.schedule('*/10 * * * *', runCheck)
+// Start cron schedule with initial interval
+currentCronJob = cron.schedule(`*/${currentInterval} * * * *`, runCheck)
+console.log(`⏰ Cron job scheduled: Every ${currentInterval} minutes`)
 
 async function runCheck() {
   const timestamp = new Date().toLocaleString('en-US', { 
