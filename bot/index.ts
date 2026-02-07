@@ -31,6 +31,48 @@ if (TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID) {
     await bot!.sendMessage(chatId, '✅ Manual check completed!', { parse_mode: 'Markdown' })
   })
   
+  // Handle /check command (with optional config number)
+  bot.onText(/\/check(@\w+)?\s*(.*)/, async (msg, match) => {
+    const chatId = msg.chat.id.toString()
+    
+    if (chatId !== TELEGRAM_CHAT_ID) return
+    
+    const configs = getMonitoredConfigurations()
+    const input = match?.[2]?.trim() || ''
+    
+    // If no input, show list of configs
+    if (!input) {
+      const configList = configs.map((c, i) => `/check${i + 1} - ${c.name}`).join('\n')
+      await bot!.sendMessage(chatId, `
+📋 *Available Configurations*
+
+${configList}
+
+Usage: \`/check1\` or \`/check2\` etc.
+Or use \`/checkall\` to check everything
+      `.trim(), { parse_mode: 'Markdown' })
+      return
+    }
+    
+    // Try to parse as number
+    const configNum = parseInt(input)
+    if (!isNaN(configNum) && configNum > 0 && configNum <= configs.length) {
+      const config = configs[configNum - 1]
+      await bot!.sendMessage(chatId, `🔄 Checking *${config.name}*...`, { parse_mode: 'Markdown' })
+      console.log(`📱 Received /check${configNum} command from Telegram`)
+      
+      try {
+        await checkResolutionsForConfig(config)
+        await bot!.sendMessage(chatId, `✅ Check completed for *${config.name}*`, { parse_mode: 'Markdown' })
+      } catch (error: any) {
+        await bot!.sendMessage(chatId, `❌ Error checking ${config.name}: ${error.message}`, { parse_mode: 'Markdown' })
+      }
+      return
+    }
+    
+    await bot!.sendMessage(chatId, `❌ Invalid config number. Use /check to see available configs.`, { parse_mode: 'Markdown' })
+  })
+  
   // Handle /status command
   bot.onText(/\/status/, async (msg) => {
     const chatId = msg.chat.id.toString()
@@ -48,6 +90,11 @@ Monitoring: *${configs.length} configuration(s)*
 ${configList}
 
 Schedule: Every 10 minutes
+
+Commands:
+• /checkall - Check all configs
+• /check1, /check2, etc - Check specific config
+• /status - Show this message
     `.trim(), { parse_mode: 'Markdown' })
   })
   
