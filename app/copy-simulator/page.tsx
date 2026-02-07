@@ -1313,6 +1313,57 @@ export default function CopySimulatorPage() {
     }
   }
 
+  const exportBotConfigurations = () => {
+    try {
+      // Create simplified configuration format for the bot
+      const botConfigs = copyTrades.map(ct => ({
+        id: ct.id,
+        name: ct.name,
+        traderAddress: ct.traderAddress,
+        minTriggerAmount: ct.minTriggerAmount,
+        minPrice: ct.minPrice,
+        maxPrice: ct.maxPrice,
+        initialBudget: ct.initialBudget,
+        fixedBetAmount: ct.fixedBetAmount
+      }))
+
+      const dataStr = JSON.stringify(botConfigs, null, 2)
+      
+      // Copy to clipboard
+      navigator.clipboard.writeText(dataStr).then(() => {
+        setNotification({
+          message: '📋 Bot configurations copied to clipboard! Paste this into Railway as CONFIGURATIONS environment variable.',
+          type: 'success'
+        })
+        setTimeout(() => setNotification(null), 5000)
+      }).catch(() => {
+        // Fallback: download as file
+        const dataBlob = new Blob([dataStr], { type: 'application/json' })
+        const url = URL.createObjectURL(dataBlob)
+        const link = document.createElement('a')
+        link.href = url
+        link.download = 'bot-configurations.json'
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        URL.revokeObjectURL(url)
+        
+        setNotification({
+          message: '📥 Bot configurations downloaded! Upload this to Railway or paste contents into CONFIGURATIONS variable.',
+          type: 'success'
+        })
+        setTimeout(() => setNotification(null), 5000)
+      })
+    } catch (error) {
+      console.error('Export failed:', error)
+      setNotification({
+        message: 'Export failed. Please try again.',
+        type: 'warning'
+      })
+      setTimeout(() => setNotification(null), 3000)
+    }
+  }
+
   const exportAllData = () => {
     try {
       const exportData = {
@@ -2386,6 +2437,13 @@ export default function CopySimulatorPage() {
           <div className="flex items-center gap-3">
             {copyTrades.length > 0 && (
               <>
+                <button
+                  onClick={exportBotConfigurations}
+                  className="px-4 py-2 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 hover:border-purple-500/50 text-purple-400 font-medium rounded-lg transition-all"
+                  title="Export configurations for Telegram bot"
+                >
+                  🤖 Export for Bot
+                </button>
                 <button
                   onClick={exportAllData}
                   className="px-4 py-2 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 hover:border-blue-500/50 text-blue-400 font-medium rounded-lg transition-all"
