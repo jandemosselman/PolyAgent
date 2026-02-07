@@ -671,21 +671,34 @@ export default function CopySimulatorPage() {
       console.log(`✅ Received ${botRuns.length} run(s) from bot`)
       
       // Merge bot data with local data
-      // Bot is source of truth for automated checks, localhost can have additional manual runs
+      // Strategy: Bot is source of truth ONLY if it has actually found trades
+      // Otherwise, keep local data (user's manual checks)
       const merged = [...copyTrades]
+      let synced = 0
+      let skipped = 0
       
       for (const botRun of botRuns) {
         const existingIndex = merged.findIndex(ct => ct.id === botRun.id)
         
         if (existingIndex >= 0) {
-          // Update existing run with bot data (bot is source of truth)
-          merged[existingIndex] = {
-            ...merged[existingIndex],
-            currentBudget: botRun.currentBudget,
-            trades: botRun.trades,
-            lastChecked: Date.now(), // Mark as synced
+          const localRun = merged[existingIndex]
+          const botHasTrades = botRun.trades && botRun.trades.length > 0
+          const localHasTrades = localRun.trades && localRun.trades.length > 0
+          
+          // Only sync if bot has trades OR local has no trades
+          if (botHasTrades || !localHasTrades) {
+            merged[existingIndex] = {
+              ...merged[existingIndex],
+              currentBudget: botRun.currentBudget,
+              trades: botRun.trades,
+              lastChecked: Date.now(),
+            }
+            console.log(`🔄 Updated run: ${botRun.name} (${botRun.trades?.length || 0} trades)`)
+            synced++
+          } else {
+            console.log(`⏭️ Skipped run: ${botRun.name} (bot has no trades yet, keeping local data)`)
+            skipped++
           }
-          console.log(`🔄 Updated run: ${botRun.name}`)
         } else {
           // Add new run from bot
           merged.push({
@@ -711,8 +724,12 @@ export default function CopySimulatorPage() {
       setCopyTrades(merged)
       await saveToIndexedDB('copyTrades', merged)
       
+      const message = skipped > 0 
+        ? `✅ Synced: ${synced} updated, ${skipped} skipped (bot has no trades yet)`
+        : `✅ Synced with bot: ${synced} run(s) updated`
+      
       setNotification({
-        message: `✅ Synced with bot: ${botRuns.length} run(s) updated`,
+        message,
         type: 'success'
       })
       

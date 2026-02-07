@@ -93,13 +93,32 @@ ${configList}
 Schedule: Every 10 minutes
 
 Commands:
+• /refresh - Full cycle: check → scan → check (all configs)
 • /checkall - Check all configs
 • /check1, /check2, etc - Check specific config
 • /status - Show this message
     `.trim(), { parse_mode: 'Markdown' })
   })
   
-  console.log('✅ Telegram bot commands initialized (/checkall, /status)')
+  // Handle /refresh command - Full workflow for all configs
+  bot.onText(/\/refresh/, async (msg) => {
+    const chatId = msg.chat.id.toString()
+    
+    // Only respond to the configured chat ID
+    if (chatId !== TELEGRAM_CHAT_ID) {
+      console.log(`❌ Unauthorized command from chat ID: ${chatId}`)
+      return
+    }
+    
+    await bot!.sendMessage(chatId, '🔄 Starting full refresh cycle for all configurations...\n\n_Check resolutions → Scan for new trades → Check resolutions_', { parse_mode: 'Markdown' })
+    console.log('📱 Received /refresh command from Telegram')
+    
+    await runCheck()
+    
+    await bot!.sendMessage(chatId, '✅ Full refresh cycle completed!', { parse_mode: 'Markdown' })
+  })
+  
+  console.log('✅ Telegram bot commands initialized (/refresh, /checkall, /status)')
 } else {
   console.log('⚠️  Telegram bot commands disabled (missing credentials)')
 }
