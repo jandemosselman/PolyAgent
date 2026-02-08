@@ -59,6 +59,16 @@ export async function scanForNewTrades(
     if (existingTradeIds.has(activity.transactionHash)) return false
     if (existingTradeIds.has(activity.transactionHash)) return false
     
+    // ⚡ CRITICAL: Only trades AFTER run creation timestamp
+    // Detect if timestamp is in seconds (< 10 billion) or milliseconds
+    const activityTimestampMs = activity.timestamp > 10000000000 
+      ? activity.timestamp 
+      : activity.timestamp * 1000
+    
+    if (activityTimestampMs < run.createdAt) {
+      return false // Trade happened BEFORE this run was created
+    }
+    
     // Check amount filter
     const amount = parseFloat(activity.size)
     if (amount < run.minTriggerAmount) return false
@@ -70,7 +80,21 @@ export async function scanForNewTrades(
     return true
   })
   
-  console.log(`  ✅ Found ${matchingTrades.length} matching trades`)
+  console.log(`  ✅ Found ${matchingTrades.length} matching trades (after timestamp filter)`)
+  
+  // Debug: Show how many were filtered by timestamp
+  const totalBuys = activities.filter(a => a.type === 'TRADE' && a.side === 'BUY').length
+  const beforeCreation = activities.filter(a => {
+    if (a.type !== 'TRADE' || a.side !== 'BUY') return false
+    const timestampMs = a.timestamp > 10000000000 ? a.timestamp : a.timestamp * 1000
+    return timestampMs < run.createdAt
+  }).length
+  
+  console.log(`  📊 Timestamp filter stats:`)
+  console.log(`     Total BUYs in API: ${totalBuys}`)
+  console.log(`     Before run creation: ${beforeCreation} (filtered out)`)
+  console.log(`     After run creation: ${totalBuys - beforeCreation}`)
+  console.log(`     Final matching: ${matchingTrades.length}`)
   
   // Calculate available budget like localhost does
   // Formula: Initial Budget + Closed Trades P&L - Open Trades Cost
