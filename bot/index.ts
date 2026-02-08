@@ -109,6 +109,19 @@ Interval: Every ${currentInterval} min
 Trade Limit: ${maxGlobalTrades.toLocaleString()}
 Largest Run: ${maxTradeRun.name} (${maxTradeRun.trades?.length || 0} trades)
 
+🧠 *Memory*
+━━━━━━━━━━━━━━━━━━━━`
+
+      // Add memory info
+      const mem = process.memoryUsage()
+      const rssMB = mem.rss / 1024 / 1024
+      const railwayLimit = 512
+      const memPercent = (rssMB / railwayLimit * 100).toFixed(1)
+      const memStatus = rssMB > railwayLimit * 0.85 ? '🔴 CRITICAL' : rssMB > railwayLimit * 0.7 ? '⚠️ Warning' : '✅ Healthy'
+      
+      dashboard += `
+${memStatus}: ${rssMB.toFixed(0)} MB / ${railwayLimit} MB (${memPercent}%)
+
 📋 *Run Details*
 ━━━━━━━━━━━━━━━━━━━━
 `
@@ -228,7 +241,57 @@ ${configList}
 • /checkall - Check all configs
 • /check1, /check2, etc - Check specific config
 • /cleardata - Delete all data (requires confirmation)
+• /memory - 🧠 Check memory usage
 • /status - Show this message
+    `.trim(), { parse_mode: 'Markdown' })
+  })
+  
+  // Handle /memory command - Show memory usage
+  bot.onText(/\/memory/, async (msg) => {
+    const chatId = msg.chat.id.toString()
+    
+    if (chatId !== TELEGRAM_CHAT_ID) return
+    
+    const used = process.memoryUsage()
+    const totalMB = used.heapTotal / 1024 / 1024
+    const usedMB = used.heapUsed / 1024 / 1024
+    const externalMB = used.external / 1024 / 1024
+    const rss = used.rss / 1024 / 1024
+    
+    // Railway free tier has 512MB limit
+    const railwayLimit = 512
+    const usagePercent = (rss / railwayLimit * 100).toFixed(1)
+    const isWarning = rss > railwayLimit * 0.7 // 70% warning threshold
+    const isCritical = rss > railwayLimit * 0.85 // 85% critical threshold
+    
+    let statusEmoji = '✅'
+    let statusText = 'Healthy'
+    if (isCritical) {
+      statusEmoji = '🔴'
+      statusText = 'CRITICAL - Close to OOM!'
+    } else if (isWarning) {
+      statusEmoji = '⚠️'
+      statusText = 'Warning - High usage'
+    }
+    
+    await bot!.sendMessage(chatId, `
+🧠 *Memory Usage*
+
+${statusEmoji} Status: *${statusText}*
+
+📊 *Details:*
+• RSS (Total): ${rss.toFixed(2)} MB
+• Heap Used: ${usedMB.toFixed(2)} MB
+• Heap Total: ${totalMB.toFixed(2)} MB
+• External: ${externalMB.toFixed(2)} MB
+
+🛡️ *Railway Limits:*
+• Free Tier: ${railwayLimit} MB
+• Current: ${usagePercent}% used
+• Available: ${(railwayLimit - rss).toFixed(2)} MB
+
+${isCritical ? '⚠️ *CRITICAL*: Consider lowering /setmaxglobal or clearing old data!' : ''}
+${isWarning && !isCritical ? '💡 *Tip*: Monitor closely, may need to clear data soon' : ''}
     `.trim(), { parse_mode: 'Markdown' })
   })
   

@@ -3,7 +3,8 @@ import path from 'path'
 
 export interface StoredTrade {
   id: string
-  originalTrade: any
+  // ⚡ REMOVED: originalTrade (huge redundant data)
+  // All essential fields extracted below:
   timestamp: number
   market: string
   outcome: string
@@ -34,7 +35,27 @@ export interface CopyTradeRun {
   trades: StoredTrade[]
 }
 
-const STORAGE_FILE = path.join(process.cwd(), 'copy-trades-data.json')
+// 🛡️ PERSISTENT STORAGE PATH
+// Use /data for Railway persistent volume (survives crashes/restarts)
+// Falls back to current directory for local development
+const STORAGE_DIR = process.env.RAILWAY_ENVIRONMENT 
+  ? '/data' 
+  : process.cwd()
+
+const STORAGE_FILE = path.join(STORAGE_DIR, 'copy-trades-data.json')
+
+// Ensure storage directory exists (Railway volume mount point)
+if (!fs.existsSync(STORAGE_DIR)) {
+  try {
+    fs.mkdirSync(STORAGE_DIR, { recursive: true })
+    console.log(`📁 Created storage directory: ${STORAGE_DIR}`)
+  } catch (error) {
+    console.error(`❌ Failed to create storage directory:`, error)
+  }
+}
+
+console.log(`💾 Storage location: ${STORAGE_FILE}`)
+console.log(`🛡️ Persistent: ${process.env.RAILWAY_ENVIRONMENT ? 'YES (Railway Volume)' : 'NO (Local Dev)'}`)
 
 export function loadCopyTrades(): CopyTradeRun[] {
   try {

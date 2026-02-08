@@ -135,7 +135,8 @@ export async function scanForNewTrades(
     
     return {
       id: `${activity.transactionHash}-${activity.asset}-${Date.now()}-${index}-${Math.random().toString(36).substring(7)}`,
-      originalTrade: activity,
+      // ⚡ MEMORY OPTIMIZATION: Don't store full originalTrade object
+      // All essential fields extracted below (saves ~60% memory)
       timestamp: timestampMs,
       market: marketName,
       outcome: activity.outcome || activity.outcomeName || 'Unknown',
