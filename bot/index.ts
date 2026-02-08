@@ -412,15 +412,36 @@ When ANY run reaches this limit, automatic checks will pause to prevent overflow
     console.log('📱 Received /cleardata confirm command from Telegram')
     
     try {
-      // Clear the storage by reinitializing from configurations
-      const { saveCopyTrades } = await import('./trade-storage.js')
+      // IMPORTANT: Clear storage completely and recreate with FRESH timestamps
+      const { saveCopyTrades, initializeCopyTradesFromConfigurations } = await import('./trade-storage.js')
+      const configurations = getMonitoredConfigurations()
+      
+      // Step 1: Completely wipe storage
       saveCopyTrades([])
+      console.log('🗑️ All existing runs deleted')
       
-      // Reinitialize from configurations
-      initializeCopyTrades()
+      // Step 2: Create brand new runs with current timestamp
+      const freshRuns = configurations.map(config => ({
+        id: config.id,
+        name: config.name,
+        traderAddress: config.traderAddress,
+        initialBudget: config.initialBudget,
+        currentBudget: config.initialBudget,
+        fixedBetAmount: config.fixedBetAmount,
+        minTriggerAmount: config.minTriggerAmount,
+        minPrice: config.minPrice,
+        maxPrice: config.maxPrice,
+        isActive: true,
+        createdAt: Date.now(), // ⚡ FRESH TIMESTAMP - only trades AFTER this moment
+        lastChecked: Date.now(),
+        trades: []
+      }))
       
-      await bot!.sendMessage(chatId, '✅ All trade data cleared! Fresh runs created from configurations.', { parse_mode: 'Markdown' })
-      console.log('✅ Trade data cleared and reinitialized')
+      saveCopyTrades(freshRuns)
+      console.log(`✅ Created ${freshRuns.length} fresh run(s) with current timestamp`)
+      
+      await bot!.sendMessage(chatId, `✅ All trade data cleared!\n\n🆕 Created ${freshRuns.length} fresh run(s)\n⏰ Timestamp: ${new Date().toISOString()}\n\n💡 *Next /refresh will only find trades from THIS moment forward!*`, { parse_mode: 'Markdown' })
+      console.log('✅ Trade data cleared and reinitialized with fresh timestamps')
     } catch (error: any) {
       await bot!.sendMessage(chatId, `❌ Error clearing data: ${error.message}`, { parse_mode: 'Markdown' })
       console.error('❌ Error clearing data:', error)
