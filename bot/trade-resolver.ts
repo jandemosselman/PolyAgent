@@ -22,11 +22,14 @@ export async function checkResolutionsForStoredTrades(
   console.log(`  🔍 Checking ${openTrades.length} open trades for resolutions...`)
   
   // Get unique condition IDs
-  const conditionIds = [...new Set(openTrades.map(t => t.conditionId))]
+  const conditionIds = [...new Set(openTrades.map(t => t.conditionId).filter(Boolean))]
   console.log(`  📋 Checking ${conditionIds.length} unique markets...`)
   
-  // Fetch market data
-  const marketsUrl = `https://gamma-api.polymarket.com/markets?condition_ids=${conditionIds.join(',')}`
+  // Fetch market data - Build URL with proper format
+  const conditionIdsParam = conditionIds.map(id => `condition_ids=${id}`).join('&')
+  const marketsUrl = `https://gamma-api.polymarket.com/markets?${conditionIdsParam}`
+  console.log(`  🌐 Fetching from: ${marketsUrl.substring(0, 100)}...`)
+  
   const response = await fetch(marketsUrl)
   
   if (!response.ok) {
