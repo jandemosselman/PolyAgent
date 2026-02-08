@@ -72,12 +72,31 @@ export async function scanForNewTrades(
   
   console.log(`  ✅ Found ${matchingTrades.length} matching trades`)
   
+  // Calculate available budget like localhost does
+  // Formula: Initial Budget + Closed Trades P&L - Open Trades Cost
+  const openTrades = run.trades.filter(t => t.status === 'open')
+  const closedTrades = run.trades.filter(t => t.status !== 'open')
+  const totalPnL = closedTrades.reduce((sum, t) => sum + (t.pnl || 0), 0)
+  const openTradesCost = openTrades.length * run.fixedBetAmount
+  const actualAvailableBudget = run.initialBudget + totalPnL - openTradesCost
+  
+  console.log(`  💰 Budget calculation:`)
+  console.log(`     Initial: $${run.initialBudget.toFixed(2)}`)
+  console.log(`     Closed P&L: $${totalPnL.toFixed(2)}`)
+  console.log(`     Open cost: $${openTradesCost.toFixed(2)} (${openTrades.length} trades)`)
+  console.log(`     Available: $${actualAvailableBudget.toFixed(2)}`)
+  console.log(`     Current (old method): $${run.currentBudget.toFixed(2)}`)
+  
+  // Use the calculated available budget, but ensure it's not negative
+  const budgetToUse = Math.max(0, actualAvailableBudget)
+  
   // Calculate how many we can afford
-  const affordableCount = Math.floor(run.currentBudget / run.fixedBetAmount)
+  const affordableCount = Math.floor(budgetToUse / run.fixedBetAmount)
   const tradesToCopy = matchingTrades.slice(0, affordableCount)
   
-  console.log(`  💰 Budget allows ${affordableCount} trades, copying ${tradesToCopy.length}`)
-  
+  console.log(`  💰 Can afford ${affordableCount} new trades, copying ${tradesToCopy.length}`)
+  console.log(`  📊 Current state: ${run.trades.length} total (${openTrades.length} open, ${closedTrades.length} closed)`)
+
   // Create simulated trades
   const newTrades: StoredTrade[] = tradesToCopy.map((activity, index) => {
     // Handle timestamp - Polymarket API returns in seconds, need milliseconds
