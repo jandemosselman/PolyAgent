@@ -18,6 +18,126 @@ let isPaused = false
 if (TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID) {
   bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true })
   
+  // Handle /home command - Detailed dashboard
+  bot.onText(/\/home/, async (msg) => {
+    const chatId = msg.chat.id.toString()
+    
+    if (chatId !== TELEGRAM_CHAT_ID) {
+      console.log(`❌ Unauthorized command from chat ID: ${chatId}`)
+      return
+    }
+    
+    try {
+      const { loadCopyTrades } = await import('./trade-storage.js')
+      const runs = loadCopyTrades()
+      const configs = getMonitoredConfigurations()
+      
+      // Calculate overall stats
+      let totalTrades = 0
+      let totalOpen = 0
+      let totalClosed = 0
+      let totalWon = 0
+      let totalLost = 0
+      let totalPnL = 0
+      let totalBudgetUsed = 0
+      let totalBudgetAvailable = 0
+      
+      const runStats = runs.map(run => {
+        const openTrades = run.trades.filter(t => t.status === 'open')
+        const closedTrades = run.trades.filter(t => t.status !== 'open')
+        const wonTrades = run.trades.filter(t => t.status === 'won')
+        const lostTrades = run.trades.filter(t => t.status === 'lost')
+        const pnl = closedTrades.reduce((sum, t) => sum + (t.pnl || 0), 0)
+        const winRate = closedTrades.length > 0 ? (wonTrades.length / closedTrades.length * 100) : 0
+        const budgetUsed = openTrades.length * run.fixedBetAmount
+        const budgetAvailable = run.initialBudget + pnl - budgetUsed
+        
+        totalTrades += run.trades.length
+        totalOpen += openTrades.length
+        totalClosed += closedTrades.length
+        totalWon += wonTrades.length
+        totalLost += lostTrades.length
+        totalPnL += pnl
+        totalBudgetUsed += budgetUsed
+        totalBudgetAvailable += budgetAvailable
+        
+        return {
+          name: run.name,
+          trades: run.trades.length,
+          open: openTrades.length,
+          closed: closedTrades.length,
+          won: wonTrades.length,
+          lost: lostTrades.length,
+          winRate,
+          pnl,
+          budgetAvailable,
+          trader: run.traderAddress.substring(0, 8) + '...'
+        }
+      })
+      
+      const overallWinRate = totalClosed > 0 ? (totalWon / totalClosed * 100) : 0
+      
+      // Find run with most trades
+      const maxTradeRun = runs.reduce((max, run) => 
+        run.trades.length > max.trades.length ? run : max, 
+        runs[0] || { trades: [], name: 'None' }
+      )
+      
+      // Build dashboard
+      let dashboard = `
+🏠 *POLYAGENT DASHBOARD*
+
+📊 *Overall Statistics*
+━━━━━━━━━━━━━━━━━━━━
+Total Runs: ${runs.length}
+Total Trades: ${totalTrades.toLocaleString()}
+  • Open: ${totalOpen.toLocaleString()}
+  • Closed: ${totalClosed.toLocaleString()}
+  • Won: ${totalWon.toLocaleString()} (${overallWinRate.toFixed(1)}%)
+  • Lost: ${totalLost.toLocaleString()}
+
+💰 *Budget Summary*
+━━━━━━━━━━━━━━━━━━━━
+Total P&L: ${totalPnL >= 0 ? '+' : ''}$${totalPnL.toFixed(2)}
+Budget Used: $${totalBudgetUsed.toFixed(2)}
+Available: $${totalBudgetAvailable.toFixed(2)}
+
+⚙️ *Bot Settings*
+━━━━━━━━━━━━━━━━━━━━
+Status: ${isPaused ? '⏸️ PAUSED' : '▶️ Active'}
+Interval: Every ${currentInterval} min
+Trade Limit: ${maxGlobalTrades.toLocaleString()}
+Largest Run: ${maxTradeRun.name} (${maxTradeRun.trades?.length || 0} trades)
+
+📋 *Run Details*
+━━━━━━━━━━━━━━━━━━━━
+`
+      
+      runStats.forEach((stat, i) => {
+        dashboard += `
+${i + 1}. *${stat.name}*
+   ${stat.trades} trades | ${stat.open} open | ${stat.closed} closed
+   Win Rate: ${stat.winRate.toFixed(1)}% | P&L: ${stat.pnl >= 0 ? '+' : ''}$${stat.pnl.toFixed(2)}
+   Available: $${stat.budgetAvailable.toFixed(2)}
+`
+      })
+      
+      dashboard += `
+━━━━━━━━━━━━━━━━━━━━
+
+*Quick Commands:*
+/refresh - Run check cycle now
+/status - Show bot status
+/pause - Pause automatic checks
+`
+      
+      await bot!.sendMessage(chatId, dashboard.trim(), { parse_mode: 'Markdown' })
+    } catch (error: any) {
+      await bot!.sendMessage(chatId, `❌ Error loading dashboard: ${error.message}`, { parse_mode: 'Markdown' })
+      console.error('Error in /home command:', error)
+    }
+  })
+  
   // Handle /checkall command
   bot.onText(/\/checkall/, async (msg) => {
     const chatId = msg.chat.id.toString()
@@ -99,6 +219,7 @@ ${configList}
 ⏸️ Status: ${isPaused ? '*PAUSED*' : '*Active*'}
 
 *Commands:*
+• /home - 🏠 Detailed dashboard
 • /refresh - Manual full cycle
 • /setinterval <min> - Change check interval
 • /setmaxglobal <trades> - Set global trade limit
