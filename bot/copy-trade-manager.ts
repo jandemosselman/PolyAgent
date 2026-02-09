@@ -16,26 +16,67 @@ interface Configuration {
   fixedBetAmount: number
 }
 
+// Get configuration file path (use persistent volume if on Railway)
+function getConfigPath(): string {
+  const storageDir = process.env.RAILWAY_ENVIRONMENT ? '/data' : process.cwd()
+  return path.join(storageDir, 'configurations.json')
+}
+
 // Load configurations from environment or file
 function loadConfigurations(): Configuration[] {
   try {
-    // Try environment variable first
+    // Try environment variable first (deprecated, kept for backwards compatibility)
     const envConfigs = process.env.CONFIGURATIONS
     if (envConfigs) {
+      console.log('⚠️ Using CONFIGURATIONS env var (deprecated). Consider syncing from localhost instead.')
       return JSON.parse(envConfigs)
     }
     
-    // Try file
-    const configPath = path.join(process.cwd(), 'configurations.json')
+    // Try file (preferred method)
+    const configPath = getConfigPath()
     if (fs.existsSync(configPath)) {
       const data = fs.readFileSync(configPath, 'utf-8')
-      return JSON.parse(data)
+      const configs = JSON.parse(data)
+      console.log(`📋 Loaded ${configs.length} configuration(s) from ${configPath}`)
+      return configs
     }
   } catch (error) {
     console.error('Error loading configurations:', error)
   }
   
+  console.log('📋 No configurations found')
   return []
+}
+
+// Save configurations to file
+export function saveConfigurations(configurations: Configuration[]): void {
+  try {
+    const configPath = getConfigPath()
+    fs.writeFileSync(configPath, JSON.stringify(configurations, null, 2), 'utf-8')
+    console.log(`💾 Saved ${configurations.length} configuration(s) to ${configPath}`)
+  } catch (error) {
+    console.error('Error saving configurations:', error)
+    throw error
+  }
+}
+
+// Load configurations from file (for API access)
+export function loadConfigurationsFromFile(): Configuration[] {
+  return loadConfigurations()
+}
+
+// Clear all configurations
+export function clearConfigurations(): void {
+  try {
+    const configPath = getConfigPath()
+    if (fs.existsSync(configPath)) {
+      fs.unlinkSync(configPath)
+      console.log(`🗑️ Deleted configurations file: ${configPath}`)
+    }
+  } catch (error) {
+    console.error('Error clearing configurations:', error)
+    throw error
+  }
 }
 
 export function getMonitoredConfigurations(): Configuration[] {

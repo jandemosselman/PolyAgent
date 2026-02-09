@@ -459,7 +459,7 @@ When ANY run reaches this limit, automatic checks will pause to prevent overflow
       return
     }
     
-    await bot!.sendMessage(chatId, '⚠️ *WARNING*: This will delete ALL stored trade data!\n\nReply with `/cleardata confirm` to proceed.', { parse_mode: 'Markdown' })
+    await bot!.sendMessage(chatId, '⚠️ *WARNING*: This will delete ALL stored trade data AND configurations!\n\nYou will need to add new copy trades from localhost.\n\nReply with `/cleardata confirm` to proceed.', { parse_mode: 'Markdown' })
   })
   
   // Handle /cleardata confirm
@@ -471,40 +471,22 @@ When ANY run reaches this limit, automatic checks will pause to prevent overflow
       return
     }
     
-    await bot!.sendMessage(chatId, '🗑️ Deleting all stored trade data...', { parse_mode: 'Markdown' })
+    await bot!.sendMessage(chatId, '🗑️ Deleting all data and configurations...', { parse_mode: 'Markdown' })
     console.log('📱 Received /cleardata confirm command from Telegram')
     
     try {
-      // IMPORTANT: Clear storage completely and recreate with FRESH timestamps
-      const { saveCopyTrades, initializeCopyTradesFromConfigurations } = await import('./trade-storage.js')
-      const configurations = getMonitoredConfigurations()
-      
-      // Step 1: Completely wipe storage
+      // Step 1: Clear all trade data
+      const { saveCopyTrades } = await import('./trade-storage.js')
       saveCopyTrades([])
-      console.log('🗑️ All existing runs deleted')
+      console.log('🗑️ All trade data deleted')
       
-      // Step 2: Create brand new runs with current timestamp
-      const freshRuns = configurations.map(config => ({
-        id: config.id,
-        name: config.name,
-        traderAddress: config.traderAddress,
-        initialBudget: config.initialBudget,
-        currentBudget: config.initialBudget,
-        fixedBetAmount: config.fixedBetAmount,
-        minTriggerAmount: config.minTriggerAmount,
-        minPrice: config.minPrice,
-        maxPrice: config.maxPrice,
-        isActive: true,
-        createdAt: Date.now(), // ⚡ FRESH TIMESTAMP - only trades AFTER this moment
-        lastChecked: Date.now(),
-        trades: []
-      }))
+      // Step 2: Clear all configurations
+      const { clearConfigurations } = await import('./copy-trade-manager.js')
+      clearConfigurations()
+      console.log('🗑️ All configurations deleted')
       
-      saveCopyTrades(freshRuns)
-      console.log(`✅ Created ${freshRuns.length} fresh run(s) with current timestamp`)
-      
-      await bot!.sendMessage(chatId, `✅ All trade data cleared!\n\n🆕 Created ${freshRuns.length} fresh run(s)\n⏰ Timestamp: ${new Date().toISOString()}\n\n💡 *Next /refresh will only find trades from THIS moment forward!*`, { parse_mode: 'Markdown' })
-      console.log('✅ Trade data cleared and reinitialized with fresh timestamps')
+      await bot!.sendMessage(chatId, `✅ All data cleared!\n\n🆕 Clean slate ready!\n\n*Next steps:*\n1. Go to localhost\n2. Click "+ Add Copy Trade"\n3. It will automatically appear in the bot!\n4. Run /refresh to start collecting`, { parse_mode: 'Markdown' })
+      console.log('✅ Complete clean slate created')
     } catch (error: any) {
       await bot!.sendMessage(chatId, `❌ Error clearing data: ${error.message}`, { parse_mode: 'Markdown' })
       console.error('❌ Error clearing data:', error)

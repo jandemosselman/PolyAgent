@@ -1498,7 +1498,7 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
     }
   }
 
-  const exportBotConfigurations = () => {
+  const exportBotConfigurations = async () => {
     try {
       // Create simplified configuration format for the bot
       const botConfigs = copyTrades.map(ct => ({
@@ -1512,9 +1512,34 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
         fixedBetAmount: ct.fixedBetAmount
       }))
 
+      // Try to sync with Railway bot first
+      const railwayUrl = process.env.NEXT_PUBLIC_RAILWAY_BOT_URL || localStorage.getItem('railwayBotUrl')
+      
+      if (railwayUrl) {
+        try {
+          const response = await fetch(`${railwayUrl}/api/configurations`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ configurations: botConfigs })
+          })
+          
+          if (response.ok) {
+            const data = await response.json()
+            setNotification({
+              message: `✅ Synced ${botConfigs.length} configuration(s) to Railway bot! Bot will start monitoring automatically.`,
+              type: 'success'
+            })
+            setTimeout(() => setNotification(null), 5000)
+            return
+          }
+        } catch (error) {
+          console.warn('Failed to sync to Railway, falling back to clipboard:', error)
+        }
+      }
+
+      // Fallback: Copy to clipboard
       const dataStr = JSON.stringify(botConfigs, null, 2)
       
-      // Copy to clipboard
       navigator.clipboard.writeText(dataStr).then(() => {
         setNotification({
           message: '📋 Bot configurations copied to clipboard! Paste this into Railway as CONFIGURATIONS environment variable.',
