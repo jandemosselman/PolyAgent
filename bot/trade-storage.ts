@@ -3,8 +3,15 @@ import path from 'path'
 
 export interface StoredTrade {
   id: string
-  // ⚡ REMOVED: originalTrade (huge redundant data)
-  // All essential fields extracted below:
+  // ⚡ OPTIMIZED: Only store essential fields from originalTrade (not full API response)
+  originalTrade?: {
+    amount?: string
+    size?: string
+    price?: string
+    type?: string
+    side?: string
+  }
+  // All essential fields extracted:
   timestamp: number
   market: string
   outcome: string

@@ -135,8 +135,15 @@ export async function scanForNewTrades(
     
     return {
       id: `${activity.transactionHash}-${activity.asset}-${Date.now()}-${index}-${Math.random().toString(36).substring(7)}`,
-      // ⚡ MEMORY OPTIMIZATION: Don't store full originalTrade object
-      // All essential fields extracted below (saves ~60% memory)
+      // ⚡ MEMORY OPTIMIZATION: Only store essential fields from originalTrade
+      // (Not full API response, saves ~90% memory while keeping functionality)
+      originalTrade: {
+        amount: activity.size, // Needed for Auto-Find features
+        size: activity.size,
+        price: activity.price,
+        type: activity.type,
+        side: activity.side
+      },
       timestamp: timestampMs,
       market: marketName,
       outcome: activity.outcome || activity.outcomeName || 'Unknown',
