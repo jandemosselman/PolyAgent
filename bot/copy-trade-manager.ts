@@ -29,22 +29,31 @@ function loadConfigurations(): Configuration[] {
     const envConfigs = process.env.CONFIGURATIONS
     if (envConfigs) {
       console.log('⚠️ Using CONFIGURATIONS env var (deprecated). Consider syncing from localhost instead.')
-      return JSON.parse(envConfigs)
+      try {
+        return JSON.parse(envConfigs)
+      } catch (error) {
+        console.error('Error parsing CONFIGURATIONS env var:', error)
+        console.log('📋 Ignoring malformed env var, checking file instead...')
+      }
     }
     
     // Try file (preferred method)
     const configPath = getConfigPath()
     if (fs.existsSync(configPath)) {
       const data = fs.readFileSync(configPath, 'utf-8')
-      const configs = JSON.parse(data)
-      console.log(`📋 Loaded ${configs.length} configuration(s) from ${configPath}`)
-      return configs
+      if (data.trim()) { // Check if file has content
+        const configs = JSON.parse(data)
+        console.log(`📋 Loaded ${configs.length} configuration(s) from ${configPath}`)
+        return configs
+      } else {
+        console.log('📋 Configuration file is empty')
+      }
     }
   } catch (error) {
     console.error('Error loading configurations:', error)
   }
   
-  console.log('📋 No configurations found')
+  console.log('📋 No configurations found - use localhost to create and sync configurations')
   return []
 }
 
