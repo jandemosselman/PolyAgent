@@ -1,5 +1,5 @@
 import express from 'express'
-import { loadCopyTrades, saveCopyTrades, CopyTradeRun } from './trade-storage.js'
+import { loadCopyTrades, saveCopyTrades, CopyTradeRun, initializeCopyTradesFromConfigurations } from './trade-storage.js'
 import { saveConfigurations, loadConfigurationsFromFile } from './copy-trade-manager.js'
 
 const app = express()
@@ -71,7 +71,6 @@ app.post('/api/configurations', (req, res) => {
     saveConfigurations(configs)
     
     // Sync with existing runs or create new ones
-    const { initializeCopyTradesFromConfigurations } = require('./trade-storage.js')
     initializeCopyTradesFromConfigurations(configs)
     
     console.log(`💾 Synced ${configs.length} configuration(s) from localhost`)
