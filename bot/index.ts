@@ -502,28 +502,34 @@ When ANY run reaches this limit, automatic checks will pause to prevent overflow
 const configurations = getMonitoredConfigurations()
 
 if (configurations.length === 0) {
-  console.error('⚠️  No configurations found!')
-  console.error('Export your configurations from the Copy Simulator and save to configurations.json')
-  console.error('')
-  console.error('In your browser console on the Copy Simulator page, run:')
-  console.error('copy(JSON.stringify(JSON.parse(localStorage.getItem("copyTrades") || "[]")))')
-  console.error('Then paste the output into bot/configurations.json')
-  process.exit(1)
+  console.log('⚠️  No configurations found yet - waiting for sync from localhost')
+  console.log('💡 In localhost:')
+  console.log('   1. Create copy trades')
+  console.log('   2. Click "🤖 Export for Bot"')
+  console.log('   3. Configurations will sync automatically!')
+  console.log('')
+} else {
+  // Initialize copy trade storage from configurations
+  initializeCopyTrades()
+
+  console.log(`📊 Monitoring ${configurations.length} configuration(s)`)
+  configurations.forEach((config, i) => {
+    console.log(`   ${i + 1}. ${config.name} - ${config.traderAddress.slice(0, 10)}... (${config.minTriggerAmount >= 0 ? `$${config.minTriggerAmount}+` : 'any'} | ${(config.minPrice * 100).toFixed(0)}-${(config.maxPrice * 100).toFixed(0)}%)`)
+  })
 }
-
-// Initialize copy trade storage from configurations
-initializeCopyTrades()
-
-console.log(`📊 Monitoring ${configurations.length} configuration(s)`)
-configurations.forEach((config, i) => {
-  console.log(`   ${i + 1}. ${config.name} - ${config.traderAddress.slice(0, 10)}... (${config.minTriggerAmount >= 0 ? `$${config.minTriggerAmount}+` : 'any'} | ${(config.minPrice * 100).toFixed(0)}-${(config.maxPrice * 100).toFixed(0)}%)`)
-})
 
 // Start cron schedule with initial interval
 currentCronJob = cron.schedule(`*/${currentInterval} * * * *`, runCheck)
 console.log(`⏰ Cron job scheduled: Every ${currentInterval} minutes`)
 
 async function runCheck() {
+  // Skip if no configurations
+  const currentConfigs = getMonitoredConfigurations()
+  if (currentConfigs.length === 0) {
+    console.log('⏭️  Skipping check - no configurations loaded yet')
+    return
+  }
+  
   const timestamp = new Date().toLocaleString('en-US', { 
     timeZone: 'Europe/Brussels',
     hour12: false 
@@ -568,7 +574,7 @@ Trades: *${maxTradeRun.trades.length.toLocaleString()}* / ${maxGlobalTrades.toLo
     return
   }
   
-  for (const config of configurations) {
+  for (const config of currentConfigs) {
     try {
       await performFullCheckCycle(config)
       
@@ -582,14 +588,20 @@ Trades: *${maxTradeRun.trades.length.toLocaleString()}* / ${maxGlobalTrades.toLo
   console.log('✅ Finished checking all configurations\n')
 }
 
-// Start API server
+// Start API server (MUST start first so we can receive configs)
 startApiServer()
 
 // Notify bot started
-notifyBotStarted(configurations.length)
+const initialConfigs = getMonitoredConfigurations()
+if (initialConfigs.length > 0) {
+  notifyBotStarted(initialConfigs.length)
+  
+  // Run once on startup if we have configs
+  console.log('🚀 Running initial check...\n')
+  runCheck()
+} else {
+  console.log('⏭️  Skipping initial check - waiting for configurations from localhost\n')
+}
 
-// Run once on startup
-console.log('🚀 Running initial check...\n')
-runCheck()
+console.log('🤖 Bot is running! Waiting for configurations...')
 
-console.log('🤖 Bot is running! Press Ctrl+C to stop.')
