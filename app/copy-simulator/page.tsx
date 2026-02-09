@@ -1515,26 +1515,40 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
       // Try to sync with Railway bot first
       const railwayUrl = process.env.NEXT_PUBLIC_RAILWAY_BOT_URL || localStorage.getItem('railwayBotUrl')
       
+      console.log('🔍 Railway URL:', railwayUrl)
+      console.log('🔍 Configs to sync:', botConfigs.length)
+      
       if (railwayUrl) {
         try {
+          console.log('📡 Attempting to sync to:', `${railwayUrl}/api/configurations`)
+          
           const response = await fetch(`${railwayUrl}/api/configurations`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ configurations: botConfigs })
           })
           
+          console.log('📡 Response status:', response.status)
+          console.log('📡 Response ok:', response.ok)
+          
           if (response.ok) {
             const data = await response.json()
+            console.log('✅ Sync successful:', data)
             setNotification({
               message: `✅ Synced ${botConfigs.length} configuration(s) to Railway bot! Bot will start monitoring automatically.`,
               type: 'success'
             })
             setTimeout(() => setNotification(null), 5000)
             return
+          } else {
+            const errorText = await response.text()
+            console.error('❌ Sync failed:', response.status, errorText)
           }
         } catch (error) {
-          console.warn('Failed to sync to Railway, falling back to clipboard:', error)
+          console.error('❌ Failed to sync to Railway:', error)
         }
+      } else {
+        console.log('⚠️ No Railway URL configured')
       }
 
       // Fallback: Copy to clipboard
