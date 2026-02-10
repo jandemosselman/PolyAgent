@@ -2055,13 +2055,8 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
       })
       console.log(`\n🏆 Best trigger (optimized for Win Rate): $${results[0].trigger} (${results[0].winRate.toFixed(1)}% WR, $${results[0].avgPnl.toFixed(2)} avg, ${results[0].trades} trades)`)
     } else {
-      results.sort((a, b) => {
-        const avgPnlDiff = b.avgPnl - a.avgPnl
-        if (Math.abs(avgPnlDiff) > 0.5) { // If avg P&L difference is significant (>$0.50)
-          return avgPnlDiff
-        }
-        return b.winRate - a.winRate // Tiebreaker: win rate
-      })
+      // Simple sort by avg P&L - no threshold needed
+      results.sort((a, b) => b.avgPnl - a.avgPnl)
       console.log(`\n🏆 Best trigger (optimized for Avg P&L): $${results[0].trigger} ($${results[0].avgPnl.toFixed(2)} avg, ${results[0].winRate.toFixed(1)}% WR, ${results[0].trades} trades)`)
     }
 
@@ -2181,13 +2176,8 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
       })
       console.log(`\n🏆 Best range (optimized for Win Rate): ${results[0].rangeLabel} (${results[0].winRate.toFixed(1)}% WR, $${results[0].avgPnl.toFixed(2)} avg, ${results[0].trades} trades)`)
     } else {
-      results.sort((a, b) => {
-        const avgPnlDiff = b.avgPnl - a.avgPnl
-        if (Math.abs(avgPnlDiff) > 0.5) { // If avg P&L difference is significant (>$0.50)
-          return avgPnlDiff
-        }
-        return b.winRate - a.winRate // Tiebreaker: win rate
-      })
+      // Simple sort by avg P&L - no threshold needed
+      results.sort((a, b) => b.avgPnl - a.avgPnl)
       console.log(`\n🏆 Best range (optimized for Avg P&L): ${results[0].rangeLabel} ($${results[0].avgPnl.toFixed(2)} avg, ${results[0].winRate.toFixed(1)}% WR, ${results[0].trades} trades)`)
     }
 
