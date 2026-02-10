@@ -152,6 +152,8 @@ export default function CopySimulatorPage() {
   }> | null>(null)
   const [autoFindingPriceRange, setAutoFindingPriceRange] = useState(false)
   const [minTradesForPriceRange, setMinTradesForPriceRange] = useState<number>(50)
+  const [priceRangeOptimizationMode, setPriceRangeOptimizationMode] = useState<'winrate' | 'avgpnl'>('winrate')
+  const [triggerOptimizationMode, setTriggerOptimizationMode] = useState<'winrate' | 'avgpnl'>('winrate')
   const [autoPriceRangeResults, setAutoPriceRangeResults] = useState<Array<{
     minPrice: number
     maxPrice: number
@@ -239,6 +241,8 @@ export default function CopySimulatorPage() {
       totalTrades: number
       wonTrades: number
       winRate: number
+      totalPnL: number
+      avgPnLPerTrade: number
     }>
   } | null>(null)
   const [autoBacktesting, setAutoBacktesting] = useState(false)
@@ -1158,6 +1162,8 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
       )
       const wonInRange = tradesInRange.filter(t => t.status === 'won').length
       const winRate = tradesInRange.length > 0 ? (wonInRange / tradesInRange.length) * 100 : 0
+      const totalPnL = tradesInRange.reduce((sum, t) => sum + (t.pnl || 0), 0)
+      const avgPnLPerTrade = tradesInRange.length > 0 ? totalPnL / tradesInRange.length : 0
 
       return {
         rangeLabel: `$${range.min.toFixed(2)} - $${range.max.toFixed(2)}`,
@@ -1165,7 +1171,9 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
         maxPrice: range.max,
         totalTrades: tradesInRange.length,
         wonTrades: wonInRange,
-        winRate
+        winRate,
+        totalPnL,
+        avgPnLPerTrade
       }
     })
 
@@ -2036,16 +2044,26 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
       return
     }
 
-    // Sort by win rate first, then by avg P&L
-    results.sort((a, b) => {
-      const winRateDiff = b.winRate - a.winRate
-      if (Math.abs(winRateDiff) > 2) { // If win rate difference is significant (>2%)
-        return winRateDiff
-      }
-      return b.avgPnl - a.avgPnl // Otherwise sort by avg P&L
-    })
-
-    console.log(`\n🏆 Best trigger: $${results[0].trigger} (${results[0].winRate.toFixed(1)}% WR, $${results[0].avgPnl.toFixed(2)} avg, ${results[0].trades} trades)`)
+    // Sort based on optimization mode
+    if (triggerOptimizationMode === 'winrate') {
+      results.sort((a, b) => {
+        const winRateDiff = b.winRate - a.winRate
+        if (Math.abs(winRateDiff) > 2) { // If win rate difference is significant (>2%)
+          return winRateDiff
+        }
+        return b.avgPnl - a.avgPnl // Tiebreaker: avg P&L
+      })
+      console.log(`\n🏆 Best trigger (optimized for Win Rate): $${results[0].trigger} (${results[0].winRate.toFixed(1)}% WR, $${results[0].avgPnl.toFixed(2)} avg, ${results[0].trades} trades)`)
+    } else {
+      results.sort((a, b) => {
+        const avgPnlDiff = b.avgPnl - a.avgPnl
+        if (Math.abs(avgPnlDiff) > 0.5) { // If avg P&L difference is significant (>$0.50)
+          return avgPnlDiff
+        }
+        return b.winRate - a.winRate // Tiebreaker: win rate
+      })
+      console.log(`\n🏆 Best trigger (optimized for Avg P&L): $${results[0].trigger} ($${results[0].avgPnl.toFixed(2)} avg, ${results[0].winRate.toFixed(1)}% WR, ${results[0].trades} trades)`)
+    }
 
     setAutoTriggerResults(results)
     setAutoFindingTrigger(false)
@@ -2152,16 +2170,26 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
       return
     }
 
-    // Sort by win rate first, then by avg P&L
-    results.sort((a, b) => {
-      const winRateDiff = b.winRate - a.winRate
-      if (Math.abs(winRateDiff) > 2) { // If win rate difference is significant (>2%)
-        return winRateDiff
-      }
-      return b.avgPnl - a.avgPnl // Otherwise sort by avg P&L
-    })
-
-    console.log(`\n🏆 Best range: ${results[0].rangeLabel} (${results[0].winRate.toFixed(1)}% WR, $${results[0].avgPnl.toFixed(2)} avg, ${results[0].trades} trades)`)
+    // Sort based on optimization mode
+    if (priceRangeOptimizationMode === 'winrate') {
+      results.sort((a, b) => {
+        const winRateDiff = b.winRate - a.winRate
+        if (Math.abs(winRateDiff) > 2) { // If win rate difference is significant (>2%)
+          return winRateDiff
+        }
+        return b.avgPnl - a.avgPnl // Tiebreaker: avg P&L
+      })
+      console.log(`\n🏆 Best range (optimized for Win Rate): ${results[0].rangeLabel} (${results[0].winRate.toFixed(1)}% WR, $${results[0].avgPnl.toFixed(2)} avg, ${results[0].trades} trades)`)
+    } else {
+      results.sort((a, b) => {
+        const avgPnlDiff = b.avgPnl - a.avgPnl
+        if (Math.abs(avgPnlDiff) > 0.5) { // If avg P&L difference is significant (>$0.50)
+          return avgPnlDiff
+        }
+        return b.winRate - a.winRate // Tiebreaker: win rate
+      })
+      console.log(`\n🏆 Best range (optimized for Avg P&L): ${results[0].rangeLabel} ($${results[0].avgPnl.toFixed(2)} avg, ${results[0].winRate.toFixed(1)}% WR, ${results[0].trades} trades)`)
+    }
 
     setAutoPriceRangeResults(results)
     setAutoFindingPriceRange(false)
@@ -3855,6 +3883,41 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
                   Automatically test multiple trigger amounts to find the best one. Set a minimum number of trades to avoid outliers.
                 </p>
                 
+                {/* Optimization Mode Selector */}
+                <div className="mb-4">
+                  <label className="block text-slate-300 text-sm font-medium mb-2">
+                    Optimization Mode
+                  </label>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setTriggerOptimizationMode('winrate')}
+                      className={`flex-1 px-4 py-2 rounded-lg font-medium transition-all ${
+                        triggerOptimizationMode === 'winrate'
+                          ? 'bg-amber-500/20 border-2 border-amber-500 text-amber-300'
+                          : 'bg-slate-800/50 border border-slate-700 text-slate-400 hover:bg-slate-700/50'
+                      }`}
+                    >
+                      🎯 Best Win Rate
+                    </button>
+                    <button
+                      onClick={() => setTriggerOptimizationMode('avgpnl')}
+                      className={`flex-1 px-4 py-2 rounded-lg font-medium transition-all ${
+                        triggerOptimizationMode === 'avgpnl'
+                          ? 'bg-emerald-500/20 border-2 border-emerald-500 text-emerald-300'
+                          : 'bg-slate-800/50 border border-slate-700 text-slate-400 hover:bg-slate-700/50'
+                      }`}
+                    >
+                      💰 Best Avg P&L/Trade
+                    </button>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-2">
+                    {triggerOptimizationMode === 'winrate' 
+                      ? '🎯 Prioritizes highest win rate (good for consistency)'
+                      : '💰 Prioritizes highest profit per trade (good for overall profit)'
+                    }
+                  </p>
+                </div>
+                
                 <div className="flex items-end gap-3 mb-4">
                   <div className="flex-1">
                     <label className="block text-slate-300 text-sm font-medium mb-2">
@@ -4003,6 +4066,41 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
                 <p className="text-sm text-slate-400 mb-4">
                   Automatically test multiple price ranges to find the one with best performance. Helps identify if specific price ranges are hurting your results.
                 </p>
+                
+                {/* Optimization Mode Selector */}
+                <div className="mb-4">
+                  <label className="block text-slate-300 text-sm font-medium mb-2">
+                    Optimization Mode
+                  </label>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setPriceRangeOptimizationMode('winrate')}
+                      className={`flex-1 px-4 py-2 rounded-lg font-medium transition-all ${
+                        priceRangeOptimizationMode === 'winrate'
+                          ? 'bg-cyan-500/20 border-2 border-cyan-500 text-cyan-300'
+                          : 'bg-slate-800/50 border border-slate-700 text-slate-400 hover:bg-slate-700/50'
+                      }`}
+                    >
+                      🎯 Best Win Rate
+                    </button>
+                    <button
+                      onClick={() => setPriceRangeOptimizationMode('avgpnl')}
+                      className={`flex-1 px-4 py-2 rounded-lg font-medium transition-all ${
+                        priceRangeOptimizationMode === 'avgpnl'
+                          ? 'bg-emerald-500/20 border-2 border-emerald-500 text-emerald-300'
+                          : 'bg-slate-800/50 border border-slate-700 text-slate-400 hover:bg-slate-700/50'
+                      }`}
+                    >
+                      💰 Best Avg P&L/Trade
+                    </button>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-2">
+                    {priceRangeOptimizationMode === 'winrate' 
+                      ? '🎯 Prioritizes highest win rate (good for consistency)'
+                      : '💰 Prioritizes highest profit per trade (good for overall profit)'
+                    }
+                  </p>
+                </div>
                 
                 <div className="flex items-end gap-3 mb-4">
                   <div className="flex-1">
@@ -5146,20 +5244,35 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
                             </span>
                           </div>
                           {hasData && (
-                            <div className="mt-2 flex items-center gap-4">
-                              <div className="flex-1 bg-slate-700/30 rounded-full h-3 overflow-hidden">
-                                <div
-                                  className={`h-full transition-all ${
-                                    range.winRate >= 60 ? 'bg-emerald-500' :
-                                    range.winRate >= 50 ? 'bg-yellow-500' :
-                                    range.winRate >= 40 ? 'bg-orange-500' : 'bg-red-500'
-                                  }`}
-                                  style={{ width: `${range.winRate}%` }}
-                                />
+                            <div className="mt-2 space-y-2">
+                              {/* Win Rate Bar */}
+                              <div className="flex items-center gap-4">
+                                <div className="flex-1 bg-slate-700/30 rounded-full h-3 overflow-hidden">
+                                  <div
+                                    className={`h-full transition-all ${
+                                      range.winRate >= 60 ? 'bg-emerald-500' :
+                                      range.winRate >= 50 ? 'bg-yellow-500' :
+                                      range.winRate >= 40 ? 'bg-orange-500' : 'bg-red-500'
+                                    }`}
+                                    style={{ width: `${range.winRate}%` }}
+                                  />
+                                </div>
+                                <span className={`text-sm font-semibold min-w-[60px] ${winRateColor}`}>
+                                  {range.winRate.toFixed(1)}%
+                                </span>
                               </div>
-                              <span className={`text-sm font-semibold min-w-[60px] ${winRateColor}`}>
-                                {range.winRate.toFixed(1)}%
-                              </span>
+                              {/* Avg P&L Per Trade */}
+                              <div className="flex items-center gap-2 text-xs">
+                                <span className="text-slate-500">Avg P&L/trade:</span>
+                                <span className={`font-semibold ${range.avgPnLPerTrade >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                                  {range.avgPnLPerTrade >= 0 ? '+' : ''}${range.avgPnLPerTrade.toFixed(2)}
+                                </span>
+                                <span className="text-slate-600">•</span>
+                                <span className="text-slate-500">Total:</span>
+                                <span className={`font-semibold ${range.totalPnL >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                                  {range.totalPnL >= 0 ? '+' : ''}${range.totalPnL.toFixed(2)}
+                                </span>
+                              </div>
                             </div>
                           )}
                         </div>
