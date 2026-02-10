@@ -25,11 +25,19 @@ export async function scanForNewTrades(
   
   console.log(`  🔍 Scanning for new trades for ${run.name}...`)
   console.log(`  📅 Run created at: ${new Date(run.createdAt).toISOString()}`)
+  
+  // Calculate last check time - use the most recent trade timestamp, or run creation time
+  const lastCheckTimestamp = run.trades.length > 0
+    ? Math.max(...run.trades.map(t => t.timestamp), run.createdAt)
+    : run.createdAt
+  
+  console.log(`  ⏰ Last check: ${new Date(lastCheckTimestamp).toISOString()}`)
   console.log(`  💰 Current budget: $${run.currentBudget.toFixed(2)}`)
   console.log(`  🎯 Filters: Amount >= $${run.minTriggerAmount}, Price ${run.minPrice}-${run.maxPrice}`)
   
-  // Fetch trader's recent activity
-  const activityUrl = `https://data-api.polymarket.com/activity?user=${run.traderAddress}&limit=2000&sortBy=TIMESTAMP&sortDirection=DESC`
+  // Fetch trader's recent activity with a much higher limit to avoid missing trades
+  // Use 5000 to handle very active traders (Polymarket API max is likely 10000)
+  const activityUrl = `https://data-api.polymarket.com/activity?user=${run.traderAddress}&limit=5000&sortBy=TIMESTAMP&sortDirection=DESC`
   
   const response = await fetch(activityUrl)
   if (!response.ok) {
@@ -57,16 +65,21 @@ export async function scanForNewTrades(
     
     // Skip duplicates (already copied)
     if (existingTradeIds.has(activity.transactionHash)) return false
-    if (existingTradeIds.has(activity.transactionHash)) return false
     
-    // ⚡ CRITICAL: Only trades AFTER run creation timestamp
+    // ⚡ CRITICAL: Only trades AFTER last check timestamp (optimization)
+    // This prevents re-processing the same trades every check cycle
     // Detect if timestamp is in seconds (< 10 billion) or milliseconds
     const activityTimestampMs = activity.timestamp > 10000000000 
       ? activity.timestamp 
       : activity.timestamp * 1000
     
+    if (activityTimestampMs <= lastCheckTimestamp) {
+      return false // Trade already processed or happened before last check
+    }
+    
+    // Additional safety: Must be after run creation
     if (activityTimestampMs < run.createdAt) {
-      return false // Trade happened BEFORE this run was created
+      return false
     }
     
     // Check amount filter
@@ -80,21 +93,21 @@ export async function scanForNewTrades(
     return true
   })
   
-  console.log(`  ✅ Found ${matchingTrades.length} matching trades (after timestamp filter)`)
+  console.log(`  ✅ Found ${matchingTrades.length} NEW matching trades (since last check)`)
   
-  // Debug: Show how many were filtered by timestamp
+  // Debug: Show filtering stats
   const totalBuys = activities.filter(a => a.type === 'TRADE' && a.side === 'BUY').length
-  const beforeCreation = activities.filter(a => {
+  const sinceLastCheck = activities.filter(a => {
     if (a.type !== 'TRADE' || a.side !== 'BUY') return false
     const timestampMs = a.timestamp > 10000000000 ? a.timestamp : a.timestamp * 1000
-    return timestampMs < run.createdAt
+    return timestampMs > lastCheckTimestamp
   }).length
   
-  console.log(`  📊 Timestamp filter stats:`)
-  console.log(`     Total BUYs in API: ${totalBuys}`)
-  console.log(`     Before run creation: ${beforeCreation} (filtered out)`)
-  console.log(`     After run creation: ${totalBuys - beforeCreation}`)
-  console.log(`     Final matching: ${matchingTrades.length}`)
+  console.log(`  📊 Filter stats:`)
+  console.log(`     Total BUYs in API response: ${totalBuys}`)
+  console.log(`     New BUYs since last check: ${sinceLastCheck}`)
+  console.log(`     After price/amount filters: ${matchingTrades.length}`)
+  console.log(`     Time window: ${new Date(lastCheckTimestamp).toISOString()} → now`)
   
   // Calculate available budget like localhost does
   // Formula: Initial Budget + Closed Trades P&L - Open Trades Cost
