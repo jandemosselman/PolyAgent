@@ -621,7 +621,7 @@ export default function CopySimulatorPage() {
     setShowChartModal(true)
   }
 
-  const createCopyTrade = () => {
+  const createCopyTrade = async () => {
     if (!name || !traderAddress) {
       alert('Please fill in name and trader address')
       return
@@ -643,7 +643,8 @@ export default function CopySimulatorPage() {
       trades: []
     }
 
-    setCopyTrades([...copyTrades, newCopyTrade])
+    const updatedTrades = [...copyTrades, newCopyTrade]
+    setCopyTrades(updatedTrades)
     setShowCreateModal(false)
     
     // Reset form
@@ -654,6 +655,50 @@ export default function CopySimulatorPage() {
     setMinTriggerAmount(10)
     setMinPrice(0.5)
     setMaxPrice(0.66)
+
+    // Auto-sync to Railway bot
+    const railwayUrl = process.env.NEXT_PUBLIC_RAILWAY_BOT_URL || localStorage.getItem('railwayBotUrl')
+    if (railwayUrl) {
+      try {
+        const botConfigs = updatedTrades.map(ct => ({
+          id: ct.id,
+          name: ct.name,
+          traderAddress: ct.traderAddress,
+          minTriggerAmount: ct.minTriggerAmount,
+          minPrice: ct.minPrice,
+          maxPrice: ct.maxPrice,
+          initialBudget: ct.initialBudget,
+          fixedBetAmount: ct.fixedBetAmount
+        }))
+
+        console.log('🤖 Auto-syncing new configuration to Railway bot...')
+        const response = await fetch(`${railwayUrl}/api/configurations`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ configurations: botConfigs })
+        })
+
+        if (response.ok) {
+          console.log('✅ Configuration synced to bot!')
+          setNotification({
+            message: `✅ Run "${name}" created and synced to Railway bot!`,
+            type: 'success'
+          })
+          setTimeout(() => setNotification(null), 4000)
+        } else {
+          console.error('❌ Failed to sync to bot:', response.status)
+          setNotification({
+            message: `⚠️ Run created locally but sync to bot failed. Click "Export to Bot" to retry.`,
+            type: 'warning'
+          })
+          setTimeout(() => setNotification(null), 5000)
+        }
+      } catch (error) {
+        console.error('❌ Error syncing to bot:', error)
+      }
+    } else {
+      console.log('⚠️ No Railway URL configured - run created locally only')
+    }
   }
 
   const syncWithBot = async () => {
