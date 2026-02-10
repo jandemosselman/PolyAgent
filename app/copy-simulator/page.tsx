@@ -154,6 +154,48 @@ export default function CopySimulatorPage() {
   const [minTradesForPriceRange, setMinTradesForPriceRange] = useState<number>(50)
   const [priceRangeOptimizationMode, setPriceRangeOptimizationMode] = useState<'winrate' | 'avgpnl'>('winrate')
   const [triggerOptimizationMode, setTriggerOptimizationMode] = useState<'winrate' | 'avgpnl'>('winrate')
+  
+  // Monte Carlo Simulation States
+  const [mcBudget, setMcBudget] = useState<number>(10)
+  const [mcFixedBet, setMcFixedBet] = useState<number>(1)
+  const [mcMinPrice, setMcMinPrice] = useState<number>(0.5)
+  const [mcMaxPrice, setMcMaxPrice] = useState<number>(0.66)
+  const [mcMinTrigger, setMcMinTrigger] = useState<number>(10)
+  const [mcNumSimulations, setMcNumSimulations] = useState<number>(100)
+  const [mcResults, setMcResults] = useState<{
+    survived: number
+    bankrupt: number
+    avgPnl: number
+    bestPnl: number
+    worstPnl: number
+    avgWinRate: number
+    simulations: Array<{
+      startIndex: number
+      finalBudget: number
+      pnl: number
+      trades: number
+      bankrupt: boolean
+      winRate: number
+    }>
+  } | null>(null)
+  const [isRunningMC, setIsRunningMC] = useState(false)
+  const [mcProgress, setMcProgress] = useState<string>('')
+  
+  // Brute Force Strategy Finder States
+  const [isFindingBestStrategy, setIsFindingBestStrategy] = useState(false)
+  const [strategyFinderProgress, setStrategyFinderProgress] = useState<string>('')
+  const [bestStrategies, setBestStrategies] = useState<Array<{
+    minPrice: number
+    maxPrice: number
+    minTrigger: number
+    fixedBet: number
+    survivalRate: number
+    bankruptcyRate: number
+    avgPnl: number
+    avgWinRate: number
+    riskAdjustedReturn: number
+    totalTrades: number
+  }> | null>(null)
   const [autoPriceRangeResults, setAutoPriceRangeResults] = useState<Array<{
     minPrice: number
     maxPrice: number
@@ -2693,6 +2735,316 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
     }
   }
 
+  // Monte Carlo Simulation - Run multiple simulations with random starting points
+  const runMonteCarloSimulation = (group: any) => {
+    if (!optimizationResults) return
+    
+    setIsRunningMC(true)
+    setMcResults(null)
+    
+    console.log(`\n🎲 MONTE CARLO SIMULATION STARTED`)
+    console.log(`Budget: $${mcBudget}, Fixed Bet: $${mcFixedBet}`)
+    console.log(`Price Range: ${mcMinPrice}-${mcMaxPrice}, Min Trigger: $${mcMinTrigger}`)
+    console.log(`Simulations: ${mcNumSimulations}`)
+    
+    // Get all trades from all runs in this configuration
+    const configRuns = copyTrades.filter(ct => {
+      const key = `${ct.traderAddress}-${ct.initialBudget}-${ct.fixedBetAmount}-${ct.minPrice}-${ct.maxPrice}-${ct.minTriggerAmount}`
+      return key === group.configKey
+    })
+    
+    const allTrades = configRuns.flatMap(run => run.trades)
+    
+    // Filter to only resolved trades within price/trigger filters
+    const resolvedTrades = allTrades.filter(t => {
+      if (t.status === 'open') return false
+      if (t.price < mcMinPrice || t.price > mcMaxPrice) return false
+      
+      // Check trigger amount from originalTrade
+      const originalTrade = t.originalTrade
+      if (!originalTrade) return false
+      
+      let tradeAmount = 0
+      if (originalTrade.amount) {
+        tradeAmount = parseFloat(originalTrade.amount)
+      } else if (originalTrade.size && originalTrade.price) {
+        tradeAmount = parseFloat(originalTrade.size) * parseFloat(originalTrade.price)
+      }
+      
+      return tradeAmount >= mcMinTrigger
+    }).sort((a, b) => a.timestamp - b.timestamp) // Chronological order
+    
+    console.log(`📊 Found ${resolvedTrades.length} resolved trades matching filters`)
+    
+    if (resolvedTrades.length < 50) {
+      setNotification({ type: 'warning', message: `Need at least 50 resolved trades (found ${resolvedTrades.length})` })
+      setTimeout(() => setNotification(null), 3000)
+      setIsRunningMC(false)
+      return
+    }
+    
+    // Run simulations at random starting points
+    const simulations: Array<{
+      startIndex: number
+      finalBudget: number
+      pnl: number
+      trades: number
+      bankrupt: boolean
+      winRate: number
+    }> = []
+    
+    const maxStartIndex = Math.max(0, resolvedTrades.length - 100) // Need at least 100 trades for a meaningful simulation
+    
+    for (let i = 0; i < mcNumSimulations; i++) {
+      // Pick random starting point
+      const startIndex = Math.floor(Math.random() * (maxStartIndex + 1))
+      
+      let budget = mcBudget
+      let tradesCopied = 0
+      let wins = 0
+      let bankrupt = false
+      
+      // Simulate trades from this starting point
+      for (let j = startIndex; j < resolvedTrades.length; j++) {
+        if (budget < mcFixedBet) {
+          bankrupt = true
+          break
+        }
+        
+        const trade = resolvedTrades[j]
+        
+        // Copy the trade
+        budget -= mcFixedBet
+        tradesCopied++
+        
+        // Resolve the trade
+        if (trade.status === 'won') {
+          budget += mcFixedBet * 2 // Win = 2x bet back
+          wins++
+        }
+        // If lost, we already deducted the bet
+      }
+      
+      const finalBudget = budget
+      const pnl = finalBudget - mcBudget
+      const winRate = tradesCopied > 0 ? (wins / tradesCopied) * 100 : 0
+      
+      simulations.push({
+        startIndex,
+        finalBudget,
+        pnl,
+        trades: tradesCopied,
+        bankrupt,
+        winRate
+      })
+      
+      setMcProgress(`Running simulation ${i + 1}/${mcNumSimulations}...`)
+    }
+    
+    // Aggregate results
+    const survived = simulations.filter(s => !s.bankrupt).length
+    const bankrupt = simulations.filter(s => s.bankrupt).length
+    const avgPnl = simulations.reduce((sum, s) => sum + s.pnl, 0) / simulations.length
+    const bestPnl = Math.max(...simulations.map(s => s.pnl))
+    const worstPnl = Math.min(...simulations.map(s => s.pnl))
+    const avgWinRate = simulations.reduce((sum, s) => sum + s.winRate, 0) / simulations.length
+    
+    console.log(`\n✅ SIMULATION COMPLETE`)
+    console.log(`Survived: ${survived}/${mcNumSimulations} (${(survived/mcNumSimulations*100).toFixed(1)}%)`)
+    console.log(`Bankrupt: ${bankrupt}/${mcNumSimulations} (${(bankrupt/mcNumSimulations*100).toFixed(1)}%)`)
+    console.log(`Avg P&L: $${avgPnl.toFixed(2)}`)
+    console.log(`Best: $${bestPnl.toFixed(2)}, Worst: $${worstPnl.toFixed(2)}`)
+    console.log(`Avg Win Rate: ${avgWinRate.toFixed(1)}%`)
+    
+    setMcResults({
+      survived,
+      bankrupt,
+      avgPnl,
+      bestPnl,
+      worstPnl,
+      avgWinRate,
+      simulations
+    })
+    
+    setIsRunningMC(false)
+    setMcProgress('')
+    
+    setNotification({ type: 'success', message: `Simulation complete! ${survived}/${mcNumSimulations} survived` })
+    setTimeout(() => setNotification(null), 4000)
+  }
+
+  // Brute Force Strategy Finder - Test all combinations to find best strategy
+  const findBestStrategy = async (group: any) => {
+    setIsFindingBestStrategy(true)
+    setBestStrategies(null)
+    
+    console.log(`\n🔬 BRUTE FORCE STRATEGY FINDER STARTED`)
+    console.log(`Budget: $${mcBudget}`)
+    
+    // Get all resolved trades
+    const configRuns = copyTrades.filter(ct => {
+      const key = `${ct.traderAddress}-${ct.initialBudget}-${ct.fixedBetAmount}-${ct.minPrice}-${ct.maxPrice}-${ct.minTriggerAmount}`
+      return key === group.configKey
+    })
+    
+    const allTrades = configRuns.flatMap(run => run.trades)
+      .filter(t => t.status !== 'open')
+      .sort((a, b) => a.timestamp - b.timestamp)
+    
+    if (allTrades.length < 100) {
+      setNotification({ type: 'warning', message: `Need at least 100 resolved trades (found ${allTrades.length})` })
+      setTimeout(() => setNotification(null), 3000)
+      setIsFindingBestStrategy(false)
+      return
+    }
+    
+    // Define parameter combinations to test
+    const priceRanges = [
+      { min: 0.45, max: 0.55 },
+      { min: 0.45, max: 0.60 },
+      { min: 0.45, max: 0.65 },
+      { min: 0.50, max: 0.60 },
+      { min: 0.50, max: 0.65 },
+      { min: 0.50, max: 0.70 },
+      { min: 0.55, max: 0.65 },
+      { min: 0.55, max: 0.70 },
+    ]
+    
+    const minTriggers = [1, 5, 10, 20, 50, 100]
+    const fixedBets = mcBudget >= 50 ? [0.5, 1, 2, 5] : mcBudget >= 20 ? [0.5, 1, 2] : [0.5, 1]
+    
+    const totalCombinations = priceRanges.length * minTriggers.length * fixedBets.length
+    console.log(`Testing ${totalCombinations} combinations...`)
+    
+    const strategies: Array<{
+      minPrice: number
+      maxPrice: number
+      minTrigger: number
+      fixedBet: number
+      survivalRate: number
+      bankruptcyRate: number
+      avgPnl: number
+      avgWinRate: number
+      riskAdjustedReturn: number
+      totalTrades: number
+    }> = []
+    
+    let combinationIndex = 0
+    
+    for (const priceRange of priceRanges) {
+      for (const minTrigger of minTriggers) {
+        for (const fixedBet of fixedBets) {
+          combinationIndex++
+          
+          // Skip if fixed bet is too large for budget
+          if (fixedBet > mcBudget / 5) continue
+          
+          setStrategyFinderProgress(`Testing ${combinationIndex}/${totalCombinations}: Price ${priceRange.min}-${priceRange.max}, Trigger $${minTrigger}, Bet $${fixedBet}`)
+          
+          // Filter trades for this combination
+          const filteredTrades = allTrades.filter(t => {
+            if (t.price < priceRange.min || t.price > priceRange.max) return false
+            
+            const originalTrade = t.originalTrade
+            if (!originalTrade) return false
+            
+            let tradeAmount = 0
+            if (originalTrade.amount) {
+              tradeAmount = parseFloat(originalTrade.amount)
+            } else if (originalTrade.size && originalTrade.price) {
+              tradeAmount = parseFloat(originalTrade.size) * parseFloat(originalTrade.price)
+            }
+            
+            return tradeAmount >= minTrigger
+          })
+          
+          if (filteredTrades.length < 50) continue // Need minimum trades
+          
+          // Run 50 simulations for this combination
+          const numSims = 50
+          const sims = []
+          const maxStart = Math.max(0, filteredTrades.length - 100)
+          
+          for (let i = 0; i < numSims; i++) {
+            const startIndex = Math.floor(Math.random() * (maxStart + 1))
+            
+            let budget = mcBudget
+            let tradesCopied = 0
+            let wins = 0
+            let bankrupt = false
+            
+            for (let j = startIndex; j < filteredTrades.length; j++) {
+              if (budget < fixedBet) {
+                bankrupt = true
+                break
+              }
+              
+              const trade = filteredTrades[j]
+              budget -= fixedBet
+              tradesCopied++
+              
+              if (trade.status === 'won') {
+                budget += fixedBet * 2
+                wins++
+              }
+            }
+            
+            const pnl = budget - mcBudget
+            const winRate = tradesCopied > 0 ? (wins / tradesCopied) * 100 : 0
+            
+            sims.push({ pnl, winRate, bankrupt, trades: tradesCopied })
+          }
+          
+          const survived = sims.filter(s => !s.bankrupt).length
+          const survivalRate = (survived / numSims) * 100
+          const bankruptcyRate = ((numSims - survived) / numSims) * 100
+          const avgPnl = sims.reduce((sum, s) => sum + s.pnl, 0) / sims.length
+          const avgWinRate = sims.reduce((sum, s) => sum + s.winRate, 0) / sims.length
+          const avgTrades = sims.reduce((sum, s) => sum + s.trades, 0) / sims.length
+          
+          // Risk-adjusted return: avg P&L / bankruptcy risk
+          const riskAdjustedReturn = bankruptcyRate > 0 ? avgPnl / (bankruptcyRate + 1) : avgPnl * 10
+          
+          strategies.push({
+            minPrice: priceRange.min,
+            maxPrice: priceRange.max,
+            minTrigger,
+            fixedBet,
+            survivalRate,
+            bankruptcyRate,
+            avgPnl,
+            avgWinRate,
+            riskAdjustedReturn,
+            totalTrades: avgTrades
+          })
+        }
+      }
+    }
+    
+    // Sort by: 1) Low bankruptcy risk, 2) High risk-adjusted return
+    const sortedStrategies = strategies
+      .filter(s => s.bankruptcyRate < 30) // Only show strategies with <30% bankruptcy
+      .sort((a, b) => {
+        // Prioritize survival first
+        if (Math.abs(a.bankruptcyRate - b.bankruptcyRate) > 10) {
+          return a.bankruptcyRate - b.bankruptcyRate
+        }
+        // Then risk-adjusted return
+        return b.riskAdjustedReturn - a.riskAdjustedReturn
+      })
+      .slice(0, 10) // Top 10
+    
+    console.log(`\n✅ STRATEGY FINDER COMPLETE`)
+    console.log(`Found ${sortedStrategies.length} viable strategies`)
+    
+    setBestStrategies(sortedStrategies)
+    setIsFindingBestStrategy(false)
+    setStrategyFinderProgress('')
+    
+    setNotification({ type: 'success', message: `Found ${sortedStrategies.length} strategies!` })
+    setTimeout(() => setNotification(null), 4000)
+  }
+
   const strategyGroups = groupByStrategy()
 
   return (
@@ -4377,6 +4729,251 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
                   )}
                 </div>
               )}
+
+              {/* Monte Carlo Simulation Section */}
+              <div className="mb-6 pb-6 border-b border-slate-800/50">
+                <h3 className="text-lg font-semibold text-purple-400 mb-2 flex items-center gap-2">
+                  🎲 Monte Carlo Simulation
+                </h3>
+                <p className="text-sm text-slate-400 mb-4">
+                  Test your strategy with different random starting points to measure bankruptcy risk and profit potential
+                </p>
+
+                {/* Configuration */}
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <label className="block text-sm text-slate-400 mb-2">Your Budget ($)</label>
+                    <input
+                      type="number"
+                      value={mcBudget}
+                      onChange={(e) => setMcBudget(parseFloat(e.target.value) || 10)}
+                      className="w-full px-4 py-2 bg-slate-900/50 border border-slate-700/50 rounded-lg text-slate-200 focus:outline-none focus:border-purple-500/50"
+                      step="1"
+                      min="1"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-slate-400 mb-2">Fixed Bet ($)</label>
+                    <input
+                      type="number"
+                      value={mcFixedBet}
+                      onChange={(e) => setMcFixedBet(parseFloat(e.target.value) || 1)}
+                      className="w-full px-4 py-2 bg-slate-900/50 border border-slate-700/50 rounded-lg text-slate-200 focus:outline-none focus:border-purple-500/50"
+                      step="0.5"
+                      min="0.5"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-slate-400 mb-2">Min Price</label>
+                    <input
+                      type="number"
+                      value={mcMinPrice}
+                      onChange={(e) => setMcMinPrice(parseFloat(e.target.value) || 0.5)}
+                      className="w-full px-4 py-2 bg-slate-900/50 border border-slate-700/50 rounded-lg text-slate-200 focus:outline-none focus:border-purple-500/50"
+                      step="0.01"
+                      min="0.01"
+                      max="0.99"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-slate-400 mb-2">Max Price</label>
+                    <input
+                      type="number"
+                      value={mcMaxPrice}
+                      onChange={(e) => setMcMaxPrice(parseFloat(e.target.value) || 0.66)}
+                      className="w-full px-4 py-2 bg-slate-900/50 border border-slate-700/50 rounded-lg text-slate-200 focus:outline-none focus:border-purple-500/50"
+                      step="0.01"
+                      min="0.01"
+                      max="0.99"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-slate-400 mb-2">Min Trigger ($)</label>
+                    <input
+                      type="number"
+                      value={mcMinTrigger}
+                      onChange={(e) => setMcMinTrigger(parseFloat(e.target.value) || 10)}
+                      className="w-full px-4 py-2 bg-slate-900/50 border border-slate-700/50 rounded-lg text-slate-200 focus:outline-none focus:border-purple-500/50"
+                      step="1"
+                      min="0"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-slate-400 mb-2">Simulations</label>
+                    <input
+                      type="number"
+                      value={mcNumSimulations}
+                      onChange={(e) => setMcNumSimulations(parseInt(e.target.value) || 100)}
+                      className="w-full px-4 py-2 bg-slate-900/50 border border-slate-700/50 rounded-lg text-slate-200 focus:outline-none focus:border-purple-500/50"
+                      step="10"
+                      min="10"
+                      max="1000"
+                    />
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      const group = strategyGroups.find(g => g.configKey === optimizationResults.configKey)
+                      if (group) runMonteCarloSimulation(group)
+                    }}
+                    disabled={isRunningMC}
+                    className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-500/20 to-pink-500/20 hover:from-purple-500/30 hover:to-pink-500/30 border border-purple-500/40 hover:border-purple-500/50 text-purple-300 font-bold rounded-lg transition-all disabled:opacity-50"
+                  >
+                    {isRunningMC ? '🎲 Running...' : '🎲 Run Simulation'}
+                  </button>
+                  <button
+                    onClick={() => {
+                      const group = strategyGroups.find(g => g.configKey === optimizationResults.configKey)
+                      if (group) findBestStrategy(group)
+                    }}
+                    disabled={isFindingBestStrategy}
+                    className="flex-1 px-6 py-3 bg-gradient-to-r from-emerald-500/20 to-green-500/20 hover:from-emerald-500/30 hover:to-green-500/30 border border-emerald-500/40 hover:border-emerald-500/50 text-emerald-300 font-bold rounded-lg transition-all disabled:opacity-50"
+                  >
+                    {isFindingBestStrategy ? '🔬 Finding...' : '🔬 Find Best Strategy'}
+                  </button>
+                </div>
+
+                {/* Progress */}
+                {(mcProgress || strategyFinderProgress) && (
+                  <div className="mt-4 bg-purple-500/10 border border-purple-500/30 rounded-lg p-3">
+                    <p className="text-sm text-purple-300">
+                      {mcProgress || strategyFinderProgress}
+                    </p>
+                  </div>
+                )}
+
+                {/* Monte Carlo Results */}
+                {mcResults && (
+                  <div className="mt-4 bg-gradient-to-br from-purple-900/30 to-pink-900/20 border-2 border-purple-500/50 rounded-xl p-6">
+                    <h4 className="text-lg font-semibold text-purple-300 mb-4">📊 Simulation Results</h4>
+                    
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4">
+                      <div className="bg-slate-900/50 rounded-lg p-4">
+                        <p className="text-xs text-slate-500 mb-1">Survival Rate</p>
+                        <p className="text-2xl font-bold text-emerald-400">
+                          {((mcResults.survived / (mcResults.survived + mcResults.bankrupt)) * 100).toFixed(1)}%
+                        </p>
+                        <p className="text-xs text-emerald-400">{mcResults.survived}/{mcNumSimulations}</p>
+                      </div>
+                      
+                      <div className="bg-slate-900/50 rounded-lg p-4">
+                        <p className="text-xs text-slate-500 mb-1">Bankruptcy Risk</p>
+                        <p className="text-2xl font-bold text-red-400">
+                          {((mcResults.bankrupt / (mcResults.survived + mcResults.bankrupt)) * 100).toFixed(1)}%
+                        </p>
+                        <p className="text-xs text-red-400">{mcResults.bankrupt}/{mcNumSimulations}</p>
+                      </div>
+                      
+                      <div className="bg-slate-900/50 rounded-lg p-4">
+                        <p className="text-xs text-slate-500 mb-1">Avg P&L</p>
+                        <p className={`text-2xl font-bold ${mcResults.avgPnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                          {mcResults.avgPnl >= 0 ? '+' : ''}${mcResults.avgPnl.toFixed(2)}
+                        </p>
+                        <p className="text-xs text-slate-400">{mcResults.avgWinRate.toFixed(1)}% WR</p>
+                      </div>
+                      
+                      <div className="bg-slate-900/50 rounded-lg p-4">
+                        <p className="text-xs text-slate-500 mb-1">Best Case</p>
+                        <p className="text-2xl font-bold text-emerald-400">
+                          +${mcResults.bestPnl.toFixed(2)}
+                        </p>
+                      </div>
+                      
+                      <div className="bg-slate-900/50 rounded-lg p-4">
+                        <p className="text-xs text-slate-500 mb-1">Worst Case</p>
+                        <p className="text-2xl font-bold text-red-400">
+                          ${mcResults.worstPnl.toFixed(2)}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="bg-slate-900/30 rounded-lg p-4 border border-slate-700/30">
+                      <p className="text-sm text-slate-300 mb-2">
+                        {mcResults.survived === mcNumSimulations && (
+                          <span className="text-emerald-400">✅ <strong>Very Safe Strategy:</strong> All simulations survived! Low bankruptcy risk.</span>
+                        )}
+                        {mcResults.survived > mcNumSimulations * 0.8 && mcResults.survived < mcNumSimulations && (
+                          <span className="text-emerald-400">✅ <strong>Safe Strategy:</strong> High survival rate ({((mcResults.survived / mcNumSimulations) * 100).toFixed(0)}%). Good risk/reward.</span>
+                        )}
+                        {mcResults.survived >= mcNumSimulations * 0.5 && mcResults.survived <= mcNumSimulations * 0.8 && (
+                          <span className="text-amber-400">⚠️ <strong>Moderate Risk:</strong> {((mcResults.bankrupt / mcNumSimulations) * 100).toFixed(0)}% bankruptcy rate. Consider reducing bet size or tightening filters.</span>
+                        )}
+                        {mcResults.survived < mcNumSimulations * 0.5 && (
+                          <span className="text-red-400">❌ <strong>High Risk:</strong> {((mcResults.bankrupt / mcNumSimulations) * 100).toFixed(0)}% bankruptcy rate. This strategy is too risky!</span>
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Best Strategies Results */}
+                {bestStrategies && bestStrategies.length > 0 && (
+                  <div className="mt-4 bg-gradient-to-br from-emerald-900/30 to-green-900/20 border-2 border-emerald-500/50 rounded-xl p-6">
+                    <h4 className="text-lg font-semibold text-emerald-300 mb-4">🏆 Top Strategies for ${mcBudget} Budget</h4>
+                    
+                    <div className="space-y-3">
+                      {bestStrategies.map((strategy, index) => (
+                        <div key={index} className={`bg-slate-900/50 rounded-lg p-4 border ${
+                          index === 0 ? 'border-emerald-500/50' : 'border-slate-700/30'
+                        }`}>
+                          <div className="flex items-start justify-between mb-2">
+                            <div>
+                              <span className="text-lg font-bold text-slate-200">
+                                {index === 0 && '🥇 '}
+                                {index === 1 && '🥈 '}
+                                {index === 2 && '🥉 '}
+                                #{index + 1}
+                              </span>
+                              <span className="ml-3 text-sm text-slate-400">
+                                Price {strategy.minPrice}-{strategy.maxPrice} | Trigger ${strategy.minTrigger} | Bet ${strategy.fixedBet}
+                              </span>
+                            </div>
+                            <button
+                              onClick={() => {
+                                setMcMinPrice(strategy.minPrice)
+                                setMcMaxPrice(strategy.maxPrice)
+                                setMcMinTrigger(strategy.minTrigger)
+                                setMcFixedBet(strategy.fixedBet)
+                              }}
+                              className="px-3 py-1 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 text-xs rounded-lg transition-all"
+                            >
+                              📋 Use This
+                            </button>
+                          </div>
+                          
+                          <div className="grid grid-cols-5 gap-3 text-sm">
+                            <div>
+                              <p className="text-xs text-slate-500">Survival</p>
+                              <p className="font-semibold text-emerald-400">{strategy.survivalRate.toFixed(0)}%</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-slate-500">Bankruptcy</p>
+                              <p className="font-semibold text-red-400">{strategy.bankruptcyRate.toFixed(0)}%</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-slate-500">Avg P&L</p>
+                              <p className={`font-semibold ${strategy.avgPnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                                ${strategy.avgPnl.toFixed(2)}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-slate-500">Win Rate</p>
+                              <p className="font-semibold text-cyan-400">{strategy.avgWinRate.toFixed(1)}%</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-slate-500">Avg Trades</p>
+                              <p className="font-semibold text-slate-300">{strategy.totalTrades.toFixed(0)}</p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
 
               {optimizationResults.suggestions.length === 0 ? (
                 <div className="bg-slate-800/30 border border-slate-700/50 rounded-lg p-8 text-center">
