@@ -761,38 +761,36 @@ export default function CopySimulatorPage() {
       const botRuns = result.data || []
       console.log(`✅ Received ${botRuns.length} run(s) from bot`)
       
-      // Merge bot data with local data
-      // Strategy: Bot is source of truth ONLY if it has actually found trades
-      // Otherwise, keep local data (user's manual checks)
-      const merged = [...copyTrades]
-      let synced = 0
-      let skipped = 0
+      // USE BOT AS SOURCE OF TRUTH
+      // If bot has data, replace local with bot data (this ensures deletions sync properly)
+      // Only keep local data if bot has no trades for that specific run (user's manual checks)
+      const botRunIds = new Set(botRuns.map(r => r.id))
       
-      for (const botRun of botRuns) {
-        const existingIndex = merged.findIndex(ct => ct.id === botRun.id)
+      // Start with bot runs
+      const merged = botRuns.map(botRun => {
+        const localRun = copyTrades.find(ct => ct.id === botRun.id)
         
-        if (existingIndex >= 0) {
-          const localRun = merged[existingIndex]
+        if (localRun) {
           const botHasTrades = botRun.trades && botRun.trades.length > 0
           const localHasTrades = localRun.trades && localRun.trades.length > 0
           
-          // Only sync if bot has trades OR local has no trades
+          // If bot has trades, use bot data. Otherwise keep local.
           if (botHasTrades || !localHasTrades) {
-            merged[existingIndex] = {
-              ...merged[existingIndex],
+            console.log(`🔄 Updated run: ${botRun.name} (${botRun.trades?.length || 0} trades)`)
+            return {
+              ...localRun,
               currentBudget: botRun.currentBudget,
               trades: botRun.trades,
               lastChecked: Date.now(),
             }
-            console.log(`🔄 Updated run: ${botRun.name} (${botRun.trades?.length || 0} trades)`)
-            synced++
           } else {
-            console.log(`⏭️ Skipped run: ${botRun.name} (bot has no trades yet, keeping local data)`)
-            skipped++
+            console.log(`⏭️ Kept local data for: ${botRun.name} (bot has no trades yet)`)
+            return localRun
           }
         } else {
-          // Add new run from bot
-          merged.push({
+          // New run from bot
+          console.log(`➕ Added new run from bot: ${botRun.name}`)
+          return {
             id: botRun.id,
             name: botRun.name || 'Bot Run',
             traderAddress: botRun.traderAddress,
@@ -807,17 +805,26 @@ export default function CopySimulatorPage() {
             lastChecked: Date.now(),
             isArchived: false,
             isActive: true,
-          })
-          console.log(`➕ Added new run: ${botRun.name}`)
+          }
         }
-      }
+      })
+      
+      // Add local-only runs that bot doesn't have (e.g., newly created but not yet synced)
+      const localOnlyRuns = copyTrades.filter(ct => !botRunIds.has(ct.id))
+      localOnlyRuns.forEach(run => {
+        console.log(`📍 Kept local-only run: ${run.name} (not yet on bot)`)
+        merged.push(run)
+      })
+      
+      const synced = botRuns.length
+      const localOnly = localOnlyRuns.length
       
       setCopyTrades(merged)
       await saveToIndexedDB('copyTrades', merged)
       
-      const message = skipped > 0 
-        ? `✅ Synced: ${synced} updated, ${skipped} skipped (bot has no trades yet)`
-        : `✅ Synced with bot: ${synced} run(s) updated`
+      const message = localOnly > 0
+        ? `✅ Synced ${synced} run(s) from bot, kept ${localOnly} local-only run(s)`
+        : `✅ Synced with bot: ${synced} run(s)`
       
       setNotification({
         message,
