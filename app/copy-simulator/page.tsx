@@ -1588,6 +1588,9 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
       const railwayUrl = process.env.NEXT_PUBLIC_RAILWAY_BOT_URL || localStorage.getItem('railwayBotUrl')
       if (railwayUrl) {
         try {
+          console.log('🤖 Auto-syncing deletion to Railway bot...')
+          
+          // 1. Sync updated configurations (what to monitor)
           const botConfigs = updatedCopyTrades.map(ct => ({
             id: ct.id,
             name: ct.name,
@@ -1599,22 +1602,28 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
             fixedBetAmount: ct.fixedBetAmount
           }))
 
-          console.log('🤖 Auto-syncing configuration deletion to Railway bot...')
-          const response = await fetch(`${railwayUrl}/api/configurations`, {
+          const configResponse = await fetch(`${railwayUrl}/api/configurations`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ configurations: botConfigs })
           })
 
-          if (response.ok) {
-            console.log('✅ Configuration deletion synced to bot!')
+          // 2. Sync updated run data (actual trades)
+          const runsResponse = await fetch(`${railwayUrl}/api/copy-trades`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ runs: updatedCopyTrades })
+          })
+
+          if (configResponse.ok && runsResponse.ok) {
+            console.log('✅ Configuration AND run data deletion synced to bot!')
             setNotification({
-              message: `✅ Config deleted and synced to Railway bot!`,
+              message: `✅ Config deleted and fully synced to Railway bot!`,
               type: 'success'
             })
             setTimeout(() => setNotification(null), 4000)
           } else {
-            console.error('❌ Failed to sync deletion to bot:', response.status)
+            console.error('❌ Failed to sync deletion to bot:', configResponse.status, runsResponse.status)
             setNotification({
               message: `⚠️ Config deleted locally but sync to bot failed. Click "Export to Bot" to retry.`,
               type: 'warning'
