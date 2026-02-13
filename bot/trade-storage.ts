@@ -104,8 +104,14 @@ export function updateCopyTrade(updatedRun: CopyTradeRun): void {
 
 export function initializeCopyTradesFromConfigurations(configurations: any[]): void {
   const existingRuns = loadCopyTrades()
-  const existingIds = new Set(existingRuns.map(r => r.id))
+  const configIds = new Set(configurations.map(c => c.id))
   
+  // Remove runs that are no longer in configurations (deleted configs)
+  const runsToKeep = existingRuns.filter(run => configIds.has(run.id))
+  const removedCount = existingRuns.length - runsToKeep.length
+  
+  // Add new runs from configurations
+  const existingIds = new Set(runsToKeep.map(r => r.id))
   const newRuns = configurations
     .filter(config => !existingIds.has(config.id))
     .map(config => ({
@@ -124,9 +130,13 @@ export function initializeCopyTradesFromConfigurations(configurations: any[]): v
       trades: []
     }))
   
+  const allRuns = [...runsToKeep, ...newRuns]
+  saveCopyTrades(allRuns)
+  
+  if (removedCount > 0) {
+    console.log(`🗑️ Removed ${removedCount} deleted run(s)`)
+  }
   if (newRuns.length > 0) {
-    const allRuns = [...existingRuns, ...newRuns]
-    saveCopyTrades(allRuns)
     console.log(`✅ Initialized ${newRuns.length} new copy trade run(s)`)
   }
 }

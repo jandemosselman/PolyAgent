@@ -1597,7 +1597,7 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
         try {
           console.log('🤖 Auto-syncing deletion to Railway bot...')
           
-          // 1. Sync updated configurations (what to monitor)
+          // Sync updated configurations (bot will clean up its own run data based on this)
           const botConfigs = updatedCopyTrades.map(ct => ({
             id: ct.id,
             name: ct.name,
@@ -1609,36 +1609,36 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
             fixedBetAmount: ct.fixedBetAmount
           }))
 
-          const configResponse = await fetch(`${railwayUrl}/api/configurations`, {
+          console.log(`📤 Syncing ${botConfigs.length} configuration(s) to bot...`)
+          const response = await fetch(`${railwayUrl}/api/configurations`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ configurations: botConfigs })
           })
 
-          // 2. Sync updated run data (actual trades)
-          const runsResponse = await fetch(`${railwayUrl}/api/copy-trades`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ runs: updatedCopyTrades })
-          })
-
-          if (configResponse.ok && runsResponse.ok) {
-            console.log('✅ Configuration AND run data deletion synced to bot!')
+          if (response.ok) {
+            console.log('✅ Configuration deletion synced to bot!')
             setNotification({
-              message: `✅ Config deleted and fully synced to Railway bot!`,
+              message: `✅ Config deleted and synced to Railway bot!`,
               type: 'success'
             })
             setTimeout(() => setNotification(null), 4000)
           } else {
-            console.error('❌ Failed to sync deletion to bot:', configResponse.status, runsResponse.status)
+            const errorText = await response.text()
+            console.error('❌ Failed to sync deletion to bot:', response.status, errorText)
             setNotification({
-              message: `⚠️ Config deleted locally but sync to bot failed. Click "Export to Bot" to retry.`,
+              message: `⚠️ Config deleted locally but sync to bot failed (${response.status}). Click "Export to Bot" to retry.`,
               type: 'warning'
             })
             setTimeout(() => setNotification(null), 5000)
           }
         } catch (error) {
           console.error('❌ Error syncing deletion to bot:', error)
+          setNotification({
+            message: `⚠️ Sync to bot failed: ${error.message}`,
+            type: 'warning'
+          })
+          setTimeout(() => setNotification(null), 5000)
         }
       } else {
         console.log('⚠️ No Railway URL configured - config deleted locally only')
