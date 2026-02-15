@@ -2877,9 +2877,13 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
         budget -= mcFixedBet
         tradesCopied++
         
-        // Resolve the trade
+        // Resolve the trade using ACTUAL Polymarket payout formula
         if (trade.status === 'won') {
-          budget += mcFixedBet * 2 // Win = 2x bet back
+          // Polymarket payout: (bet amount / price bought at)
+          // Example: Bet $1 at 0.5 price → Win = $1 / 0.5 = $2
+          // Example: Bet $1 at 0.7 price → Win = $1 / 0.7 = $1.43
+          const payout = mcFixedBet / trade.price
+          budget += payout
           wins++
         }
         // If lost, we already deducted the bet
@@ -3044,7 +3048,9 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
               tradesCopied++
               
               if (trade.status === 'won') {
-                budget += fixedBet * 2
+                // Use ACTUAL Polymarket payout formula
+                const payout = fixedBet / trade.price
+                budget += payout
                 wins++
               }
             }
