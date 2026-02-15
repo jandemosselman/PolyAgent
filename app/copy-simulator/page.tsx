@@ -1743,6 +1743,83 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
     }
   }
 
+  const importConfigurationsFromFile = () => {
+    try {
+      // Create file input
+      const fileInput = document.createElement('input')
+      fileInput.type = 'file'
+      fileInput.accept = '.json'
+      
+      fileInput.onchange = async (e: any) => {
+        const file = e.target.files[0]
+        if (!file) return
+        
+        try {
+          const text = await file.text()
+          const data = JSON.parse(text)
+          
+          let importedRuns: any[] = []
+          
+          // Handle different export formats
+          if (Array.isArray(data)) {
+            // Direct array of runs
+            importedRuns = data
+          } else if (data.runs && Array.isArray(data.runs)) {
+            // Single configuration export format (from exportConfigData)
+            importedRuns = data.runs
+          } else if (data.copyTrades && Array.isArray(data.copyTrades)) {
+            // Full export format (from exportAllData)
+            importedRuns = data.copyTrades
+          }
+          
+          if (!Array.isArray(importedRuns) || importedRuns.length === 0) {
+            setNotification({
+              message: '❌ Invalid file format. No runs found in the file.',
+              type: 'warning'
+            })
+            setTimeout(() => setNotification(null), 3000)
+            return
+          }
+          
+          console.log(`📥 Importing ${importedRuns.length} run(s) from file...`)
+          
+          // Merge with existing runs (avoid duplicates by ID)
+          const existingIds = new Set(copyTrades.map(ct => ct.id))
+          const newRuns = importedRuns.filter(run => !existingIds.has(run.id))
+          const duplicates = importedRuns.length - newRuns.length
+          
+          const mergedRuns = [...copyTrades, ...newRuns]
+          setCopyTrades(mergedRuns)
+          await saveToIndexedDB('copyTrades', mergedRuns)
+          
+          setNotification({
+            message: `✅ Imported ${newRuns.length} run(s)${duplicates > 0 ? `, skipped ${duplicates} duplicate(s)` : ''}. NOT synced to Railway (local only).`,
+            type: 'success'
+          })
+          setTimeout(() => setNotification(null), 5000)
+          
+          console.log(`✅ Import complete: ${newRuns.length} new, ${duplicates} duplicates skipped`)
+        } catch (error) {
+          console.error('Import failed:', error)
+          setNotification({
+            message: '❌ Failed to import file. Make sure it\'s a valid JSON file.',
+            type: 'warning'
+          })
+          setTimeout(() => setNotification(null), 3000)
+        }
+      }
+      
+      fileInput.click()
+    } catch (error) {
+      console.error('Import failed:', error)
+      setNotification({
+        message: 'Import failed. Please try again.',
+        type: 'warning'
+      })
+      setTimeout(() => setNotification(null), 3000)
+    }
+  }
+
   const exportAllData = () => {
     try {
       const exportData = {
@@ -3147,6 +3224,13 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
               title="Sync data from Railway bot"
             >
               {syncingWithBot ? '🔄 Syncing...' : '🤖 Sync with Bot'}
+            </button>
+            <button
+              onClick={importConfigurationsFromFile}
+              className="px-4 py-2 bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/30 hover:border-indigo-500/50 text-indigo-400 font-medium rounded-lg transition-all"
+              title="Import configurations from JSON file (local only, NOT synced to Railway)"
+            >
+              📥 Import Config
             </button>
             {copyTrades.length > 0 && (
               <>
