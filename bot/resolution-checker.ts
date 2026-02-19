@@ -113,6 +113,28 @@ function saveStats(stats: Map<string, ConfigStats>) {
 
 const statsCache = loadStats()
 
+// 🧹 MEMORY CLEANUP: Clear old stats periodically
+// Remove stats for configs that no longer exist (prevents memory leaks)
+export function cleanupStatsCache() {
+  const configs = loadConfigurations()
+  const activeConfigIds = new Set(configs.map(c => c.id))
+  
+  let removed = 0
+  for (const [id] of statsCache) {
+    if (!activeConfigIds.has(id)) {
+      statsCache.delete(id)
+      removed++
+    }
+  }
+  
+  if (removed > 0) {
+    console.log(`🧹 Cleaned up ${removed} orphaned stats from cache`)
+    saveStats(statsCache)
+  }
+  
+  return removed
+}
+
 export function getMonitoredConfigurations(): Configuration[] {
   return loadConfigurations()
 }

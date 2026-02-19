@@ -32,7 +32,7 @@ if (TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID) {
       const runs = loadCopyTrades()
       const configs = getMonitoredConfigurations()
       
-      // Calculate overall stats
+      // 🧹 MEMORY OPTIMIZATION: Calculate stats in single pass without creating copies
       let totalTrades = 0
       let totalOpen = 0
       let totalClosed = 0
@@ -43,20 +43,29 @@ if (TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID) {
       let totalBudgetAvailable = 0
       
       const runStats = runs.map(run => {
-        const openTrades = run.trades.filter(t => t.status === 'open')
-        const closedTrades = run.trades.filter(t => t.status !== 'open')
-        const wonTrades = run.trades.filter(t => t.status === 'won')
-        const lostTrades = run.trades.filter(t => t.status === 'lost')
-        const pnl = closedTrades.reduce((sum, t) => sum + (t.pnl || 0), 0)
-        const winRate = closedTrades.length > 0 ? (wonTrades.length / closedTrades.length * 100) : 0
-        const budgetUsed = openTrades.length * run.fixedBetAmount
+        // Single pass through trades - no filter copies
+        let open = 0, closed = 0, won = 0, lost = 0, pnl = 0
+        
+        for (const t of run.trades) {
+          if (t.status === 'open') {
+            open++
+          } else {
+            closed++
+            pnl += t.pnl || 0
+            if (t.status === 'won') won++
+            else if (t.status === 'lost') lost++
+          }
+        }
+        
+        const winRate = closed > 0 ? (won / closed * 100) : 0
+        const budgetUsed = open * run.fixedBetAmount
         const budgetAvailable = run.initialBudget + pnl - budgetUsed
         
         totalTrades += run.trades.length
-        totalOpen += openTrades.length
-        totalClosed += closedTrades.length
-        totalWon += wonTrades.length
-        totalLost += lostTrades.length
+        totalOpen += open
+        totalClosed += closed
+        totalWon += won
+        totalLost += lost
         totalPnL += pnl
         totalBudgetUsed += budgetUsed
         totalBudgetAvailable += budgetAvailable
@@ -64,10 +73,10 @@ if (TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID) {
         return {
           name: run.name,
           trades: run.trades.length,
-          open: openTrades.length,
-          closed: closedTrades.length,
-          won: wonTrades.length,
-          lost: lostTrades.length,
+          open,
+          closed,
+          won,
+          lost,
           winRate,
           pnl,
           budgetAvailable,
@@ -247,6 +256,13 @@ Or use \`/checkall\` to check everything
     const configs = getMonitoredConfigurations()
     const configList = configs.map((c, i) => `${i + 1}. ${c.name}`).join('\n')
     
+    // Get memory stats
+    const mem = process.memoryUsage()
+    const rssMB = mem.rss / 1024 / 1024
+    const railwayLimit = 512
+    const memPercent = (rssMB / railwayLimit * 100).toFixed(1)
+    const memStatus = rssMB > railwayLimit * 0.85 ? '🔴 CRITICAL' : rssMB > railwayLimit * 0.7 ? '⚠️ Warning' : '✅ Healthy'
+    
     await bot!.sendMessage(chatId, `
 🤖 *Bot Status*
 
@@ -257,6 +273,7 @@ ${configList}
 ⏰ Schedule: Every ${currentInterval} minute${currentInterval > 1 ? 's' : ''}
 🛡️ Global limit: ${maxGlobalTrades.toLocaleString()} trades
 ⏸️ Status: ${isPaused ? '*PAUSED*' : '*Active*'}
+🧠 Memory: ${memStatus} (${rssMB.toFixed(0)} MB / ${railwayLimit} MB)
 
 *Commands:*
 • /home - 🏠 Detailed dashboard
@@ -268,6 +285,7 @@ ${configList}
 • /checkall - Check all configs
 • /check1, /check2, etc - Check specific config
 • /cleardata - Delete all data (requires confirmation)
+• /cleanup - 🧹 Force memory cleanup
 • /memory - 🧠 Check memory usage
 • /status - Show this message
     `.trim(), { parse_mode: 'Markdown' })
@@ -520,7 +538,56 @@ When ANY run reaches this limit, automatic checks will pause to prevent overflow
     }
   })
   
-  console.log('✅ Telegram bot commands initialized (/refresh, /setinterval, /setmaxglobal, /pause, /resume, /cleardata, /status)')
+  // Handle /cleanup command - Manual memory cleanup
+  bot.onText(/\/cleanup/, async (msg) => {
+    const chatId = msg.chat.id.toString()
+    
+    if (chatId !== TELEGRAM_CHAT_ID) {
+      console.log(`❌ Unauthorized command from chat ID: ${chatId}`)
+      return
+    }
+    
+    try {
+      const memBefore = process.memoryUsage()
+      const rssBefore = memBefore.rss / 1024 / 1024
+      
+      console.log('🧹 Running manual memory cleanup...')
+      
+      // Clean stats cache
+      const { cleanupStatsCache } = await import('./resolution-checker.js')
+      const removed = cleanupStatsCache()
+      
+      // Force garbage collection if available
+      if (global.gc) {
+        global.gc()
+        console.log('🗑️ Forced garbage collection')
+      }
+      
+      const memAfter = process.memoryUsage()
+      const rssAfter = memAfter.rss / 1024 / 1024
+      const saved = rssBefore - rssAfter
+      
+      await bot!.sendMessage(chatId, `
+🧹 *Memory Cleanup Complete*
+
+Orphaned stats removed: ${removed}
+${global.gc ? '✅ Garbage collection forced\n' : '⚠️ GC not available (start with --expose-gc)\n'}
+*Before:* ${rssBefore.toFixed(0)} MB
+*After:* ${rssAfter.toFixed(0)} MB
+*Freed:* ${saved >= 0 ? '+' : ''}${saved.toFixed(0)} MB
+
+💡 To enable full GC on Railway:
+Set start command to: \`node --expose-gc dist/index.js\`
+      `.trim(), { parse_mode: 'Markdown' })
+      
+      console.log(`✅ Cleanup complete: ${rssBefore.toFixed(0)} MB → ${rssAfter.toFixed(0)} MB`)
+    } catch (error: any) {
+      await bot!.sendMessage(chatId, `❌ Cleanup error: ${error.message}`, { parse_mode: 'Markdown' })
+      console.error('❌ Cleanup error:', error)
+    }
+  })
+  
+  console.log('✅ Telegram bot commands initialized (/refresh, /setinterval, /setmaxglobal, /pause, /resume, /cleardata, /cleanup, /status)')
 } else {
   console.log('⚠️  Telegram bot commands disabled (missing credentials)')
 }
@@ -562,6 +629,14 @@ async function runCheck() {
     hour12: false 
   })
   console.log(`\n⏰ [${timestamp}] Running scheduled resolution check...`)
+  
+  // 🧹 MEMORY CLEANUP: Clean stats cache every check
+  try {
+    const { cleanupStatsCache } = await import('./resolution-checker.js')
+    cleanupStatsCache()
+  } catch (error) {
+    console.error('Error cleaning stats cache:', error)
+  }
   
   // Check if paused
   if (isPaused) {
