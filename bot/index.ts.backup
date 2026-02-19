@@ -83,15 +83,8 @@ if (TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID) {
         runs[0] || { trades: [], name: 'None' }
       )
       
-      // Get memory info first
-      const mem = process.memoryUsage()
-      const rssMB = mem.rss / 1024 / 1024
-      const railwayLimit = 512
-      const memPercent = (rssMB / railwayLimit * 100).toFixed(1)
-      const memStatus = rssMB > railwayLimit * 0.85 ? '🔴 CRITICAL' : rssMB > railwayLimit * 0.7 ? '⚠️ Warning' : '✅ Healthy'
-      
-      // MESSAGE 1: Summary
-      const summary = `
+      // Build dashboard
+      let dashboard = `
 🏠 *POLYAGENT DASHBOARD*
 
 📊 *Overall Statistics*
@@ -116,62 +109,42 @@ Interval: Every ${currentInterval} min
 Trade Limit: ${maxGlobalTrades.toLocaleString()}
 Largest Run: ${maxTradeRun.name} (${maxTradeRun.trades?.length || 0} trades)
 
-�� *Memory*
-━━━━━━━━━━━━━━━━━━━━
+🧠 *Memory*
+━━━━━━━━━━━━━━━━━━━━`
+
+      // Add memory info
+      const mem = process.memoryUsage()
+      const rssMB = mem.rss / 1024 / 1024
+      const railwayLimit = 512
+      const memPercent = (rssMB / railwayLimit * 100).toFixed(1)
+      const memStatus = rssMB > railwayLimit * 0.85 ? '🔴 CRITICAL' : rssMB > railwayLimit * 0.7 ? '⚠️ Warning' : '✅ Healthy'
+      
+      dashboard += `
 ${memStatus}: ${rssMB.toFixed(0)} MB / ${railwayLimit} MB (${memPercent}%)
-`.trim()
-      
-      await bot!.sendMessage(chatId, summary, { parse_mode: 'Markdown' })
-      
-      // MESSAGE 2+: Run details in batches (5 per message to avoid length limits)
-      if (runStats.length > 0) {
-        const batchSize = 5
-        const batches = Math.ceil(runStats.length / batchSize)
-        
-        for (let batch = 0; batch < batches; batch++) {
-          const start = batch * batchSize
-          const end = Math.min(start + batchSize, runStats.length)
-          const batchStats = runStats.slice(start, end)
-          
-          let details = `📋 *Run Details (${start + 1}-${end} of ${runStats.length})*
+
+📋 *Run Details*
 ━━━━━━━━━━━━━━━━━━━━
-
 `
-          
-          batchStats.forEach((stat, i) => {
-            const runNum = start + i + 1
-            details += `${runNum}. *${stat.name}*
+      
+      runStats.forEach((stat, i) => {
+        dashboard += `
+${i + 1}. *${stat.name}*
+   ${stat.trades} trades | ${stat.open} open | ${stat.closed} closed
+   Win Rate: ${stat.winRate.toFixed(1)}% | P&L: ${stat.pnl >= 0 ? '+' : ''}$${stat.pnl.toFixed(2)}
+   Available: $${stat.budgetAvailable.toFixed(2)}
 `
-            details += `   ${stat.trades} trades | ${stat.open} open | ${stat.closed} closed
-`
-            details += `   Win: ${stat.winRate.toFixed(1)}% | P&L: ${stat.pnl >= 0 ? '+' : ''}$${stat.pnl.toFixed(2)}
-`
-            details += `   Available: $${stat.budgetAvailable.toFixed(2)}
-
-`
-          })
-          
-          if (batch === batches - 1) {
-            details += `━━━━━━━━━━━━━━━━━━━━
+      })
+      
+      dashboard += `
+━━━━━━━━━━━━━━━━━━━━
 
 *Quick Commands:*
 /refresh - Run check cycle now
 /status - Show bot status
-/pause - Pause automatic checks`
-          }
-          
-          await bot!.sendMessage(chatId, details.trim(), { parse_mode: 'Markdown' })
-        }
-      } else {
-        await bot!.sendMessage(chatId, `📋 *Run Details*
-━━━━━━━━━━━━━━━━━━━━
-
-No active runs yet.
-
-*Quick Commands:*
-/refresh - Run check cycle now
-/status - Show bot status`, { parse_mode: 'Markdown' })
-      }
+/pause - Pause automatic checks
+`
+      
+      await bot!.sendMessage(chatId, dashboard.trim(), { parse_mode: 'Markdown' })
     } catch (error: any) {
       await bot!.sendMessage(chatId, `❌ Error loading dashboard: ${error.message}`, { parse_mode: 'Markdown' })
       console.error('Error in /home command:', error)
