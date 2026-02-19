@@ -157,7 +157,9 @@ export default function CopySimulatorPage() {
   
   // Monte Carlo Simulation States
   const [mcBudget, setMcBudget] = useState<number>(10)
+  const [mcBettingMode, setMcBettingMode] = useState<'fixed' | 'percentage'>('fixed')
   const [mcFixedBet, setMcFixedBet] = useState<number>(1)
+  const [mcPercentage, setMcPercentage] = useState<number>(1) // Percentage of original trade (1% = 1)
   const [mcMinPrice, setMcMinPrice] = useState<number>(0.5)
   const [mcMaxPrice, setMcMaxPrice] = useState<number>(0.66)
   const [mcMinTrigger, setMcMinTrigger] = useState<number>(10)
@@ -185,16 +187,21 @@ export default function CopySimulatorPage() {
   const [isFindingBestStrategy, setIsFindingBestStrategy] = useState(false)
   const [strategyFinderProgress, setStrategyFinderProgress] = useState<string>('')
   const [bestStrategies, setBestStrategies] = useState<Array<{
+    bettingMode: 'fixed' | 'percentage'
     minPrice: number
     maxPrice: number
     minTrigger: number
-    fixedBet: number
+    fixedBet?: number
+    percentage?: number
     survivalRate: number
     bankruptcyRate: number
     avgPnl: number
     avgWinRate: number
     riskAdjustedReturn: number
     totalTrades: number
+    consistency: number
+    sharpeRatio: number
+    maxDrawdown: number
   }> | null>(null)
   const [autoPriceRangeResults, setAutoPriceRangeResults] = useState<Array<{
     minPrice: number
@@ -2880,7 +2887,12 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
     setMcResults(null)
     
     console.log(`\n🎲 MONTE CARLO SIMULATION STARTED`)
-    console.log(`Budget: $${mcBudget}, Fixed Bet: $${mcFixedBet}`)
+    console.log(`Budget: $${mcBudget}, Betting Mode: ${mcBettingMode}`)
+    if (mcBettingMode === 'fixed') {
+      console.log(`Fixed Bet: $${mcFixedBet}`)
+    } else {
+      console.log(`Percentage: ${mcPercentage}% of original trade`)
+    }
     console.log(`Price Range: ${mcMinPrice}-${mcMaxPrice}, Min Trigger: $${mcMinTrigger}`)
     console.log(`Simulations: ${mcNumSimulations}`)
     
@@ -2943,15 +2955,37 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
       
       // Simulate trades from this starting point
       for (let j = startIndex; j < resolvedTrades.length; j++) {
-        if (budget < mcFixedBet) {
+        const trade = resolvedTrades[j]
+        
+        // Calculate bet amount based on mode
+        let betAmount: number
+        if (mcBettingMode === 'fixed') {
+          betAmount = mcFixedBet
+        } else {
+          // Percentage mode - calculate percentage of original trade amount
+          const originalTrade = trade.originalTrade
+          let originalAmount = 0
+          if (originalTrade.amount) {
+            originalAmount = parseFloat(originalTrade.amount)
+          } else if (originalTrade.size && originalTrade.price) {
+            originalAmount = parseFloat(originalTrade.size) * parseFloat(originalTrade.price)
+          }
+          betAmount = (mcPercentage / 100) * originalAmount
+          
+          // Safety check - don't bet more than available budget
+          if (betAmount > budget) {
+            betAmount = budget
+          }
+        }
+        
+        // Check if we have enough budget
+        if (budget < betAmount) {
           bankrupt = true
           break
         }
         
-        const trade = resolvedTrades[j]
-        
         // Copy the trade
-        budget -= mcFixedBet
+        budget -= betAmount
         tradesCopied++
         
         // Resolve the trade using ACTUAL Polymarket payout formula
@@ -2959,7 +2993,7 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
           // Polymarket payout: (bet amount / price bought at)
           // Example: Bet $1 at 0.5 price → Win = $1 / 0.5 = $2
           // Example: Bet $1 at 0.7 price → Win = $1 / 0.7 = $1.43
-          const payout = mcFixedBet / trade.price
+          const payout = betAmount / trade.price
           budget += payout
           wins++
         }
@@ -3020,7 +3054,7 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
     setBestStrategies(null)
     
     console.log(`\n🔬 BRUTE FORCE STRATEGY FINDER STARTED`)
-    console.log(`Budget: $${mcBudget}`)
+    console.log(`Budget: $${mcBudget}, Mode: ${mcBettingMode}`)
     
     // Get all resolved trades
     const configRuns = copyTrades.filter(ct => {
@@ -3039,48 +3073,84 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
       return
     }
     
-    // Define parameter combinations to test
+    // ENHANCED: More granular price ranges for better optimization
     const priceRanges = [
+      // Tight ranges around 0.5 (best odds)
       { min: 0.45, max: 0.55 },
+      { min: 0.48, max: 0.58 },
+      { min: 0.50, max: 0.60 },
+      { min: 0.52, max: 0.62 },
+      { min: 0.55, max: 0.65 },
+      // Medium ranges
       { min: 0.45, max: 0.60 },
       { min: 0.45, max: 0.65 },
-      { min: 0.50, max: 0.60 },
       { min: 0.50, max: 0.65 },
       { min: 0.50, max: 0.70 },
-      { min: 0.55, max: 0.65 },
       { min: 0.55, max: 0.70 },
+      // Wider ranges
+      { min: 0.40, max: 0.60 },
+      { min: 0.45, max: 0.70 },
+      { min: 0.50, max: 0.75 },
     ]
     
-    const minTriggers = [1, 5, 10, 20, 50, 100]
-    const fixedBets = mcBudget >= 50 ? [0.5, 1, 2, 5] : mcBudget >= 20 ? [0.5, 1, 2] : [0.5, 1]
+    // ENHANCED: More trigger options
+    const minTriggers = [0.5, 1, 2, 5, 10, 20, 30, 50, 75, 100, 150, 200]
     
-    const totalCombinations = priceRanges.length * minTriggers.length * fixedBets.length
-    console.log(`Testing ${totalCombinations} combinations...`)
+    // Define bet amounts based on selected mode
+    let betValues: number[]
+    let totalCombinations: number
+    
+    if (mcBettingMode === 'fixed') {
+      // ENHANCED: More bet size options based on budget
+      if (mcBudget >= 100) {
+        betValues = [0.5, 1, 1.5, 2, 2.5, 3, 5, 7, 10]
+      } else if (mcBudget >= 50) {
+        betValues = [0.5, 1, 1.5, 2, 2.5, 3, 5]
+      } else if (mcBudget >= 20) {
+        betValues = [0.25, 0.5, 0.75, 1, 1.5, 2, 3]
+      } else {
+        betValues = [0.25, 0.5, 0.75, 1, 1.5, 2]
+      }
+      totalCombinations = priceRanges.length * minTriggers.length * betValues.length
+      console.log(`Testing ${totalCombinations} FIXED BET combinations...`)
+    } else {
+      // ENHANCED: More percentage options
+      betValues = [0.25, 0.5, 0.75, 1, 1.5, 2, 3, 5, 7, 10, 15]
+      totalCombinations = priceRanges.length * minTriggers.length * betValues.length
+      console.log(`Testing ${totalCombinations} PERCENTAGE combinations...`)
+    }
     
     const strategies: Array<{
+      bettingMode: 'fixed' | 'percentage'
       minPrice: number
       maxPrice: number
       minTrigger: number
-      fixedBet: number
+      fixedBet?: number
+      percentage?: number
       survivalRate: number
       bankruptcyRate: number
       avgPnl: number
       avgWinRate: number
       riskAdjustedReturn: number
       totalTrades: number
+      consistency: number
+      sharpeRatio: number
+      maxDrawdown: number
     }> = []
     
     let combinationIndex = 0
     
+    // Test ONLY the selected mode
     for (const priceRange of priceRanges) {
       for (const minTrigger of minTriggers) {
-        for (const fixedBet of fixedBets) {
+        for (const betValue of betValues) {
           combinationIndex++
           
-          // Skip if fixed bet is too large for budget
-          if (fixedBet > mcBudget / 5) continue
+          // Skip if bet is too large for budget (for fixed mode)
+          if (mcBettingMode === 'fixed' && betValue > mcBudget / 5) continue
           
-          setStrategyFinderProgress(`Testing ${combinationIndex}/${totalCombinations}: Price ${priceRange.min}-${priceRange.max}, Trigger $${minTrigger}, Bet $${fixedBet}`)
+          const modeLabel = mcBettingMode === 'fixed' ? `$${betValue}` : `${betValue}%`
+          setStrategyFinderProgress(`Testing ${combinationIndex}/${totalCombinations}: ${mcBettingMode.toUpperCase()} ${modeLabel}, Price ${priceRange.min}-${priceRange.max}, Trigger $${minTrigger}`)
           
           // Filter trades for this combination
           const filteredTrades = allTrades.filter(t => {
@@ -3101,8 +3171,8 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
           
           if (filteredTrades.length < 50) continue // Need minimum trades
           
-          // Run 50 simulations for this combination
-          const numSims = 50
+          // ENHANCED: Run 100 simulations (was 50) for better accuracy
+          const numSims = 100
           const sims = []
           const maxStart = Math.max(0, filteredTrades.length - 100)
           
@@ -3113,29 +3183,63 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
             let tradesCopied = 0
             let wins = 0
             let bankrupt = false
+            const budgetHistory: number[] = [budget]
             
             for (let j = startIndex; j < filteredTrades.length; j++) {
-              if (budget < fixedBet) {
+              const trade = filteredTrades[j]
+              
+              // Calculate bet amount based on mode
+              let betAmount: number
+              if (mcBettingMode === 'fixed') {
+                betAmount = betValue
+              } else {
+                // Percentage mode
+                const originalTrade = trade.originalTrade
+                let originalAmount = 0
+                if (originalTrade.amount) {
+                  originalAmount = parseFloat(originalTrade.amount)
+                } else if (originalTrade.size && originalTrade.price) {
+                  originalAmount = parseFloat(originalTrade.size) * parseFloat(originalTrade.price)
+                }
+                betAmount = (betValue / 100) * originalAmount
+                
+                // Safety: don't bet more than available budget
+                if (betAmount > budget) {
+                  betAmount = budget
+                }
+              }
+              
+              if (budget < betAmount) {
                 bankrupt = true
                 break
               }
               
-              const trade = filteredTrades[j]
-              budget -= fixedBet
+              budget -= betAmount
               tradesCopied++
               
               if (trade.status === 'won') {
                 // Use ACTUAL Polymarket payout formula
-                const payout = fixedBet / trade.price
+                const payout = betAmount / trade.price
                 budget += payout
                 wins++
               }
+              
+              budgetHistory.push(budget)
             }
             
             const pnl = budget - mcBudget
             const winRate = tradesCopied > 0 ? (wins / tradesCopied) * 100 : 0
             
-            sims.push({ pnl, winRate, bankrupt, trades: tradesCopied })
+            // Calculate max drawdown
+            let maxDrawdown = 0
+            let peak = mcBudget
+            for (const b of budgetHistory) {
+              if (b > peak) peak = b
+              const drawdown = ((peak - b) / peak) * 100
+              if (drawdown > maxDrawdown) maxDrawdown = drawdown
+            }
+            
+            sims.push({ pnl, winRate, bankrupt, trades: tradesCopied, maxDrawdown, budgetHistory })
           }
           
           const survived = sims.filter(s => !s.bankrupt).length
@@ -3144,47 +3248,93 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
           const avgPnl = sims.reduce((sum, s) => sum + s.pnl, 0) / sims.length
           const avgWinRate = sims.reduce((sum, s) => sum + s.winRate, 0) / sims.length
           const avgTrades = sims.reduce((sum, s) => sum + s.trades, 0) / sims.length
+          const avgMaxDrawdown = sims.reduce((sum, s) => sum + s.maxDrawdown, 0) / sims.length
           
-          // Risk-adjusted return: avg P&L / bankruptcy risk
-          const riskAdjustedReturn = bankruptcyRate > 0 ? avgPnl / (bankruptcyRate + 1) : avgPnl * 10
+          // ENHANCED: Calculate Sharpe Ratio (risk-adjusted return metric)
+          const pnls = sims.map(s => s.pnl)
+          const stdDev = Math.sqrt(pnls.reduce((sum, p) => sum + Math.pow(p - avgPnl, 2), 0) / pnls.length)
+          const sharpeRatio = stdDev > 0 ? avgPnl / stdDev : 0
+          
+          // ENHANCED: Consistency score (how many simulations were profitable)
+          const profitableSims = sims.filter(s => s.pnl > 0).length
+          const consistency = (profitableSims / numSims) * 100
+          
+          // ENHANCED: Better risk-adjusted return calculation
+          // Combines profitability, survival, and consistency
+          const riskAdjustedReturn = bankruptcyRate > 0 
+            ? (avgPnl * consistency * survivalRate) / (bankruptcyRate * 100 + 1) 
+            : avgPnl * consistency * survivalRate
           
           strategies.push({
+            bettingMode: mcBettingMode,
             minPrice: priceRange.min,
             maxPrice: priceRange.max,
             minTrigger,
-            fixedBet,
+            ...(mcBettingMode === 'fixed' ? { fixedBet: betValue } : { percentage: betValue }),
             survivalRate,
             bankruptcyRate,
             avgPnl,
             avgWinRate,
             riskAdjustedReturn,
-            totalTrades: avgTrades
+            totalTrades: avgTrades,
+            consistency,
+            sharpeRatio,
+            maxDrawdown: avgMaxDrawdown
           })
         }
       }
     }
     
-    // Sort by: 1) Low bankruptcy risk, 2) High risk-adjusted return
+    // ENHANCED: Smart sorting algorithm
+    // Priority: 1) Survival, 2) Consistency, 3) Risk-adjusted return, 4) Sharpe ratio
     const sortedStrategies = strategies
-      .filter(s => s.bankruptcyRate < 30) // Only show strategies with <30% bankruptcy
+      .filter(s => s.bankruptcyRate < 25) // Only strategies with <25% bankruptcy
+      .filter(s => s.totalTrades >= 30) // Need meaningful sample size
       .sort((a, b) => {
-        // Prioritize survival first
-        if (Math.abs(a.bankruptcyRate - b.bankruptcyRate) > 10) {
-          return a.bankruptcyRate - b.bankruptcyRate
+        // First: Prioritize survival (must be >75% to even consider)
+        if (a.survivalRate < 75 && b.survivalRate >= 75) return 1
+        if (a.survivalRate >= 75 && b.survivalRate < 75) return -1
+        
+        // Second: Consistency (profitable simulations)
+        if (Math.abs(a.consistency - b.consistency) > 15) {
+          return b.consistency - a.consistency
         }
-        // Then risk-adjusted return
-        return b.riskAdjustedReturn - a.riskAdjustedReturn
+        
+        // Third: Risk-adjusted return
+        if (Math.abs(a.riskAdjustedReturn - b.riskAdjustedReturn) > 1000) {
+          return b.riskAdjustedReturn - a.riskAdjustedReturn
+        }
+        
+        // Fourth: Sharpe ratio (reward/volatility)
+        return b.sharpeRatio - a.sharpeRatio
       })
       .slice(0, 10) // Top 10
     
     console.log(`\n✅ STRATEGY FINDER COMPLETE`)
-    console.log(`Found ${sortedStrategies.length} viable strategies`)
+    console.log(`Tested ${strategies.length} combinations`)
+    console.log(`Found ${sortedStrategies.length} elite strategies`)
+    if (sortedStrategies.length > 0) {
+      const best = sortedStrategies[0]
+      console.log(`\n🥇 BEST STRATEGY:`)
+      console.log(`  Mode: ${best.bettingMode}`)
+      console.log(`  Bet: ${best.bettingMode === 'fixed' ? `$${best.fixedBet}` : `${best.percentage}%`}`)
+      console.log(`  Price: ${best.minPrice}-${best.maxPrice}`)
+      console.log(`  Trigger: $${best.minTrigger}`)
+      console.log(`  Survival: ${best.survivalRate.toFixed(1)}%`)
+      console.log(`  Consistency: ${best.consistency.toFixed(1)}%`)
+      console.log(`  Avg P&L: $${best.avgPnl.toFixed(2)}`)
+      console.log(`  Sharpe: ${best.sharpeRatio.toFixed(2)}`)
+    }
     
     setBestStrategies(sortedStrategies)
     setIsFindingBestStrategy(false)
     setStrategyFinderProgress('')
     
-    setNotification({ type: 'success', message: `Found ${sortedStrategies.length} strategies!` })
+    if (sortedStrategies.length === 0) {
+      setNotification({ type: 'warning', message: 'No strategies met the strict criteria. Try different settings or more data.' })
+    } else {
+      setNotification({ type: 'success', message: `🏆 Found ${sortedStrategies.length} elite strategies!` })
+    }
     setTimeout(() => setNotification(null), 4000)
   }
 
@@ -4903,16 +5053,43 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
                     />
                   </div>
                   <div>
-                    <label className="block text-sm text-slate-400 mb-2">Fixed Bet ($)</label>
-                    <input
-                      type="number"
-                      value={mcFixedBet}
-                      onChange={(e) => setMcFixedBet(parseFloat(e.target.value) || 1)}
+                    <label className="block text-sm text-slate-400 mb-2">Betting Mode</label>
+                    <select
+                      value={mcBettingMode}
+                      onChange={(e) => setMcBettingMode(e.target.value as 'fixed' | 'percentage')}
                       className="w-full px-4 py-2 bg-slate-900/50 border border-slate-700/50 rounded-lg text-slate-200 focus:outline-none focus:border-purple-500/50"
-                      step="0.5"
-                      min="0.5"
-                    />
+                    >
+                      <option value="fixed">💵 Fixed Bet Amount</option>
+                      <option value="percentage">📊 % of Original Trade</option>
+                    </select>
                   </div>
+                  {mcBettingMode === 'fixed' ? (
+                    <div>
+                      <label className="block text-sm text-slate-400 mb-2">Fixed Bet ($)</label>
+                      <input
+                        type="number"
+                        value={mcFixedBet}
+                        onChange={(e) => setMcFixedBet(parseFloat(e.target.value) || 1)}
+                        className="w-full px-4 py-2 bg-slate-900/50 border border-slate-700/50 rounded-lg text-slate-200 focus:outline-none focus:border-purple-500/50"
+                        step="0.5"
+                        min="0.5"
+                      />
+                    </div>
+                  ) : (
+                    <div>
+                      <label className="block text-sm text-slate-400 mb-2">Percentage (%)</label>
+                      <input
+                        type="number"
+                        value={mcPercentage}
+                        onChange={(e) => setMcPercentage(parseFloat(e.target.value) || 1)}
+                        className="w-full px-4 py-2 bg-slate-900/50 border border-slate-700/50 rounded-lg text-slate-200 focus:outline-none focus:border-purple-500/50"
+                        step="0.5"
+                        min="0.1"
+                        max="100"
+                      />
+                    </div>
+                  )}
+                  <div></div>
                   <div>
                     <label className="block text-sm text-slate-400 mb-2">Min Price</label>
                     <input
@@ -5078,15 +5255,24 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
                                 #{index + 1}
                               </span>
                               <span className="ml-3 text-sm text-slate-400">
-                                Price {strategy.minPrice}-{strategy.maxPrice} | Trigger ${strategy.minTrigger} | Bet ${strategy.fixedBet}
+                                {strategy.bettingMode === 'fixed' ? (
+                                  <>💵 Fixed ${strategy.fixedBet}</>
+                                ) : (
+                                  <>📊 {strategy.percentage}% of trade</>
+                                )} | Price {strategy.minPrice}-{strategy.maxPrice} | Trigger ${strategy.minTrigger}
                               </span>
                             </div>
                             <button
                               onClick={() => {
+                                setMcBettingMode(strategy.bettingMode)
                                 setMcMinPrice(strategy.minPrice)
                                 setMcMaxPrice(strategy.maxPrice)
                                 setMcMinTrigger(strategy.minTrigger)
-                                setMcFixedBet(strategy.fixedBet)
+                                if (strategy.bettingMode === 'fixed' && strategy.fixedBet) {
+                                  setMcFixedBet(strategy.fixedBet)
+                                } else if (strategy.bettingMode === 'percentage' && strategy.percentage) {
+                                  setMcPercentage(strategy.percentage)
+                                }
                               }}
                               className="px-3 py-1 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 text-xs rounded-lg transition-all"
                             >
@@ -5094,14 +5280,14 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
                             </button>
                           </div>
                           
-                          <div className="grid grid-cols-5 gap-3 text-sm">
+                          <div className="grid grid-cols-6 gap-3 text-sm mb-2">
                             <div>
                               <p className="text-xs text-slate-500">Survival</p>
                               <p className="font-semibold text-emerald-400">{strategy.survivalRate.toFixed(0)}%</p>
                             </div>
                             <div>
-                              <p className="text-xs text-slate-500">Bankruptcy</p>
-                              <p className="font-semibold text-red-400">{strategy.bankruptcyRate.toFixed(0)}%</p>
+                              <p className="text-xs text-slate-500">Consistency</p>
+                              <p className="font-semibold text-cyan-400">{strategy.consistency.toFixed(0)}%</p>
                             </div>
                             <div>
                               <p className="text-xs text-slate-500">Avg P&L</p>
@@ -5110,13 +5296,21 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
                               </p>
                             </div>
                             <div>
-                              <p className="text-xs text-slate-500">Win Rate</p>
-                              <p className="font-semibold text-cyan-400">{strategy.avgWinRate.toFixed(1)}%</p>
+                              <p className="text-xs text-slate-500">Sharpe</p>
+                              <p className="font-semibold text-purple-400">{strategy.sharpeRatio.toFixed(2)}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-slate-500">Max DD</p>
+                              <p className="font-semibold text-orange-400">{strategy.maxDrawdown.toFixed(1)}%</p>
                             </div>
                             <div>
                               <p className="text-xs text-slate-500">Avg Trades</p>
                               <p className="font-semibold text-slate-300">{strategy.totalTrades.toFixed(0)}</p>
                             </div>
+                          </div>
+                          
+                          <div className="text-xs text-slate-500 pt-2 border-t border-slate-700/30">
+                            Win Rate: {strategy.avgWinRate.toFixed(1)}% | Bankruptcy: {strategy.bankruptcyRate.toFixed(0)}%
                           </div>
                         </div>
                       ))}

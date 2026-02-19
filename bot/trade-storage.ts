@@ -78,8 +78,23 @@ export function loadCopyTrades(): CopyTradeRun[] {
 
 export function saveCopyTrades(runs: CopyTradeRun[]): void {
   try {
-    fs.writeFileSync(STORAGE_FILE, JSON.stringify(runs, null, 2), 'utf-8')
-    console.log(`💾 Saved ${runs.length} copy trade run(s) to storage`)
+    // 🛡️ AUTOMATIC DATA PRUNING - Prevent memory overflow
+    // Keep max 2000 trades per run (enough for analysis, prevents bloat)
+    const prunedRuns = runs.map(run => {
+      if (run.trades.length > 2000) {
+        const originalCount = run.trades.length
+        // Keep most recent 2000 trades
+        const sortedTrades = [...run.trades].sort((a, b) => b.timestamp - a.timestamp)
+        run.trades = sortedTrades.slice(0, 2000)
+        console.log(`✂️  Auto-pruned run ${run.name}: ${originalCount} → ${run.trades.length} trades`)
+      }
+      return run
+    })
+    
+    fs.writeFileSync(STORAGE_FILE, JSON.stringify(prunedRuns, null, 2), 'utf-8')
+    
+    const totalTrades = prunedRuns.reduce((sum, r) => sum + r.trades.length, 0)
+    console.log(`💾 Saved ${prunedRuns.length} run(s) with ${totalTrades.toLocaleString()} trades`)
   } catch (error) {
     console.error('Error saving copy trades:', error)
   }
