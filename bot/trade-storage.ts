@@ -76,17 +76,19 @@ export function loadCopyTrades(): CopyTradeRun[] {
   return []
 }
 
-export function saveCopyTrades(runs: CopyTradeRun[]): void {
+export function saveCopyTrades(runs: CopyTradeRun[], maxTradesPerRun?: number): void {
   try {
     // 🛡️ AUTOMATIC DATA PRUNING - Prevent memory overflow
-    // Keep max 2000 trades per run (enough for analysis, prevents bloat)
+    // Use maxGlobalTrades or default to 50000 (way more than the old 2000 limit)
+    const MAX_TRADES_PER_RUN = maxTradesPerRun || 50000
+    
     const prunedRuns = runs.map(run => {
-      if (run.trades.length > 2000) {
+      if (run.trades.length > MAX_TRADES_PER_RUN) {
         const originalCount = run.trades.length
-        // Keep most recent 2000 trades
+        // Keep most recent trades
         const sortedTrades = [...run.trades].sort((a, b) => b.timestamp - a.timestamp)
-        run.trades = sortedTrades.slice(0, 2000)
-        console.log(`✂️  Auto-pruned run ${run.name}: ${originalCount} → ${run.trades.length} trades`)
+        run.trades = sortedTrades.slice(0, MAX_TRADES_PER_RUN)
+        console.log(`✂️  Auto-pruned run ${run.name}: ${originalCount} → ${run.trades.length} trades (limit: ${MAX_TRADES_PER_RUN})`)
       }
       return run
     })
