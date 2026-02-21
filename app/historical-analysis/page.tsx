@@ -216,37 +216,105 @@ export default function HistoricalAnalysisPage() {
       console.log(`✅ Fetched ${allActivity.length} trades using timestamp-based pagination`)
 
       // Fetch closed positions for resolution checking
+      // Note: Fetch ALL closed positions available (not limited by numTrades)
       setFetchStatus('Fetching closed positions for resolution...')
       const closedPositions: any[] = []
-      const closedBatches = Math.ceil(numTrades / batchSize)
+      const maxClosedPositions = 10000 // Fetch up to 10k closed positions
+      let closedBatchSize = 1000 // Larger batches for closed positions
+      let closedOffset = 0
+      let hasMoreClosedPositions = true
 
-      for (let i = 0; i < closedBatches; i++) {
-        const offset = i * batchSize
-        const limit = Math.min(batchSize, numTrades - offset)
+      while (hasMoreClosedPositions && closedPositions.length < maxClosedPositions) {
+        const limit = Math.min(closedBatchSize, maxClosedPositions - closedPositions.length)
         
-        setFetchStatus(`Checking resolutions... ${offset + limit} / ${numTrades}`)
-        setFetchProgress(50 + ((offset + limit) / numTrades) * 50) // 50-100%
+        setFetchStatus(`Fetching closed positions... ${closedPositions.length}`)
+        setFetchProgress(50 + (closedPositions.length / Math.min(allActivity.length, maxClosedPositions)) * 50)
 
         const response = await fetch(
-          `/api/closed-positions?user=${traderAddress}&limit=${limit}&offset=${offset}`
+          `/api/closed-positions?user=${traderAddress}&limit=${limit}&offset=${closedOffset}`
         )
 
         if (!response.ok) {
-          console.warn(`Failed to fetch closed positions batch ${i}: ${response.status}`)
-          continue
-        }
-
-        const data = await response.json()
-        // data is already an array from this API
-        if (Array.isArray(data)) {
-          closedPositions.push(...data)
-        }
-
-        if (data.length < limit) {
+          console.warn(`⚠️ Failed to fetch closed positions at offset ${closedOffset}: ${response.status}`)
           break
         }
 
+        const data = await response.json()
+        if (Array.isArray(data) && data.length > 0) {
+          closedPositions.push(...data)
+          closedOffset += data.length
+          
+          // If we got fewer than requested, we've reached the end
+          if (data.length < limit) {
+            hasMoreClosedPositions = false
+            console.log(`📊 Reached end of closed positions at ${closedPositions.length}`)
+          }
+        } else {
+          hasMoreClosedPositions = false
+        }
+
         await new Promise(resolve => setTimeout(resolve, 200))
+      }
+
+      console.log(`✅ Fetched ${closedPositions.length} closed positions`)
+      
+      // AUTO-FETCH MORE TRADES if we have closed positions but haven't fetched enough trades yet
+      // This handles ultra-fast traders who have hundreds of open trades but closed positions just 10-20 min ago
+      if (closedPositions.length > 0 && allActivity.length < 5000) {
+        const oldestClosedTimestamp = Math.min(...closedPositions.map(p => p.timestamp))
+        const oldestActivityTimestamp = Math.min(...allActivity.map(a => a.timestamp))
+        
+        console.log(`📅 Oldest activity fetched: ${new Date(oldestActivityTimestamp * 1000).toISOString()}`)
+        console.log(`📅 Oldest closed position: ${new Date(oldestClosedTimestamp * 1000).toISOString()}`)
+        
+        // If our oldest activity is still NEWER than the oldest closed position,
+        // we need to fetch MORE trades to reach the resolved ones
+        if (oldestActivityTimestamp > oldestClosedTimestamp) {
+          const timeDiffMinutes = Math.floor((oldestActivityTimestamp - oldestClosedTimestamp) / 60)
+          console.warn(`⚠️ Gap detected: Oldest trade fetched is ${timeDiffMinutes} minutes newer than oldest closed position`)
+          console.log(`🔄 Auto-fetching more trades to reach resolved positions...`)
+          
+          setFetchStatus('Fetching older trades to find resolved positions...')
+          
+          // Fetch additional batches until we reach the closed positions timeframe
+          let additionalBatches = 0
+          const maxAdditionalBatches = 5 // Fetch up to 5 more batches (15k more trades)
+          
+          while (additionalBatches < maxAdditionalBatches && oldestTimestamp && oldestTimestamp > oldestClosedTimestamp) {
+            const limit = 3000
+            const url = `/api/activity?user=${traderAddress}&limit=${limit}&end=${oldestTimestamp - 1}`
+            
+            console.log(`📥 Additional batch ${additionalBatches + 1}: fetching 3000 trades before ${new Date(oldestTimestamp * 1000).toISOString()}`)
+            
+            const response = await fetch(url)
+            if (!response.ok) break
+            
+            const data = await response.json()
+            if (Array.isArray(data) && data.length > 0) {
+              allActivity.push(...data)
+              additionalBatches++
+              
+              // Update oldest timestamp
+              const timestamps = data.map((d: any) => d.timestamp).filter((t: number) => t)
+              if (timestamps.length > 0) {
+                oldestTimestamp = Math.min(...timestamps)
+                console.log(`📊 Total trades now: ${allActivity.length}. Oldest: ${new Date(oldestTimestamp * 1000).toISOString()}`)
+              }
+              
+              // If we've reached the closed positions timeframe, stop
+              if (oldestTimestamp <= oldestClosedTimestamp) {
+                console.log(`✅ Reached closed positions timeframe! Should have matches now.`)
+                break
+              }
+            } else {
+              break
+            }
+            
+            await new Promise(resolve => setTimeout(resolve, 300))
+          }
+          
+          console.log(`✅ Finished auto-fetch: ${allActivity.length} total trades`)
+        }
       }
 
       console.log(`✅ Fetched ${closedPositions.length} closed positions`)
@@ -263,36 +331,62 @@ export default function HistoricalAnalysisPage() {
       )
       
       console.log(`📊 Unique trades after deduplication: ${uniqueActivity.length} (from ${allActivity.length})`)
+      console.log(`📊 Total closed positions available: ${closedPositions.length}`)
+      
+      // Create a map of conditionId -> closed position for faster lookup
+      const closedPosMap = new Map<string, any>()
+      closedPositions.forEach(pos => {
+        if (pos.conditionId) {
+          closedPosMap.set(pos.conditionId, pos)
+        }
+        // Also index by asset as fallback
+        if (pos.asset) {
+          closedPosMap.set(pos.asset, pos)
+        }
+      })
+      
+      console.log(`📊 Closed positions indexed by ${closedPosMap.size} keys`)
+      
+      let matchedCount = 0
+      let unmatchedCount = 0
       
       const trades: HistoricalTrade[] = uniqueActivity.map((activity: any, index: number) => {
-        // Find matching closed position by conditionId (more reliable than asset)
-        // Try multiple matching strategies
-        const closedPos = closedPositions.find((pos: any) => {
-          // Match by conditionId (most reliable)
-          if (pos.conditionId && activity.conditionId && pos.conditionId === activity.conditionId) {
-            return true
-          }
-          // Fallback: match by asset
-          if (pos.asset && activity.asset && (pos.asset === activity.asset || pos.assetId === activity.asset)) {
-            return true
-          }
-          // Fallback: match by market slug
-          if (pos.slug && activity.slug && pos.slug === activity.slug) {
-            return true
-          }
-          return false
-        })
+        // Try to find matching closed position
+        let closedPos = null
+        
+        // Strategy 1: Match by conditionId (most reliable)
+        if (activity.conditionId) {
+          closedPos = closedPosMap.get(activity.conditionId)
+        }
+        
+        // Strategy 2: Match by asset
+        if (!closedPos && activity.asset) {
+          closedPos = closedPosMap.get(activity.asset)
+        }
 
         let status: 'open' | 'won' | 'lost' = 'open'
         let pnl = 0
 
         if (closedPos) {
+          matchedCount++
           // Check for realizedPnl or pnl field
           pnl = parseFloat(closedPos.realizedPnl || closedPos.pnl) || 0
-          status = pnl > 0 ? 'won' : pnl < 0 ? 'lost' : 'open'
-          console.log(`✅ Matched trade to closed position: ${activity.title} → ${status} (PnL: ${pnl.toFixed(2)})`)
+          
+          // Determine status based on PnL
+          if (pnl > 0) {
+            status = 'won'
+          } else if (pnl < 0) {
+            status = 'lost'
+          }
+          
+          if (matchedCount <= 5) { // Only log first 5 matches to avoid spam
+            console.log(`✅ Match #${matchedCount}: ${activity.title} → ${status} (PnL: $${pnl.toFixed(2)})`)
+          }
         } else {
-          console.log(`⚠️ No closed position found for: ${activity.title} (conditionId: ${activity.conditionId})`)
+          unmatchedCount++
+          if (unmatchedCount <= 3) { // Only log first 3 unmatched to avoid spam
+            console.log(`⚠️ Unmatched #${unmatchedCount}: ${activity.title} (conditionId: ${activity.conditionId?.slice(0, 10)}...)`)
+          }
         }
 
         // Generate unique ID with fallback to index
@@ -315,6 +409,13 @@ export default function HistoricalAnalysisPage() {
           pnl
         }
       })
+
+      // Log matching summary
+      console.log(`\n📊 RESOLUTION MATCHING SUMMARY:`)
+      console.log(`   Total trades: ${trades.length}`)
+      console.log(`   Matched to closed positions: ${matchedCount} (${(matchedCount/trades.length*100).toFixed(1)}%)`)
+      console.log(`   Still open/unmatched: ${unmatchedCount} (${(unmatchedCount/trades.length*100).toFixed(1)}%)`)
+      console.log(`   Closed positions available: ${closedPositions.length}\n`)
 
       // Calculate stats
       const closedTrades = trades.filter(t => t.status !== 'open')
