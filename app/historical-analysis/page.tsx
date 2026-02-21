@@ -260,7 +260,9 @@ export default function HistoricalAnalysisPage() {
       
       // AUTO-FETCH MORE TRADES if we have closed positions but haven't fetched enough trades yet
       // This handles ultra-fast traders who have hundreds of open trades but closed positions just 10-20 min ago
-      if (closedPositions.length > 0 && allActivity.length < 5000) {
+      // Only auto-fetch if user requested MORE than we currently have
+      const initialTradeCount = allActivity.length
+      if (closedPositions.length > 0 && allActivity.length < Math.min(numTrades * 2, 10000)) {
         const oldestClosedTimestamp = Math.min(...closedPositions.map(p => p.timestamp))
         const oldestActivityTimestamp = Math.min(...allActivity.map(a => a.timestamp))
         
@@ -274,17 +276,26 @@ export default function HistoricalAnalysisPage() {
           console.warn(`⚠️ Gap detected: Oldest trade fetched is ${timeDiffMinutes} minutes newer than oldest closed position`)
           console.log(`🔄 Auto-fetching more trades to reach resolved positions...`)
           
-          setFetchStatus('Fetching older trades to find resolved positions...')
+          setFetchStatus('Auto-fetching older trades to find resolved positions...')
           
-          // Fetch additional batches until we reach the closed positions timeframe
+          // Calculate how many more trades we can fetch (up to 2x user's request or 10k max)
+          const maxTotalTrades = Math.min(numTrades * 2, 10000)
           let additionalBatches = 0
-          const maxAdditionalBatches = 5 // Fetch up to 5 more batches (15k more trades)
+          const maxAdditionalBatches = Math.ceil((maxTotalTrades - allActivity.length) / 3000)
           
-          while (additionalBatches < maxAdditionalBatches && oldestTimestamp && oldestTimestamp > oldestClosedTimestamp) {
-            const limit = 3000
+          while (additionalBatches < maxAdditionalBatches && 
+                 allActivity.length < maxTotalTrades && 
+                 oldestTimestamp && 
+                 oldestTimestamp > oldestClosedTimestamp) {
+            const limit = Math.min(3000, maxTotalTrades - allActivity.length)
             const url = `/api/activity?user=${traderAddress}&limit=${limit}&end=${oldestTimestamp - 1}`
             
-            console.log(`📥 Additional batch ${additionalBatches + 1}: fetching 3000 trades before ${new Date(oldestTimestamp * 1000).toISOString()}`)
+            // Update progress bar: 50% base + additional progress for auto-fetch
+            const autoFetchProgress = ((allActivity.length - initialTradeCount) / (maxTotalTrades - initialTradeCount)) * 25
+            setFetchProgress(50 + autoFetchProgress) // 50-75% for auto-fetch
+            setFetchStatus(`Auto-fetching older trades... ${allActivity.length} / ${maxTotalTrades}`)
+            
+            console.log(`📥 Additional batch ${additionalBatches + 1}: fetching ${limit} trades before ${new Date(oldestTimestamp * 1000).toISOString()}`)
             
             const response = await fetch(url)
             if (!response.ok) break
@@ -313,14 +324,19 @@ export default function HistoricalAnalysisPage() {
             await new Promise(resolve => setTimeout(resolve, 300))
           }
           
-          console.log(`✅ Finished auto-fetch: ${allActivity.length} total trades`)
+          if (allActivity.length > numTrades) {
+            console.log(`✅ Finished auto-fetch: ${allActivity.length} total trades (requested ${numTrades}, auto-fetched ${allActivity.length - initialTradeCount} more to reach closed positions)`)
+          } else {
+            console.log(`✅ Finished auto-fetch: ${allActivity.length} total trades`)
+          }
         }
       }
 
-      console.log(`✅ Fetched ${closedPositions.length} closed positions`)
+      console.log(`✅ Total trades fetched: ${allActivity.length}`)
 
       // Match trades with resolutions
       setFetchStatus('Processing trades and resolutions...')
+      setFetchProgress(75) // Fixed progress for processing phase
       
       // Deduplicate by transaction hash
       const uniqueActivity = Array.from(
