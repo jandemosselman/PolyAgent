@@ -155,7 +155,7 @@ export default function HistoricalAnalysisPage() {
         setFetchProgress(((offset + limit) / numTrades) * 50) // 0-50% for activity
 
         const response = await fetch(
-          `https://clob.polymarket.com/events?trader=${traderAddress}&offset=${offset}&limit=${limit}`
+          `/api/fetch-trader-activity?trader=${traderAddress}&offset=${offset}&limit=${limit}`
         )
 
         if (!response.ok) {
@@ -190,7 +190,7 @@ export default function HistoricalAnalysisPage() {
         setFetchProgress(50 + ((offset + limit) / numTrades) * 50) // 50-100%
 
         const response = await fetch(
-          `https://clob.polymarket.com/positions?account=${traderAddress}&limit=${limit}&offset=${offset}`
+          `/api/fetch-closed-positions?account=${traderAddress}&limit=${limit}&offset=${offset}`
         )
 
         if (!response.ok) {
