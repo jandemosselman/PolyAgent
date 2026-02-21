@@ -131,8 +131,8 @@ export default function HistoricalAnalysisPage() {
       return
     }
 
-    if (numTrades < 100 || numTrades > 50000) {
-      setNotification({ message: '❌ Number of trades must be between 100 and 50,000', type: 'error' })
+    if (numTrades < 100 || numTrades > 10000) {
+      setNotification({ message: '❌ Number of trades must be between 100 and 10,000', type: 'error' })
       return
     }
 
@@ -141,39 +141,61 @@ export default function HistoricalAnalysisPage() {
     setFetchStatus('Starting fetch...')
 
     try {
-      // Fetch activity in batches
-      setFetchStatus('Fetching trade activity...')
+      // Fetch from Polymarket REST API
+      // Note: API typically limits to ~3,000 trades due to pagination constraints
+      setFetchStatus('Fetching trades from Polymarket API...')
       const allActivity = []
-      const batchSize = 5000
+      const batchSize = 5000 // Request size (API will paginate internally)
       const batches = Math.ceil(numTrades / batchSize)
+      let consecutiveEmptyBatches = 0
 
       for (let i = 0; i < batches; i++) {
         const offset = i * batchSize
         const limit = Math.min(batchSize, numTrades - offset)
         
-        setFetchStatus(`Fetching trades... ${offset + limit} / ${numTrades}`)
-        setFetchProgress(((offset + limit) / numTrades) * 50) // 0-50% for activity
+        setFetchStatus(`Fetching trades... ${allActivity.length} / ${numTrades}`)
+        setFetchProgress((allActivity.length / numTrades) * 50) // 0-50% for activity
 
-        const response = await fetch(
-          `/api/activity?user=${traderAddress}&limit=${limit}&offset=${offset}`
-        )
+        const response = await fetch(`/api/activity?user=${traderAddress}&limit=${limit}&offset=${offset}`)
 
         if (!response.ok) {
-          throw new Error(`Failed to fetch activity: ${response.status}`)
+          // If we've already got some trades, continue with what we have
+          if (allActivity.length > 0) {
+            console.warn(`⚠️ API error at offset ${offset}, stopping with ${allActivity.length} trades`)
+            setNotification({ 
+              message: `⚠️ API limit reached. Fetched ${allActivity.length} trades (max available)`, 
+              type: 'warning' 
+            })
+            break
+          }
+          throw new Error(`Failed to fetch: ${response.statusText}`)
         }
 
         const data = await response.json()
-        // data is already an array from this API
-        if (Array.isArray(data)) {
+        if (Array.isArray(data) && data.length > 0) {
           allActivity.push(...data)
+          consecutiveEmptyBatches = 0
+        } else {
+          consecutiveEmptyBatches++
+          // If we get 2 empty batches in a row, we've reached the end
+          if (consecutiveEmptyBatches >= 2) {
+            console.log(`📊 Reached end of available data at ${allActivity.length} trades`)
+            break
+          }
         }
 
+        // If we got fewer results than requested, we've reached the end
         if (data.length < limit) {
-          break // No more data available
+          console.log(`📊 Received ${data.length} trades (less than ${limit}), stopping`)
+          break
         }
 
         // Small delay to avoid rate limiting
         await new Promise(resolve => setTimeout(resolve, 200))
+      }
+
+      if (allActivity.length === 0) {
+        throw new Error('No activity found for this trader')
       }
 
       console.log(`✅ Fetched ${allActivity.length} trades`)
@@ -216,7 +238,18 @@ export default function HistoricalAnalysisPage() {
 
       // Match trades with resolutions
       setFetchStatus('Processing trades and resolutions...')
-      const trades: HistoricalTrade[] = allActivity.map((activity: any) => {
+      
+      // Deduplicate by transaction hash
+      const uniqueActivity = Array.from(
+        new Map(allActivity.map(a => [
+          a.transactionHash || a.id || `${a.asset}_${a.timestamp}`,
+          a
+        ])).values()
+      )
+      
+      console.log(`📊 Unique trades after deduplication: ${uniqueActivity.length} (from ${allActivity.length})`)
+      
+      const trades: HistoricalTrade[] = uniqueActivity.map((activity: any, index: number) => {
         // Find matching closed position by asset
         const closedPos = closedPositions.find((pos: any) => 
           pos.asset === activity.asset || pos.assetId === activity.asset
@@ -231,9 +264,13 @@ export default function HistoricalAnalysisPage() {
           status = pnl > 0 ? 'won' : pnl < 0 ? 'lost' : 'open'
         }
 
+        // Generate unique ID with fallback to index
+        const txHash = activity.transactionHash || activity.id
+        const uniqueId = txHash ? `${txHash}_${index}` : `trade_${index}_${Date.now()}`
+
         return {
-          id: activity.transactionHash || `${activity.asset}_${activity.timestamp}`,
-          timestamp: activity.timestamp * 1000, // Convert to milliseconds
+          id: uniqueId,
+          timestamp: activity.timestamp * 1000,
           market: activity.title || activity.name || 'Unknown Market',
           outcome: activity.outcome || 'Unknown',
           price: parseFloat(activity.price) || 0,
@@ -241,7 +278,7 @@ export default function HistoricalAnalysisPage() {
           asset: activity.asset || '',
           conditionId: activity.conditionId || '',
           slug: activity.slug || '',
-          transactionHash: activity.transactionHash || '',
+          transactionHash: activity.transactionHash || activity.id || '',
           icon: activity.icon || '',
           status,
           pnl
@@ -333,17 +370,22 @@ export default function HistoricalAnalysisPage() {
           </div>
           
           <div>
-            <label className="block text-sm text-slate-400 mb-2">Number of Trades (max 50,000)</label>
+            <label className="block text-sm text-slate-400 mb-2">
+              Number of Trades (typically limited to ~3,000)
+            </label>
             <input
               type="number"
               value={numTrades}
               onChange={(e) => setNumTrades(parseInt(e.target.value) || 0)}
               min="100"
-              max="50000"
-              step="1000"
+              max="10000"
+              step="500"
               disabled={isFetching}
               className="w-full px-4 py-2 bg-slate-700/50 border border-slate-600 rounded-lg focus:outline-none focus:border-cyan-500 disabled:opacity-50"
             />
+            <p className="text-xs text-slate-500 mt-1">
+              ⚠️ Polymarket API typically returns a max of ~3,000 trades. The system will fetch as many as available.
+            </p>
           </div>
         </div>
 
