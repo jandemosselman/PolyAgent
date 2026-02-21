@@ -3523,6 +3523,13 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
             </p>
           </div>
           <div className="flex items-center gap-3">
+            <a
+              href="/historical-analysis"
+              className="px-4 py-2 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 hover:border-purple-500/50 text-purple-400 font-medium rounded-lg transition-all"
+              title="Analyze historical trades from any trader"
+            >
+              📊 Historical Analysis
+            </a>
             <button
               onClick={syncWithBot}
               disabled={syncingWithBot}
