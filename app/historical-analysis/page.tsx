@@ -131,8 +131,8 @@ export default function HistoricalAnalysisPage() {
       return
     }
 
-    if (numTrades < 100 || numTrades > 10000) {
-      setNotification({ message: '❌ Number of trades must be between 100 and 10,000', type: 'error' })
+    if (numTrades < 100 || numTrades > 50000) {
+      setNotification({ message: '❌ Number of trades must be between 100 and 50,000', type: 'error' })
       return
     }
 
@@ -141,29 +141,36 @@ export default function HistoricalAnalysisPage() {
     setFetchStatus('Starting fetch...')
 
     try {
-      // Fetch from Polymarket REST API
-      // Note: API typically limits to ~3,000 trades due to pagination constraints
+      // Fetch from Polymarket REST API using TIMESTAMP-BASED PAGINATION
+      // This allows us to fetch way more than 3,000 trades by using the oldest timestamp as anchor
       setFetchStatus('Fetching trades from Polymarket API...')
       const allActivity = []
-      const batchSize = 5000 // Request size (API will paginate internally)
-      const batches = Math.ceil(numTrades / batchSize)
+      const batchSize = 3000 // Fetch 3k at a time
+      let oldestTimestamp: number | null = null
       let consecutiveEmptyBatches = 0
 
-      for (let i = 0; i < batches; i++) {
-        const offset = i * batchSize
-        const limit = Math.min(batchSize, numTrades - offset)
+      while (allActivity.length < numTrades) {
+        const limit = Math.min(batchSize, numTrades - allActivity.length)
         
         setFetchStatus(`Fetching trades... ${allActivity.length} / ${numTrades}`)
         setFetchProgress((allActivity.length / numTrades) * 50) // 0-50% for activity
 
-        const response = await fetch(`/api/activity?user=${traderAddress}&limit=${limit}&offset=${offset}`)
+        // Build URL with timestamp anchor if we have one
+        let url = `/api/activity?user=${traderAddress}&limit=${limit}`
+        if (oldestTimestamp) {
+          // Fetch trades BEFORE the oldest timestamp we've seen
+          url += `&end=${oldestTimestamp - 1}` // -1 to exclude the last trade we already have
+          console.log(`📅 Using timestamp anchor: fetching trades before ${new Date(oldestTimestamp).toISOString()}`)
+        }
+
+        const response = await fetch(url)
 
         if (!response.ok) {
           // If we've already got some trades, continue with what we have
           if (allActivity.length > 0) {
-            console.warn(`⚠️ API error at offset ${offset}, stopping with ${allActivity.length} trades`)
+            console.warn(`⚠️ API error, stopping with ${allActivity.length} trades`)
             setNotification({ 
-              message: `⚠️ API limit reached. Fetched ${allActivity.length} trades (max available)`, 
+              message: `⚠️ API error. Fetched ${allActivity.length} trades`, 
               type: 'warning' 
             })
             break
@@ -175,8 +182,16 @@ export default function HistoricalAnalysisPage() {
         if (Array.isArray(data) && data.length > 0) {
           allActivity.push(...data)
           consecutiveEmptyBatches = 0
+          
+          // Update oldest timestamp for next batch
+          const timestamps = data.map((d: any) => d.timestamp).filter((t: number) => t)
+          if (timestamps.length > 0) {
+            oldestTimestamp = Math.min(...timestamps)
+            console.log(`📊 Batch complete: ${data.length} trades. Oldest: ${new Date(oldestTimestamp).toISOString()}`)
+          }
         } else {
           consecutiveEmptyBatches++
+          console.log(`⚠️ Empty batch received (${consecutiveEmptyBatches}/2)`)
           // If we get 2 empty batches in a row, we've reached the end
           if (consecutiveEmptyBatches >= 2) {
             console.log(`📊 Reached end of available data at ${allActivity.length} trades`)
@@ -184,21 +199,21 @@ export default function HistoricalAnalysisPage() {
           }
         }
 
-        // If we got fewer results than requested, we've reached the end
-        if (data.length < limit) {
-          console.log(`📊 Received ${data.length} trades (less than ${limit}), stopping`)
+        // If we got fewer results than requested, we've likely reached the end
+        if (data.length < batchSize) {
+          console.log(`📊 Received ${data.length} trades (less than ${batchSize}), likely at end`)
           break
         }
 
         // Small delay to avoid rate limiting
-        await new Promise(resolve => setTimeout(resolve, 200))
+        await new Promise(resolve => setTimeout(resolve, 300))
       }
 
       if (allActivity.length === 0) {
         throw new Error('No activity found for this trader')
       }
 
-      console.log(`✅ Fetched ${allActivity.length} trades`)
+      console.log(`✅ Fetched ${allActivity.length} trades using timestamp-based pagination`)
 
       // Fetch closed positions for resolution checking
       setFetchStatus('Fetching closed positions for resolution...')
@@ -250,10 +265,23 @@ export default function HistoricalAnalysisPage() {
       console.log(`📊 Unique trades after deduplication: ${uniqueActivity.length} (from ${allActivity.length})`)
       
       const trades: HistoricalTrade[] = uniqueActivity.map((activity: any, index: number) => {
-        // Find matching closed position by asset
-        const closedPos = closedPositions.find((pos: any) => 
-          pos.asset === activity.asset || pos.assetId === activity.asset
-        )
+        // Find matching closed position by conditionId (more reliable than asset)
+        // Try multiple matching strategies
+        const closedPos = closedPositions.find((pos: any) => {
+          // Match by conditionId (most reliable)
+          if (pos.conditionId && activity.conditionId && pos.conditionId === activity.conditionId) {
+            return true
+          }
+          // Fallback: match by asset
+          if (pos.asset && activity.asset && (pos.asset === activity.asset || pos.assetId === activity.asset)) {
+            return true
+          }
+          // Fallback: match by market slug
+          if (pos.slug && activity.slug && pos.slug === activity.slug) {
+            return true
+          }
+          return false
+        })
 
         let status: 'open' | 'won' | 'lost' = 'open'
         let pnl = 0
@@ -262,6 +290,9 @@ export default function HistoricalAnalysisPage() {
           // Check for realizedPnl or pnl field
           pnl = parseFloat(closedPos.realizedPnl || closedPos.pnl) || 0
           status = pnl > 0 ? 'won' : pnl < 0 ? 'lost' : 'open'
+          console.log(`✅ Matched trade to closed position: ${activity.title} → ${status} (PnL: ${pnl.toFixed(2)})`)
+        } else {
+          console.log(`⚠️ No closed position found for: ${activity.title} (conditionId: ${activity.conditionId})`)
         }
 
         // Generate unique ID with fallback to index
@@ -371,20 +402,20 @@ export default function HistoricalAnalysisPage() {
           
           <div>
             <label className="block text-sm text-slate-400 mb-2">
-              Number of Trades (typically limited to ~3,000)
+              Number of Trades (up to 50,000 with timestamp pagination)
             </label>
             <input
               type="number"
               value={numTrades}
               onChange={(e) => setNumTrades(parseInt(e.target.value) || 0)}
               min="100"
-              max="10000"
-              step="500"
+              max="50000"
+              step="1000"
               disabled={isFetching}
               className="w-full px-4 py-2 bg-slate-700/50 border border-slate-600 rounded-lg focus:outline-none focus:border-cyan-500 disabled:opacity-50"
             />
             <p className="text-xs text-slate-500 mt-1">
-              ⚠️ Polymarket API typically returns a max of ~3,000 trades. The system will fetch as many as available.
+              💡 Uses timestamp-based pagination to fetch beyond the 3k offset limit
             </p>
           </div>
         </div>
