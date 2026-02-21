@@ -155,7 +155,7 @@ export default function HistoricalAnalysisPage() {
         setFetchProgress(((offset + limit) / numTrades) * 50) // 0-50% for activity
 
         const response = await fetch(
-          `/api/fetch-trader-activity?trader=${traderAddress}&offset=${offset}&limit=${limit}`
+          `/api/activity?user=${traderAddress}&limit=${limit}&offset=${offset}`
         )
 
         if (!response.ok) {
@@ -163,11 +163,12 @@ export default function HistoricalAnalysisPage() {
         }
 
         const data = await response.json()
-        if (data.data && Array.isArray(data.data)) {
-          allActivity.push(...data.data)
+        // data is already an array from this API
+        if (Array.isArray(data)) {
+          allActivity.push(...data)
         }
 
-        if (data.data.length < limit) {
+        if (data.length < limit) {
           break // No more data available
         }
 
@@ -179,7 +180,7 @@ export default function HistoricalAnalysisPage() {
 
       // Fetch closed positions for resolution checking
       setFetchStatus('Fetching closed positions for resolution...')
-      const closedPositions = []
+      const closedPositions: any[] = []
       const closedBatches = Math.ceil(numTrades / batchSize)
 
       for (let i = 0; i < closedBatches; i++) {
@@ -190,7 +191,7 @@ export default function HistoricalAnalysisPage() {
         setFetchProgress(50 + ((offset + limit) / numTrades) * 50) // 50-100%
 
         const response = await fetch(
-          `/api/fetch-closed-positions?account=${traderAddress}&limit=${limit}&offset=${offset}`
+          `/api/closed-positions?user=${traderAddress}&limit=${limit}&offset=${offset}`
         )
 
         if (!response.ok) {
@@ -199,11 +200,12 @@ export default function HistoricalAnalysisPage() {
         }
 
         const data = await response.json()
-        if (data.data && Array.isArray(data.data)) {
-          closedPositions.push(...data.data)
+        // data is already an array from this API
+        if (Array.isArray(data)) {
+          closedPositions.push(...data)
         }
 
-        if (data.data.length < limit) {
+        if (data.length < limit) {
           break
         }
 
@@ -215,30 +217,31 @@ export default function HistoricalAnalysisPage() {
       // Match trades with resolutions
       setFetchStatus('Processing trades and resolutions...')
       const trades: HistoricalTrade[] = allActivity.map((activity: any) => {
-        // Find matching closed position
+        // Find matching closed position by asset
         const closedPos = closedPositions.find((pos: any) => 
-          pos.asset_id === activity.asset_id
+          pos.asset === activity.asset || pos.assetId === activity.asset
         )
 
         let status: 'open' | 'won' | 'lost' = 'open'
         let pnl = 0
 
-        if (closedPos && closedPos.pnl !== undefined) {
-          pnl = parseFloat(closedPos.pnl) || 0
+        if (closedPos) {
+          // Check for realizedPnl or pnl field
+          pnl = parseFloat(closedPos.realizedPnl || closedPos.pnl) || 0
           status = pnl > 0 ? 'won' : pnl < 0 ? 'lost' : 'open'
         }
 
         return {
-          id: activity.id || `${activity.asset_id}_${activity.timestamp}`,
-          timestamp: new Date(activity.timestamp).getTime(),
-          market: activity.market || activity.question || 'Unknown Market',
-          outcome: activity.outcome || activity.title || 'Unknown',
+          id: activity.transactionHash || `${activity.asset}_${activity.timestamp}`,
+          timestamp: activity.timestamp * 1000, // Convert to milliseconds
+          market: activity.title || activity.name || 'Unknown Market',
+          outcome: activity.outcome || 'Unknown',
           price: parseFloat(activity.price) || 0,
-          amount: parseFloat(activity.size || activity.amount) || 0,
-          asset: activity.asset_id || activity.token_id || '',
-          conditionId: activity.condition_id || '',
+          amount: parseFloat(activity.usdcSize || activity.size) || 0,
+          asset: activity.asset || '',
+          conditionId: activity.conditionId || '',
           slug: activity.slug || '',
-          transactionHash: activity.transaction_hash || activity.hash || '',
+          transactionHash: activity.transactionHash || '',
           icon: activity.icon || '',
           status,
           pnl
