@@ -149,8 +149,14 @@ export default function HistoricalAnalysisPage() {
       let oldestTimestamp: number | null = null
       let consecutiveEmptyBatches = 0
 
+      console.log(`\n🎯 TARGET: Fetch ${numTrades} trades for ${traderAddress}`)
+      
       while (allActivity.length < numTrades) {
         const limit = Math.min(batchSize, numTrades - allActivity.length)
+        
+        console.log(`\n📥 BATCH #${Math.floor(allActivity.length / batchSize) + 1}:`)
+        console.log(`   Current total: ${allActivity.length} / ${numTrades}`)
+        console.log(`   Requesting: ${limit} more trades`)
         
         setFetchStatus(`Fetching trades... ${allActivity.length} / ${numTrades}`)
         setFetchProgress((allActivity.length / numTrades) * 50) // 0-50% for activity
@@ -160,15 +166,20 @@ export default function HistoricalAnalysisPage() {
         if (oldestTimestamp) {
           // Fetch trades BEFORE the oldest timestamp we've seen
           url += `&end=${oldestTimestamp - 1}` // -1 to exclude the last trade we already have
-          console.log(`📅 Using timestamp anchor: fetching trades before ${new Date(oldestTimestamp).toISOString()}`)
+          console.log(`   📅 Timestamp anchor: ${new Date(oldestTimestamp * 1000).toISOString()}`)
+        } else {
+          console.log(`   📅 No timestamp anchor (first batch)`)
         }
+        
+        console.log(`   🌐 Fetching: ${url}`)
 
         const response = await fetch(url)
 
         if (!response.ok) {
+          console.error(`❌ API ERROR: ${response.status} ${response.statusText}`)
           // If we've already got some trades, continue with what we have
           if (allActivity.length > 0) {
-            console.warn(`⚠️ API error, stopping with ${allActivity.length} trades`)
+            console.warn(`⚠️ Stopping with ${allActivity.length} trades`)
             setNotification({ 
               message: `⚠️ API error. Fetched ${allActivity.length} trades`, 
               type: 'warning' 
@@ -179,52 +190,73 @@ export default function HistoricalAnalysisPage() {
         }
 
         const data = await response.json()
+        console.log(`   ✅ Received: ${Array.isArray(data) ? data.length : 0} trades`)
+        
         if (Array.isArray(data) && data.length > 0) {
+          console.log(`   📊 First trade timestamp: ${new Date(data[0].timestamp * 1000).toISOString()}`)
+          console.log(`   📊 Last trade timestamp: ${new Date(data[data.length - 1].timestamp * 1000).toISOString()}`)
+          
           allActivity.push(...data)
           consecutiveEmptyBatches = 0
           
           // Update oldest timestamp for next batch
           const timestamps = data.map((d: any) => d.timestamp).filter((t: number) => t)
           if (timestamps.length > 0) {
-            oldestTimestamp = Math.min(...timestamps)
-            console.log(`📊 Batch complete: ${data.length} trades. Oldest: ${new Date(oldestTimestamp).toISOString()}`)
+            const newOldest = Math.min(...timestamps)
+            console.log(`   � New oldest timestamp: ${new Date(newOldest * 1000).toISOString()}`)
+            oldestTimestamp = newOldest
           }
+          
+          console.log(`   📈 Total so far: ${allActivity.length} trades`)
         } else {
           consecutiveEmptyBatches++
-          console.log(`⚠️ Empty batch received (${consecutiveEmptyBatches}/2)`)
+          console.warn(`   ⚠️ Empty batch! (${consecutiveEmptyBatches}/2 consecutive)`)
           // If we get 2 empty batches in a row, we've reached the end
           if (consecutiveEmptyBatches >= 2) {
-            console.log(`📊 Reached end of available data at ${allActivity.length} trades`)
+            console.log(`   � Reached end of available data at ${allActivity.length} trades`)
             break
           }
         }
 
         // If we got fewer results than requested, we've likely reached the end
         if (data.length < batchSize) {
-          console.log(`📊 Received ${data.length} trades (less than ${batchSize}), likely at end`)
-          break
+          console.log(`   ℹ️ Got ${data.length} trades (less than ${batchSize}), likely at end`)
+          if (data.length < limit) {
+            console.log(`   🛑 Stopping: received fewer than requested`)
+            break
+          }
         }
 
         // Small delay to avoid rate limiting
         await new Promise(resolve => setTimeout(resolve, 300))
       }
+      
+      console.log(`\n✅ FETCH COMPLETE: ${allActivity.length} trades`)
+      console.log(`   🎯 Target was: ${numTrades}`)
+      console.log(`   📊 Difference: ${allActivity.length - numTrades} (${allActivity.length >= numTrades ? 'OK' : 'SHORT'})`)
 
       if (allActivity.length === 0) {
         throw new Error('No activity found for this trader')
       }
 
-      console.log(`✅ Fetched ${allActivity.length} trades using timestamp-based pagination`)
+      console.log(`\n🔍 RESOLUTION CHECK PHASE`)
+      console.log(`===========================`)
 
       // Check market resolutions using gamma-api (NOT closed-positions!)
       // closed-positions only shows positions the USER closed, not market resolutions
       setFetchStatus('Checking market resolutions...')
-      setFetchProgress(50)
+      setFetchProgress(55)
       
       // Get unique conditionIds from all trades
       const uniqueConditionIds = [...new Set(allActivity.map((a: any) => a.conditionId).filter(Boolean))]
-      console.log(`📊 Checking resolutions for ${uniqueConditionIds.length} unique markets...`)
+      console.log(`📊 Total trades: ${allActivity.length}`)
+      console.log(`📊 Unique markets (conditionIds): ${uniqueConditionIds.length}`)
+      console.log(`\n📋 Sample conditionIds (first 3):`)
+      uniqueConditionIds.slice(0, 3).forEach((id, i) => {
+        console.log(`   ${i + 1}. ${id}`)
+      })
       
-      // Fetch resolution data from gamma-api
+      console.log(`\n🌐 Calling /api/market-resolutions...`)
       const resolutionResponse = await fetch('/api/market-resolutions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -232,6 +264,7 @@ export default function HistoricalAnalysisPage() {
       })
       
       if (!resolutionResponse.ok) {
+        console.error(`❌ Resolution API error: ${resolutionResponse.status} ${resolutionResponse.statusText}`)
         throw new Error('Failed to fetch market resolutions')
       }
       
@@ -241,9 +274,23 @@ export default function HistoricalAnalysisPage() {
       // Count resolved vs open from resolutionMap
       const initialResolvedCount = Object.values(resolutionMap).filter((r: any) => r.resolved).length
       const initialOpenCount = uniqueConditionIds.length - initialResolvedCount
-      console.log(`   📊 ${initialResolvedCount} resolved, ${initialOpenCount} still open`)
+      console.log(`   📊 Resolved: ${initialResolvedCount}`)
+      console.log(`   📊 Still open: ${initialOpenCount}`)
+      
+      // Show detailed breakdown of first few resolutions
+      console.log(`\n🔍 Sample resolution data (first 3):`)
+      Object.entries(resolutionMap).slice(0, 3).forEach(([conditionId, resolution]: [string, any], i) => {
+        console.log(`   ${i + 1}. ${conditionId.substring(0, 10)}...`)
+        console.log(`      Closed: ${resolution.closed}`)
+        console.log(`      Resolved: ${resolution.resolved}`)
+        console.log(`      OutcomePrices: ${JSON.stringify(resolution.outcomePrices)}`)
+        console.log(`      WinningOutcome: ${resolution.winningOutcome}`)
+      })
 
-      setFetchProgress(60)
+      setFetchProgress(70)
+      
+      console.log(`\n🔍 TRADE PROCESSING PHASE`)
+      console.log(`===========================`)
 
       console.log(`✅ Total trades fetched: ${allActivity.length}`)
 
@@ -264,9 +311,15 @@ export default function HistoricalAnalysisPage() {
       
       // Show some sample conditionIds from trades
       if (uniqueActivity.length > 0) {
-        console.log(`\n🔍 SAMPLE TRADE conditionIds (first 5):`)
-        uniqueActivity.slice(0, 5).forEach((a: any, i: number) => {
-          console.log(`  ${i+1}. ${a.conditionId} - ${a.title}`)
+        console.log(`\n🔍 SAMPLE TRADE DATA (first 3):`)
+        uniqueActivity.slice(0, 3).forEach((a: any, i: number) => {
+          console.log(`  ${i+1}. ${a.title}`)
+          console.log(`     ConditionId: ${a.conditionId}`)
+          console.log(`     OutcomeIndex: ${a.outcomeIndex} (from activity.outcomeIndex)`)
+          console.log(`     Outcome: ${a.outcome} (from activity.outcome)`)
+          console.log(`     Amount: ${a.amount || a.size || a.usdcSize}`)
+          console.log(`     Price: ${a.price}`)
+          console.log(`     Timestamp: ${new Date(a.timestamp * 1000).toISOString()}`)
         })
       }
       
@@ -275,6 +328,9 @@ export default function HistoricalAnalysisPage() {
       let wonCount = 0
       let lostCount = 0
       let openCount = 0
+      let missingOutcomeCount = 0
+      
+      console.log(`\n🔄 Processing ${uniqueActivity.length} trades...`)
       
       const trades: HistoricalTrade[] = uniqueActivity.map((activity: any, index: number) => {
         let status: 'open' | 'won' | 'lost' = 'open'
@@ -283,12 +339,26 @@ export default function HistoricalAnalysisPage() {
         // Check if market is resolved using gamma-api data
         const resolution = resolutionMap[activity.conditionId]
         
+        if (index < 3) {
+          console.log(`\n🔍 TRADE #${index + 1}: ${activity.title}`)
+          console.log(`   ConditionId: ${activity.conditionId}`)
+          console.log(`   Resolution found: ${!!resolution}`)
+          if (resolution) {
+            console.log(`   Resolution.resolved: ${resolution.resolved}`)
+            console.log(`   Resolution.winningOutcome: ${resolution.winningOutcome}`)
+          }
+        }
+        
         if (resolution && resolution.resolved) {
           resolvedCount++
           
           // Parse user's outcome index from activity
           // outcomeIndex might be in different fields depending on activity type
           const userOutcome = activity.outcomeIndex ?? activity.outcome ?? null
+          
+          if (index < 3) {
+            console.log(`   User outcome: ${userOutcome} (from outcomeIndex: ${activity.outcomeIndex}, outcome: ${activity.outcome})`)
+          }
           
           if (userOutcome !== null && resolution.winningOutcome !== null) {
             // User won if their outcome matches the winning outcome
@@ -299,6 +369,11 @@ export default function HistoricalAnalysisPage() {
             const amount = parseFloat(activity.amount || activity.size || 0)
             const price = parseFloat(activity.price || 0)
             
+            if (index < 3) {
+              console.log(`   Amount: ${amount}, Price: ${price}`)
+              console.log(`   User won: ${userWon}`)
+            }
+            
             if (userWon) {
               // Profit = amount * (1 - price paid) because winning shares are worth $1
               pnl = amount * (1 - price)
@@ -308,12 +383,25 @@ export default function HistoricalAnalysisPage() {
               pnl = -amount * price
               lostCount++
             }
+            
+            if (index < 3) {
+              console.log(`   Status: ${status}, PnL: $${pnl.toFixed(2)}`)
+            }
           } else {
             // Market resolved but can't determine user's outcome
+            if (index < 3 || missingOutcomeCount < 5) {
+              console.warn(`   ⚠️ Market resolved but missing outcome data!`)
+              console.warn(`      userOutcome: ${userOutcome}`)
+              console.warn(`      resolution.winningOutcome: ${resolution.winningOutcome}`)
+            }
+            missingOutcomeCount++
             openCount++
           }
         } else {
           // Market not resolved yet
+          if (index < 3) {
+            console.log(`   Status: open (market not resolved)`)
+          }
           openCount++
         }
         
@@ -344,10 +432,27 @@ export default function HistoricalAnalysisPage() {
 
       // Log matching summary
       console.log(`\n📊 RESOLUTION MATCHING SUMMARY:`)
+      console.log(`===========================`)
       console.log(`   Total trades: ${trades.length}`)
       console.log(`   Resolved markets: ${resolvedCount} (${(resolvedCount/trades.length*100).toFixed(1)}%)`)
-      console.log(`   Won: ${wonCount}, Lost: ${lostCount}, Open: ${openCount}`)
-      console.log(`   Total P&L from resolved trades: $${trades.reduce((sum, t) => sum + (t.pnl || 0), 0).toFixed(2)}\n`)
+      console.log(`   Won: ${wonCount} trades`)
+      console.log(`   Lost: ${lostCount} trades`)
+      console.log(`   Open: ${openCount} trades`)
+      console.log(`   Missing outcome data: ${missingOutcomeCount} trades`)
+      console.log(`   Total P&L from resolved trades: $${trades.reduce((sum, t) => sum + (t.pnl || 0), 0).toFixed(2)}`)
+      
+      if (resolvedCount === 0) {
+        console.error(`\n❌ PROBLEM: Zero resolved trades matched!`)
+        console.error(`   This means either:`)
+        console.error(`   1. No markets in resolutionMap are marked as resolved`)
+        console.error(`   2. ConditionIds don't match between trades and resolutionMap`)
+        console.error(`   3. Resolution data is missing from gamma-api response`)
+        console.log(`\n🔍 Debugging info:`)
+        console.log(`   Trades with conditionIds: ${uniqueActivity.filter((a: any) => a.conditionId).length}`)
+        console.log(`   Trades without conditionIds: ${uniqueActivity.filter((a: any) => !a.conditionId).length}`)
+        console.log(`   ResolutionMap keys: ${Object.keys(resolutionMap).length}`)
+        console.log(`   Resolved in map: ${Object.values(resolutionMap).filter((r: any) => r.resolved).length}`)
+      }
 
       // Calculate stats
       const closedTrades = trades.filter(t => t.status !== 'open')
