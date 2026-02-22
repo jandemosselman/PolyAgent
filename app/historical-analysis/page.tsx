@@ -353,6 +353,21 @@ export default function HistoricalAnalysisPage() {
       console.log(`📊 Unique trades after deduplication: ${uniqueActivity.length} (from ${allActivity.length})`)
       console.log(`📊 Total closed positions available: ${closedPositions.length}`)
       
+      // DEBUG: Show some sample conditionIds from both datasets
+      if (uniqueActivity.length > 0) {
+        console.log(`\n🔍 SAMPLE ACTIVITY conditionIds (first 5):`)
+        uniqueActivity.slice(0, 5).forEach((a: any, i: number) => {
+          console.log(`  ${i+1}. ${a.conditionId} - ${a.title}`)
+        })
+      }
+      
+      if (closedPositions.length > 0) {
+        console.log(`\n🔍 SAMPLE CLOSED POSITION conditionIds (first 5):`)
+        closedPositions.slice(0, 5).forEach((p: any, i: number) => {
+          console.log(`  ${i+1}. ${p.conditionId} - ${p.title} (PnL: $${p.realizedPnl})`)
+        })
+      }
+      
       // Create a map of conditionId -> closed position for faster lookup
       const closedPosMap = new Map<string, any>()
       closedPositions.forEach(pos => {
@@ -365,7 +380,21 @@ export default function HistoricalAnalysisPage() {
         }
       })
       
-      console.log(`📊 Closed positions indexed by ${closedPosMap.size} keys`)
+      console.log(`\n📊 Closed positions indexed by ${closedPosMap.size} keys`)
+      console.log(`   Unique conditionIds in closed positions: ${new Set(closedPositions.map(p => p.conditionId)).size}`)
+      
+      // Check for overlap
+      const activityConditionIds = new Set(uniqueActivity.map((a: any) => a.conditionId))
+      const closedConditionIds = new Set(closedPositions.map((p: any) => p.conditionId))
+      const overlap = new Set([...activityConditionIds].filter(id => closedConditionIds.has(id)))
+      console.log(`   Overlapping conditionIds: ${overlap.size}`)
+      if (overlap.size > 0) {
+        console.log(`   ✅ Found ${overlap.size} matching conditionIds!`)
+        console.log(`   Examples:`, [...overlap].slice(0, 3))
+      } else {
+        console.warn(`   ❌ NO OVERLAP between activity and closed positions!`)
+        console.warn(`   This means the trades fetched are NOT in the closed positions`)
+      }
       
       let matchedCount = 0
       let unmatchedCount = 0
@@ -670,29 +699,58 @@ export default function HistoricalAnalysisPage() {
             
             <div className="space-y-2 max-h-[600px] overflow-y-auto">
               {selectedDataset.trades.slice(0, displayedTrades).map((trade, index) => (
-                <div key={trade.id} className="bg-slate-700/30 p-3 rounded-lg flex justify-between items-center">
-                  <div className="flex-1">
-                    <div className="font-semibold text-sm mb-1">{trade.market}</div>
-                    <div className="text-xs text-slate-400">
-                      {trade.outcome} • ${trade.amount.toFixed(2)} @ {(trade.price * 100).toFixed(1)}%
+                <div key={trade.id} className="bg-slate-700/30 p-3 rounded-lg">
+                  <div className="flex justify-between items-start mb-2">
+                    <div className="flex-1">
+                      <div className="font-semibold text-sm mb-1">{trade.market}</div>
+                      <div className="text-xs text-slate-400">
+                        {trade.outcome} • ${trade.amount.toFixed(2)} @ {(trade.price * 100).toFixed(1)}%
+                      </div>
+                      <div className="text-xs text-slate-500">
+                        {new Date(trade.timestamp).toLocaleString()}
+                      </div>
                     </div>
-                    <div className="text-xs text-slate-500">
-                      {new Date(trade.timestamp).toLocaleString()}
+                    <div className="text-right">
+                      <div className={`px-2 py-1 rounded text-xs font-semibold ${
+                        trade.status === 'won' ? 'bg-green-500/20 text-green-400' :
+                        trade.status === 'lost' ? 'bg-red-500/20 text-red-400' :
+                        'bg-yellow-500/20 text-yellow-400'
+                      }`}>
+                        {trade.status.toUpperCase()}
+                      </div>
+                      {trade.status !== 'open' && (
+                        <div className={`text-sm font-semibold mt-1 ${trade.pnl! >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                          {trade.pnl! >= 0 ? '+' : ''}${trade.pnl!.toFixed(2)}
+                        </div>
+                      )}
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className={`px-2 py-1 rounded text-xs font-semibold ${
-                      trade.status === 'won' ? 'bg-green-500/20 text-green-400' :
-                      trade.status === 'lost' ? 'bg-red-500/20 text-red-400' :
-                      'bg-yellow-500/20 text-yellow-400'
-                    }`}>
-                      {trade.status.toUpperCase()}
-                    </div>
-                    {trade.status !== 'open' && (
-                      <div className={`text-sm font-semibold mt-1 ${trade.pnl! >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                        {trade.pnl! >= 0 ? '+' : ''}${trade.pnl!.toFixed(2)}
-                      </div>
-                    )}
+                  
+                  {/* Debug info with copy buttons */}
+                  <div className="flex gap-2 text-xs text-slate-500 mt-2 pt-2 border-t border-slate-600">
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(trade.conditionId)
+                        alert('ConditionId copied!')
+                      }}
+                      className="px-2 py-1 bg-slate-600/50 hover:bg-slate-600 rounded transition-all"
+                      title={trade.conditionId}
+                    >
+                      📋 Copy conditionId
+                    </button>
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(trade.asset)
+                        alert('Asset copied!')
+                      }}
+                      className="px-2 py-1 bg-slate-600/50 hover:bg-slate-600 rounded transition-all"
+                      title={trade.asset}
+                    >
+                      📋 Copy asset
+                    </button>
+                    <span className="px-2 py-1 bg-slate-700/50 rounded font-mono text-[10px]">
+                      {trade.conditionId.substring(0, 10)}...
+                    </span>
                   </div>
                 </div>
               ))}
