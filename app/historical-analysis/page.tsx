@@ -218,6 +218,7 @@ export default function HistoricalAnalysisPage() {
       // Fetch closed positions for resolution checking
       // Note: Fetch ALL closed positions available (not limited by numTrades)
       setFetchStatus('Fetching closed positions for resolution...')
+      setFetchProgress(50) // Fixed at 50% for start of closed positions fetch
       const closedPositions: any[] = []
       const maxClosedPositions = 10000 // Fetch up to 10k closed positions
       let closedBatchSize = 1000 // Larger batches for closed positions
@@ -228,7 +229,9 @@ export default function HistoricalAnalysisPage() {
         const limit = Math.min(closedBatchSize, maxClosedPositions - closedPositions.length)
         
         setFetchStatus(`Fetching closed positions... ${closedPositions.length}`)
-        setFetchProgress(50 + (closedPositions.length / Math.min(allActivity.length, maxClosedPositions)) * 50)
+        // Progress 50-60% for closed positions (capped at 60%)
+        const closedProgress = Math.min(10, (closedPositions.length / 5000) * 10)
+        setFetchProgress(50 + closedProgress)
 
         const response = await fetch(
           `/api/closed-positions?user=${traderAddress}&limit=${limit}&offset=${closedOffset}`
@@ -256,6 +259,7 @@ export default function HistoricalAnalysisPage() {
         await new Promise(resolve => setTimeout(resolve, 200))
       }
 
+      setFetchProgress(60) // Completed closed positions fetch
       console.log(`✅ Fetched ${closedPositions.length} closed positions`)
       
       // AUTO-FETCH MORE TRADES if we have closed positions but haven't fetched enough trades yet
@@ -290,9 +294,9 @@ export default function HistoricalAnalysisPage() {
             const limit = Math.min(3000, maxTotalTrades - allActivity.length)
             const url = `/api/activity?user=${traderAddress}&limit=${limit}&end=${oldestTimestamp - 1}`
             
-            // Update progress bar: 50% base + additional progress for auto-fetch
-            const autoFetchProgress = ((allActivity.length - initialTradeCount) / (maxTotalTrades - initialTradeCount)) * 25
-            setFetchProgress(50 + autoFetchProgress) // 50-75% for auto-fetch
+            // Update progress bar: 60-75% for auto-fetch (capped at 75%)
+            const autoFetchProgress = Math.min(15, ((allActivity.length - initialTradeCount) / (maxTotalTrades - initialTradeCount)) * 15)
+            setFetchProgress(60 + autoFetchProgress)
             setFetchStatus(`Auto-fetching older trades... ${allActivity.length} / ${maxTotalTrades}`)
             
             console.log(`📥 Additional batch ${additionalBatches + 1}: fetching ${limit} trades before ${new Date(oldestTimestamp * 1000).toISOString()}`)
@@ -458,6 +462,9 @@ export default function HistoricalAnalysisPage() {
       await saveDataset(dataset)
       setSelectedDataset(dataset)
       setDisplayedTrades(100)
+      
+      setFetchProgress(100) // Completed!
+      setFetchStatus('Complete!')
       
       setNotification({ 
         message: `✅ Successfully fetched ${trades.length} trades!`, 
