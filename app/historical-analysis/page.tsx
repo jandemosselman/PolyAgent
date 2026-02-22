@@ -238,10 +238,10 @@ export default function HistoricalAnalysisPage() {
       const resolutionMap = await resolutionResponse.json()
       console.log(`✅ Got resolution data for ${Object.keys(resolutionMap).length} markets`)
       
-      // Count resolved vs open
-      const resolvedCount = Object.values(resolutionMap).filter((r: any) => r.resolved).length
-      const openCount = uniqueConditionIds.length - resolvedCount
-      console.log(`   📊 ${resolvedCount} resolved, ${openCount} still open`)
+      // Count resolved vs open from resolutionMap
+      const initialResolvedCount = Object.values(resolutionMap).filter((r: any) => r.resolved).length
+      const initialOpenCount = uniqueConditionIds.length - initialResolvedCount
+      console.log(`   📊 ${initialResolvedCount} resolved, ${initialOpenCount} still open`)
 
       setFetchProgress(60)
 
@@ -270,6 +270,7 @@ export default function HistoricalAnalysisPage() {
         })
       }
       
+      let matchedResolvedCount = 0
       let resolvedCount = 0
       let wonCount = 0
       let lostCount = 0
