@@ -215,126 +215,35 @@ export default function HistoricalAnalysisPage() {
 
       console.log(`✅ Fetched ${allActivity.length} trades using timestamp-based pagination`)
 
-      // Fetch closed positions for resolution checking
-      // Note: Fetch ALL closed positions available (not limited by numTrades)
-      setFetchStatus('Fetching closed positions for resolution...')
-      setFetchProgress(50) // Fixed at 50% for start of closed positions fetch
-      const closedPositions: any[] = []
-      const maxClosedPositions = 10000 // Fetch up to 10k closed positions
-      let closedBatchSize = 1000 // Larger batches for closed positions
-      let closedOffset = 0
-      let hasMoreClosedPositions = true
-
-      while (hasMoreClosedPositions && closedPositions.length < maxClosedPositions) {
-        const limit = Math.min(closedBatchSize, maxClosedPositions - closedPositions.length)
-        
-        setFetchStatus(`Fetching closed positions... ${closedPositions.length}`)
-        // Progress 50-60% for closed positions (capped at 60%)
-        const closedProgress = Math.min(10, (closedPositions.length / 5000) * 10)
-        setFetchProgress(50 + closedProgress)
-
-        const response = await fetch(
-          `/api/closed-positions?user=${traderAddress}&limit=${limit}&offset=${closedOffset}`
-        )
-
-        if (!response.ok) {
-          console.warn(`⚠️ Failed to fetch closed positions at offset ${closedOffset}: ${response.status}`)
-          break
-        }
-
-        const data = await response.json()
-        if (Array.isArray(data) && data.length > 0) {
-          closedPositions.push(...data)
-          closedOffset += data.length
-          
-          // If we got fewer than requested, we've reached the end
-          if (data.length < limit) {
-            hasMoreClosedPositions = false
-            console.log(`📊 Reached end of closed positions at ${closedPositions.length}`)
-          }
-        } else {
-          hasMoreClosedPositions = false
-        }
-
-        await new Promise(resolve => setTimeout(resolve, 200))
-      }
-
-      setFetchProgress(60) // Completed closed positions fetch
-      console.log(`✅ Fetched ${closedPositions.length} closed positions`)
+      // Check market resolutions using gamma-api (NOT closed-positions!)
+      // closed-positions only shows positions the USER closed, not market resolutions
+      setFetchStatus('Checking market resolutions...')
+      setFetchProgress(50)
       
-      // AUTO-FETCH MORE TRADES if we have closed positions but haven't fetched enough trades yet
-      // This handles ultra-fast traders who have hundreds of open trades but closed positions just 10-20 min ago
-      // Only auto-fetch if user requested MORE than we currently have
-      const initialTradeCount = allActivity.length
-      if (closedPositions.length > 0 && allActivity.length < Math.min(numTrades * 2, 10000)) {
-        const oldestClosedTimestamp = Math.min(...closedPositions.map(p => p.timestamp))
-        const oldestActivityTimestamp = Math.min(...allActivity.map(a => a.timestamp))
-        
-        console.log(`📅 Oldest activity fetched: ${new Date(oldestActivityTimestamp * 1000).toISOString()}`)
-        console.log(`📅 Oldest closed position: ${new Date(oldestClosedTimestamp * 1000).toISOString()}`)
-        
-        // If our oldest activity is still NEWER than the oldest closed position,
-        // we need to fetch MORE trades to reach the resolved ones
-        if (oldestActivityTimestamp > oldestClosedTimestamp) {
-          const timeDiffMinutes = Math.floor((oldestActivityTimestamp - oldestClosedTimestamp) / 60)
-          console.warn(`⚠️ Gap detected: Oldest trade fetched is ${timeDiffMinutes} minutes newer than oldest closed position`)
-          console.log(`🔄 Auto-fetching more trades to reach resolved positions...`)
-          
-          setFetchStatus('Auto-fetching older trades to find resolved positions...')
-          
-          // Calculate how many more trades we can fetch (up to 2x user's request or 10k max)
-          const maxTotalTrades = Math.min(numTrades * 2, 10000)
-          let additionalBatches = 0
-          const maxAdditionalBatches = Math.ceil((maxTotalTrades - allActivity.length) / 3000)
-          
-          while (additionalBatches < maxAdditionalBatches && 
-                 allActivity.length < maxTotalTrades && 
-                 oldestTimestamp && 
-                 oldestTimestamp > oldestClosedTimestamp) {
-            const limit = Math.min(3000, maxTotalTrades - allActivity.length)
-            const url = `/api/activity?user=${traderAddress}&limit=${limit}&end=${oldestTimestamp - 1}`
-            
-            // Update progress bar: 60-75% for auto-fetch (capped at 75%)
-            const autoFetchProgress = Math.min(15, ((allActivity.length - initialTradeCount) / (maxTotalTrades - initialTradeCount)) * 15)
-            setFetchProgress(60 + autoFetchProgress)
-            setFetchStatus(`Auto-fetching older trades... ${allActivity.length} / ${maxTotalTrades}`)
-            
-            console.log(`📥 Additional batch ${additionalBatches + 1}: fetching ${limit} trades before ${new Date(oldestTimestamp * 1000).toISOString()}`)
-            
-            const response = await fetch(url)
-            if (!response.ok) break
-            
-            const data = await response.json()
-            if (Array.isArray(data) && data.length > 0) {
-              allActivity.push(...data)
-              additionalBatches++
-              
-              // Update oldest timestamp
-              const timestamps = data.map((d: any) => d.timestamp).filter((t: number) => t)
-              if (timestamps.length > 0) {
-                oldestTimestamp = Math.min(...timestamps)
-                console.log(`📊 Total trades now: ${allActivity.length}. Oldest: ${new Date(oldestTimestamp * 1000).toISOString()}`)
-              }
-              
-              // If we've reached the closed positions timeframe, stop
-              if (oldestTimestamp <= oldestClosedTimestamp) {
-                console.log(`✅ Reached closed positions timeframe! Should have matches now.`)
-                break
-              }
-            } else {
-              break
-            }
-            
-            await new Promise(resolve => setTimeout(resolve, 300))
-          }
-          
-          if (allActivity.length > numTrades) {
-            console.log(`✅ Finished auto-fetch: ${allActivity.length} total trades (requested ${numTrades}, auto-fetched ${allActivity.length - initialTradeCount} more to reach closed positions)`)
-          } else {
-            console.log(`✅ Finished auto-fetch: ${allActivity.length} total trades`)
-          }
-        }
+      // Get unique conditionIds from all trades
+      const uniqueConditionIds = [...new Set(allActivity.map((a: any) => a.conditionId).filter(Boolean))]
+      console.log(`📊 Checking resolutions for ${uniqueConditionIds.length} unique markets...`)
+      
+      // Fetch resolution data from gamma-api
+      const resolutionResponse = await fetch('/api/market-resolutions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ conditionIds: uniqueConditionIds })
+      })
+      
+      if (!resolutionResponse.ok) {
+        throw new Error('Failed to fetch market resolutions')
       }
+      
+      const resolutionMap = await resolutionResponse.json()
+      console.log(`✅ Got resolution data for ${Object.keys(resolutionMap).length} markets`)
+      
+      // Count resolved vs open
+      const resolvedCount = Object.values(resolutionMap).filter((r: any) => r.resolved).length
+      const openCount = uniqueConditionIds.length - resolvedCount
+      console.log(`   📊 ${resolvedCount} resolved, ${openCount} still open`)
+
+      setFetchProgress(60)
 
       console.log(`✅ Total trades fetched: ${allActivity.length}`)
 
@@ -351,91 +260,64 @@ export default function HistoricalAnalysisPage() {
       )
       
       console.log(`📊 Unique trades after deduplication: ${uniqueActivity.length} (from ${allActivity.length})`)
-      console.log(`📊 Total closed positions available: ${closedPositions.length}`)
+      console.log(`📊 Total markets with resolution data: ${Object.keys(resolutionMap).length}`)
       
-      // DEBUG: Show some sample conditionIds from both datasets
+      // Show some sample conditionIds from trades
       if (uniqueActivity.length > 0) {
-        console.log(`\n🔍 SAMPLE ACTIVITY conditionIds (first 5):`)
+        console.log(`\n🔍 SAMPLE TRADE conditionIds (first 5):`)
         uniqueActivity.slice(0, 5).forEach((a: any, i: number) => {
           console.log(`  ${i+1}. ${a.conditionId} - ${a.title}`)
         })
       }
       
-      if (closedPositions.length > 0) {
-        console.log(`\n🔍 SAMPLE CLOSED POSITION conditionIds (first 5):`)
-        closedPositions.slice(0, 5).forEach((p: any, i: number) => {
-          console.log(`  ${i+1}. ${p.conditionId} - ${p.title} (PnL: $${p.realizedPnl})`)
-        })
-      }
-      
-      // Create a map of conditionId -> closed position for faster lookup
-      const closedPosMap = new Map<string, any>()
-      closedPositions.forEach(pos => {
-        if (pos.conditionId) {
-          closedPosMap.set(pos.conditionId, pos)
-        }
-        // Also index by asset as fallback
-        if (pos.asset) {
-          closedPosMap.set(pos.asset, pos)
-        }
-      })
-      
-      console.log(`\n📊 Closed positions indexed by ${closedPosMap.size} keys`)
-      console.log(`   Unique conditionIds in closed positions: ${new Set(closedPositions.map(p => p.conditionId)).size}`)
-      
-      // Check for overlap
-      const activityConditionIds = new Set(uniqueActivity.map((a: any) => a.conditionId))
-      const closedConditionIds = new Set(closedPositions.map((p: any) => p.conditionId))
-      const overlap = new Set([...activityConditionIds].filter(id => closedConditionIds.has(id)))
-      console.log(`   Overlapping conditionIds: ${overlap.size}`)
-      if (overlap.size > 0) {
-        console.log(`   ✅ Found ${overlap.size} matching conditionIds!`)
-        console.log(`   Examples:`, [...overlap].slice(0, 3))
-      } else {
-        console.warn(`   ❌ NO OVERLAP between activity and closed positions!`)
-        console.warn(`   This means the trades fetched are NOT in the closed positions`)
-      }
-      
-      let matchedCount = 0
-      let unmatchedCount = 0
+      let resolvedCount = 0
+      let wonCount = 0
+      let lostCount = 0
+      let openCount = 0
       
       const trades: HistoricalTrade[] = uniqueActivity.map((activity: any, index: number) => {
-        // Try to find matching closed position
-        let closedPos = null
-        
-        // Strategy 1: Match by conditionId (most reliable)
-        if (activity.conditionId) {
-          closedPos = closedPosMap.get(activity.conditionId)
-        }
-        
-        // Strategy 2: Match by asset
-        if (!closedPos && activity.asset) {
-          closedPos = closedPosMap.get(activity.asset)
-        }
-
         let status: 'open' | 'won' | 'lost' = 'open'
         let pnl = 0
 
-        if (closedPos) {
-          matchedCount++
-          // Check for realizedPnl or pnl field
-          pnl = parseFloat(closedPos.realizedPnl || closedPos.pnl) || 0
+        // Check if market is resolved using gamma-api data
+        const resolution = resolutionMap[activity.conditionId]
+        
+        if (resolution && resolution.resolved) {
+          resolvedCount++
           
-          // Determine status based on PnL
-          if (pnl > 0) {
-            status = 'won'
-          } else if (pnl < 0) {
-            status = 'lost'
-          }
+          // Parse user's outcome index from activity
+          // outcomeIndex might be in different fields depending on activity type
+          const userOutcome = activity.outcomeIndex ?? activity.outcome ?? null
           
-          if (matchedCount <= 5) { // Only log first 5 matches to avoid spam
-            console.log(`✅ Match #${matchedCount}: ${activity.title} → ${status} (PnL: $${pnl.toFixed(2)})`)
+          if (userOutcome !== null && resolution.winningOutcome !== null) {
+            // User won if their outcome matches the winning outcome
+            const userWon = userOutcome === resolution.winningOutcome
+            status = userWon ? 'won' : 'lost'
+            
+            // Calculate P&L based on position
+            const amount = parseFloat(activity.amount || activity.size || 0)
+            const price = parseFloat(activity.price || 0)
+            
+            if (userWon) {
+              // Profit = amount * (1 - price paid) because winning shares are worth $1
+              pnl = amount * (1 - price)
+              wonCount++
+            } else {
+              // Loss = amount * price paid (lost the investment)
+              pnl = -amount * price
+              lostCount++
+            }
+          } else {
+            // Market resolved but can't determine user's outcome
+            openCount++
           }
         } else {
-          unmatchedCount++
-          if (unmatchedCount <= 3) { // Only log first 3 unmatched to avoid spam
-            console.log(`⚠️ Unmatched #${unmatchedCount}: ${activity.title} (conditionId: ${activity.conditionId?.slice(0, 10)}...)`)
-          }
+          // Market not resolved yet
+          openCount++
+        }
+        
+        if (resolvedCount <= 5 && status !== 'open') { // Only log first 5 resolved matches to avoid spam
+          console.log(`✅ Resolved #${resolvedCount}: ${activity.title} → ${status} (PnL: $${pnl.toFixed(2)})`)
         }
 
         // Generate unique ID with fallback to index
@@ -462,9 +344,9 @@ export default function HistoricalAnalysisPage() {
       // Log matching summary
       console.log(`\n📊 RESOLUTION MATCHING SUMMARY:`)
       console.log(`   Total trades: ${trades.length}`)
-      console.log(`   Matched to closed positions: ${matchedCount} (${(matchedCount/trades.length*100).toFixed(1)}%)`)
-      console.log(`   Still open/unmatched: ${unmatchedCount} (${(unmatchedCount/trades.length*100).toFixed(1)}%)`)
-      console.log(`   Closed positions available: ${closedPositions.length}\n`)
+      console.log(`   Resolved markets: ${resolvedCount} (${(resolvedCount/trades.length*100).toFixed(1)}%)`)
+      console.log(`   Won: ${wonCount}, Lost: ${lostCount}, Open: ${openCount}`)
+      console.log(`   Total P&L from resolved trades: $${trades.reduce((sum, t) => sum + (t.pnl || 0), 0).toFixed(2)}\n`)
 
       // Calculate stats
       const closedTrades = trades.filter(t => t.status !== 'open')
