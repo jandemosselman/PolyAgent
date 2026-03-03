@@ -103,6 +103,8 @@ export async function scanForNewTrades(
     
     return {
       id: `${activity.transactionHash}-${activity.asset}-${Date.now()}-${index}-${Math.random().toString(36).substring(7)}`,
+      // originalAmount: the USD value the original trader placed (needed for MC trigger filter)
+      originalAmount: parseFloat(activity.size) * parseFloat(activity.price),
       // ⚡ MEMORY OPTIMIZATION: Only store essential fields from originalTrade
       // (Not full API response, saves ~90% memory while keeping functionality)
       originalTrade: {

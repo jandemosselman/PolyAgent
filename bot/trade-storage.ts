@@ -3,6 +3,9 @@ import path from 'path'
 
 export interface StoredTrade {
   id: string
+  // originalAmount: USD size of the original trader's bet (used for MC trigger filter)
+  // Stored as a top-level number so originalTrade can be safely stripped to save memory
+  originalAmount?: number
   // ⚡ OPTIMIZED: Only store essential fields from originalTrade (not full API response)
   originalTrade?: {
     amount?: string

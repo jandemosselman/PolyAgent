@@ -3066,9 +3066,9 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
     const resolvedTrades = allTrades.filter(t => {
       if (t.status === 'open') return false
       if (t.price < mcMinPrice || t.price > mcMaxPrice) return false
-      // originalTrade may have been stripped by the bot to save memory.
-      // All stored trades already passed the trigger filter at copy-time, so
-      // fall back to the top-level amount (fixedBetAmount) if originalTrade is absent.
+      // Use originalAmount (top-level scalar) first — preserved even when originalTrade is stripped
+      if (typeof t.originalAmount === 'number') return t.originalAmount >= mcMinTrigger
+      // Fallback: reconstruct from originalTrade if present
       const orig = t.originalTrade
       if (orig) {
         let amt = 0
@@ -3076,7 +3076,7 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
         else if (orig.size && orig.price) amt = parseFloat(orig.size) * parseFloat(orig.price)
         return amt >= mcMinTrigger
       }
-      // No originalTrade → trade was already filtered at copy-time, count it
+      // No amount info at all — trade pre-dates this field, include it
       return true
     }).sort((a, b) => a.timestamp - b.timestamp)
 
