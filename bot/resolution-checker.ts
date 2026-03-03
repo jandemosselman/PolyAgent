@@ -144,7 +144,6 @@ export async function checkResolutionsForConfig(config: Configuration) {
   
   try {
     // STEP 1: Check resolutions (like pressing "Check Resolutions" button)
-    console.log(`  📊 Step 1: Checking resolutions on existing data...`)
     let [activity, closedPositions] = await Promise.all([
       fetchActivity(config.traderAddress, 5000),
       fetchClosedPositions(config.traderAddress, 10000)
@@ -168,7 +167,6 @@ export async function checkResolutionsForConfig(config: Configuration) {
     }
     
     // STEP 2: Refresh to find new trades (like pressing "Refresh" button)
-    console.log(`  🔄 Step 2: Refreshing to find new trades...`)
     await new Promise(resolve => setTimeout(resolve, 2000)) // Wait 2 seconds like manual refresh
     
     ;[activity, closedPositions] = await Promise.all([
@@ -177,7 +175,6 @@ export async function checkResolutionsForConfig(config: Configuration) {
     ])
     
     // STEP 3: Check resolutions again (like pressing "Check Resolutions" again)
-    console.log(`  📊 Step 3: Checking resolutions again after refresh...`)
     ;({ trades, stats } = matchResolvedBuysWithFilters(
       activity, 
       closedPositions,
@@ -284,7 +281,6 @@ Total P&L: $${totalPnL.toFixed(2)}
 
 async function fetchActivity(address: string, limit: number): Promise<Activity[]> {
   const url = `https://data-api.polymarket.com/activity?user=${address}&limit=${limit}&offset=0`
-  console.log(`  Fetching activity from: ${url}`)
   
   const response = await fetch(url, {
     headers: {
@@ -304,7 +300,6 @@ async function fetchActivity(address: string, limit: number): Promise<Activity[]
 
 async function fetchClosedPositions(address: string, limit: number): Promise<ClosedPosition[]> {
   const url = `https://data-api.polymarket.com/positions?user=${address}&limit=${limit}&offset=0&closed=true`
-  console.log(`  Fetching closed positions from: ${url}`)
   
   const response = await fetch(url, {
     headers: {

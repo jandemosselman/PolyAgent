@@ -43,7 +43,6 @@ function loadConfigurations(): Configuration[] {
       const data = fs.readFileSync(configPath, 'utf-8')
       if (data.trim()) { // Check if file has content
         const configs = JSON.parse(data)
-        console.log(`📋 Loaded ${configs.length} configuration(s) from ${configPath}`)
         return configs
       } else {
         console.log('📋 Configuration file is empty')
@@ -99,8 +98,6 @@ export function initializeCopyTrades() {
 }
 
 export async function performFullCheckCycle(config: Configuration) {
-  console.log(`🔍 Starting full check cycle for: ${config.name}`)
-  
   try {
     // Load the corresponding copy trade run
     const runs = loadCopyTrades()
@@ -132,7 +129,6 @@ export async function performFullCheckCycle(config: Configuration) {
     const initialBudget = run.currentBudget
     
     // STEP 1: Check resolutions on open trades
-    console.log(`  📊 Step 1: Checking resolutions...`)
     const { resolvedTrades: resolved1, budgetReturned: returned1 } = await checkResolutionsForStoredTrades(run)
     
     if (resolved1.length > 0) {
@@ -141,7 +137,6 @@ export async function performFullCheckCycle(config: Configuration) {
     }
     
     // STEP 2: Scan for new trades
-    console.log(`  🔄 Step 2: Scanning for new trades...`)
     await new Promise(resolve => setTimeout(resolve, 2000))
     
     const { newTrades, totalMatching } = await scanForNewTrades(run)
@@ -150,11 +145,9 @@ export async function performFullCheckCycle(config: Configuration) {
       const budgetUsed = newTrades.length * run.fixedBetAmount
       run.trades = [...newTrades, ...run.trades]
       run.currentBudget -= budgetUsed
-      console.log(`  ✅ Added ${newTrades.length} new trade(s)`)
     }
     
     // STEP 3: Check resolutions again
-    console.log(`  📊 Step 3: Checking resolutions again...`)
     await new Promise(resolve => setTimeout(resolve, 1000))
     
     const { resolvedTrades: resolved2, budgetReturned: returned2 } = await checkResolutionsForStoredTrades(run)
@@ -166,8 +159,6 @@ export async function performFullCheckCycle(config: Configuration) {
     // Update last checked
     run.lastChecked = Date.now()
     updateCopyTrade(run)
-    
-    console.log(`  💾 Final state: ${run.trades.length} total trades, $${run.currentBudget.toFixed(2)} budget`)
     
     // Calculate stats
     const closedTrades = run.trades.filter(t => t.status !== 'open')

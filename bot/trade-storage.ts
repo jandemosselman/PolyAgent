@@ -94,9 +94,6 @@ export function saveCopyTrades(runs: CopyTradeRun[], maxTradesPerRun?: number): 
     })
     
     fs.writeFileSync(STORAGE_FILE, JSON.stringify(prunedRuns, null, 2), 'utf-8')
-    
-    const totalTrades = prunedRuns.reduce((sum, r) => sum + r.trades.length, 0)
-    console.log(`💾 Saved ${prunedRuns.length} run(s) with ${totalTrades.toLocaleString()} trades`)
   } catch (error) {
     console.error('Error saving copy trades:', error)
   }
