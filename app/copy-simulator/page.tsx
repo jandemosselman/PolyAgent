@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { saveStrategy, generateId, loadStrategies, linkRunToStrategy, unlinkRunFromStrategy, buildRunStrategyMap, type SavedStrategy, type LinkedRun } from '@/lib/strategyStore'
 
 // IndexedDB utilities for unlimited storage
 const DB_NAME = 'PolyAgentDB'
@@ -100,6 +101,7 @@ interface SimulatedTrade {
 
 export default function CopySimulatorPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [copyTrades, setCopyTrades] = useState<CopyTrade[]>([])
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [isCreating, setIsCreating] = useState(false)
@@ -141,6 +143,12 @@ export default function CopySimulatorPage() {
     avgPnl: number
     totalPnl: number
   } | null>(null)
+  const [manualPriceTestMin, setManualPriceTestMin] = useState<string>('0.30')
+  const [manualPriceTestMax, setManualPriceTestMax] = useState<string>('0.70')
+  const [manualPriceTestResults, setManualPriceTestResults] = useState<{
+    trades: number; winRate: number; avgPnl: number; totalPnl: number
+    deltaWinRate: number; deltaAvgPnl: number
+  } | null>(null)
   const [autoFindingTrigger, setAutoFindingTrigger] = useState(false)
   const [minTradesForTrigger, setMinTradesForTrigger] = useState<number>(50)
   const [autoTriggerResults, setAutoTriggerResults] = useState<Array<{
@@ -159,18 +167,37 @@ export default function CopySimulatorPage() {
   const [mcBudget, setMcBudget] = useState<number>(10)
   const [mcBettingMode, setMcBettingMode] = useState<'fixed' | 'percentage'>('fixed')
   const [mcFixedBet, setMcFixedBet] = useState<number>(1)
-  const [mcPercentage, setMcPercentage] = useState<number>(1) // Percentage of original trade (1% = 1)
+  const [mcPercentage, setMcPercentage] = useState<number>(1)
   const [mcMinPrice, setMcMinPrice] = useState<number>(0.5)
   const [mcMaxPrice, setMcMaxPrice] = useState<number>(0.66)
   const [mcMinTrigger, setMcMinTrigger] = useState<number>(10)
-  const [mcNumSimulations, setMcNumSimulations] = useState<number>(100)
+  const [mcNumSimulations, setMcNumSimulations] = useState<number>(500)
+  const [mcSlippagePercent, setMcSlippagePercent] = useState<number>(2)
+  const [mcFeePercent, setMcFeePercent] = useState<number>(0)
+  const [mcRealismPreset, setMcRealismPreset] = useState<'optimistic'|'realistic'|'conservative'>('realistic')
   const [mcResults, setMcResults] = useState<{
     survived: number
     bankrupt: number
     avgPnl: number
+    medianPnl: number
+    p25Pnl: number
+    p75Pnl: number
     bestPnl: number
     worstPnl: number
     avgWinRate: number
+    sharpe: number
+    consistency: number
+    avgTrades: number
+    exitAdvice: {
+      avgPeakPnl: number        // average max PnL reached during a sim
+      medianPeakPnl: number     // median max PnL reached
+      p25PeakPnl: number        // conservative: 75% of sims reached this
+      avgTradesAtPeak: number   // average trade# when peak was hit
+      avgDrawdownPostPeak: number // average $ given back after peak
+      pctRegretSims: number     // % sims where >25% of peak PnL was lost after peak
+      recommendedExitPnl: number // main advice number
+      avgTrajectory: number[]   // avg PnL at each trade step (capped at 150 steps)
+    }
     simulations: Array<{
       startIndex: number
       finalBudget: number
@@ -182,6 +209,12 @@ export default function CopySimulatorPage() {
   } | null>(null)
   const [isRunningMC, setIsRunningMC] = useState(false)
   const [mcProgress, setMcProgress] = useState<string>('')
+  const [showSaveStrategyForm, setShowSaveStrategyForm] = useState(false)
+  const [strategyNameInput, setStrategyNameInput] = useState('')
+  const [strategySaved, setStrategySaved] = useState(false)
+  const [assigningRunId, setAssigningRunId] = useState<string | null>(null)
+  const [savedStrategiesForAssign, setSavedStrategiesForAssign] = useState<SavedStrategy[]>([])
+  const [runStrategyMap, setRunStrategyMap] = useState<Record<string, string>>({})
   
   // Brute Force Strategy Finder States
   const [isFindingBestStrategy, setIsFindingBestStrategy] = useState(false)
@@ -352,6 +385,30 @@ export default function CopySimulatorPage() {
   const [minPrice, setMinPrice] = useState(0.5)
   const [maxPrice, setMaxPrice] = useState(0.66)
 
+  // Auto-open create modal and pre-fill form when arriving via "Live Run" from historical-analysis
+  useEffect(() => {
+    const bet = searchParams?.get('bet')
+    if (!bet) return
+    const budget = parseFloat(searchParams?.get('budget') || '') || 100
+    const fixedBet = parseFloat(bet) || 10
+    const minP = parseFloat(searchParams?.get('minPrice') || '') || 0.5
+    const maxP = parseFloat(searchParams?.get('maxPrice') || '') || 0.66
+    const trigger = parseFloat(searchParams?.get('trigger') || '') || 0
+    const trader = searchParams?.get('trader') || ''
+    setInitialBudget(budget)
+    setFixedBetAmount(fixedBet)
+    setMinPrice(minP)
+    setMaxPrice(maxP)
+    setMinTriggerAmount(trigger)
+    setTraderAddress(trader)
+    setMcBudget(budget)
+    setMcFixedBet(fixedBet)
+    setMcMinPrice(minP)
+    setMcMaxPrice(maxP)
+    setMcMinTrigger(trigger)
+    setShowCreateModal(true)
+  }, [])
+
   // Load copy trades from IndexedDB (with localStorage fallback for migration)
   useEffect(() => {
     const loadData = async () => {
@@ -423,6 +480,11 @@ export default function CopySimulatorPage() {
     }
     
     loadData()
+  }, [])
+
+  // Load run→strategy assignment map on mount
+  useEffect(() => {
+    setRunStrategyMap(buildRunStrategyMap())
   }, [])
 
   // Auto-sync with bot on page load (disabled by default - enable after setting RAILWAY_BOT_URL)
@@ -2199,6 +2261,40 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
     setOptimizing(false)
   }
 
+  const testManualPriceRange = (group: any) => {
+    if (!optimizationResults) return
+    const lo = parseFloat(manualPriceTestMin)
+    const hi = parseFloat(manualPriceTestMax)
+    if (isNaN(lo) || isNaN(hi) || lo >= hi) {
+      setNotification({ type: 'warning', message: 'Enter a valid price range (min < max)' })
+      setTimeout(() => setNotification(null), 2000)
+      return
+    }
+    const configRuns = copyTrades.filter(ct => {
+      const key = `${ct.traderAddress}-${ct.initialBudget}-${ct.fixedBetAmount}-${ct.minPrice}-${ct.maxPrice}-${ct.minTriggerAmount}`
+      return key === group.configKey
+    })
+    const allTrades = configRuns.flatMap(run => run.trades.filter(t => t.status !== 'open'))
+    const filtered = allTrades.filter(t => t.price >= lo && t.price <= hi)
+    if (filtered.length === 0) {
+      setNotification({ type: 'warning', message: 'No trades in that price range' })
+      setTimeout(() => setNotification(null), 2000)
+      return
+    }
+    const wins = filtered.filter(t => t.status === 'won').length
+    const winRate = (wins / filtered.length) * 100
+    const totalPnl = filtered.reduce((s, t) => s + (t.pnl || 0), 0)
+    const avgPnl = totalPnl / filtered.length
+    setManualPriceTestResults({
+      trades: filtered.length,
+      winRate,
+      avgPnl,
+      totalPnl,
+      deltaWinRate: winRate - optimizationResults.currentStats.winRate,
+      deltaAvgPnl: avgPnl - optimizationResults.currentStats.avgPnl,
+    })
+  }
+
   const testManualTrigger = (group: any) => {
     if (!optimizationResults) return
     
@@ -2953,169 +3049,179 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
   // Monte Carlo Simulation - Run multiple simulations with random starting points
   const runMonteCarloSimulation = (group: any) => {
     if (!optimizationResults) return
-    
+
     setIsRunningMC(true)
     setMcResults(null)
-    
-    console.log(`\n🎲 MONTE CARLO SIMULATION STARTED`)
-    console.log(`Budget: $${mcBudget}, Betting Mode: ${mcBettingMode}`)
-    if (mcBettingMode === 'fixed') {
-      console.log(`Fixed Bet: $${mcFixedBet}`)
-    } else {
-      console.log(`Percentage: ${mcPercentage}% of original trade`)
-    }
-    console.log(`Price Range: ${mcMinPrice}-${mcMaxPrice}, Min Trigger: $${mcMinTrigger}`)
-    console.log(`Simulations: ${mcNumSimulations}`)
-    
-    // Get all trades from all runs in this configuration
+    setShowSaveStrategyForm(false)
+    setStrategySaved(false)
+
+    // Get all resolved trades for this configuration
     const configRuns = copyTrades.filter(ct => {
       const key = `${ct.traderAddress}-${ct.initialBudget}-${ct.fixedBetAmount}-${ct.minPrice}-${ct.maxPrice}-${ct.minTriggerAmount}`
       return key === group.configKey
     })
-    
+
     const allTrades = configRuns.flatMap(run => run.trades)
-    
-    // Filter to only resolved trades within price/trigger filters
+
     const resolvedTrades = allTrades.filter(t => {
       if (t.status === 'open') return false
       if (t.price < mcMinPrice || t.price > mcMaxPrice) return false
-      
-      // Check trigger amount from originalTrade
-      const originalTrade = t.originalTrade
-      if (!originalTrade) return false
-      
-      let tradeAmount = 0
-      if (originalTrade.amount) {
-        tradeAmount = parseFloat(originalTrade.amount)
-      } else if (originalTrade.size && originalTrade.price) {
-        tradeAmount = parseFloat(originalTrade.size) * parseFloat(originalTrade.price)
+      // originalTrade may have been stripped by the bot to save memory.
+      // All stored trades already passed the trigger filter at copy-time, so
+      // fall back to the top-level amount (fixedBetAmount) if originalTrade is absent.
+      const orig = t.originalTrade
+      if (orig) {
+        let amt = 0
+        if (orig.amount) amt = parseFloat(orig.amount)
+        else if (orig.size && orig.price) amt = parseFloat(orig.size) * parseFloat(orig.price)
+        return amt >= mcMinTrigger
       }
-      
-      return tradeAmount >= mcMinTrigger
-    }).sort((a, b) => a.timestamp - b.timestamp) // Chronological order
-    
-    console.log(`📊 Found ${resolvedTrades.length} resolved trades matching filters`)
-    
-    if (resolvedTrades.length < 50) {
-      setNotification({ type: 'warning', message: `Need at least 50 resolved trades (found ${resolvedTrades.length})` })
+      // No originalTrade → trade was already filtered at copy-time, count it
+      return true
+    }).sort((a, b) => a.timestamp - b.timestamp)
+
+    if (resolvedTrades.length < 10) {
+      setNotification({ type: 'warning', message: `Need at least 10 resolved trades (found ${resolvedTrades.length}) — try widening filters` })
       setTimeout(() => setNotification(null), 3000)
       setIsRunningMC(false)
       return
     }
-    
-    // Run simulations at random starting points
-    const simulations: Array<{
-      startIndex: number
-      finalBudget: number
-      pnl: number
-      trades: number
-      bankrupt: boolean
-      winRate: number
-    }> = []
-    
-    const maxStartIndex = Math.max(0, resolvedTrades.length - 100) // Need at least 100 trades for a meaningful simulation
-    
+
+    const simulations: Array<{ startIndex: number; finalBudget: number; pnl: number; trades: number; bankrupt: boolean; winRate: number }> = []
+    const maxStartIndex = Math.max(0, resolvedTrades.length - 10)
+    const slip = mcSlippagePercent / 100
+    const fee = mcFeePercent / 100
+
+    // For exit advice: track peak PnL per sim and trajectory
+    const peakPnls: number[] = []
+    const peakTradeIndices: number[] = []
+    const drawdownsPostPeak: number[] = []
+    const MAX_TRAJ_STEPS = 150
+    const trajectorySum = new Array(MAX_TRAJ_STEPS).fill(0)
+    const trajectoryCount = new Array(MAX_TRAJ_STEPS).fill(0)
+
     for (let i = 0; i < mcNumSimulations; i++) {
-      // Pick random starting point
       const startIndex = Math.floor(Math.random() * (maxStartIndex + 1))
-      
       let budget = mcBudget
       let tradesCopied = 0
       let wins = 0
       let bankrupt = false
-      
-      // Simulate trades from this starting point
+      let peakBudget = mcBudget
+      let peakTradeIndex = 0
+      const pnlCurve: number[] = []
+
       for (let j = startIndex; j < resolvedTrades.length; j++) {
         const trade = resolvedTrades[j]
-        
-        // Calculate bet amount based on mode
+
         let betAmount: number
         if (mcBettingMode === 'fixed') {
           betAmount = mcFixedBet
         } else {
-          // Percentage mode - calculate percentage of original trade amount
-          const originalTrade = trade.originalTrade
-          let originalAmount = 0
-          if (originalTrade.amount) {
-            originalAmount = parseFloat(originalTrade.amount)
-          } else if (originalTrade.size && originalTrade.price) {
-            originalAmount = parseFloat(originalTrade.size) * parseFloat(originalTrade.price)
-          }
-          betAmount = (mcPercentage / 100) * originalAmount
-          
-          // Safety check - don't bet more than available budget
-          if (betAmount > budget) {
-            betAmount = budget
-          }
+          const orig = trade.originalTrade
+          let origAmt = 0
+          if (orig?.amount) origAmt = parseFloat(orig.amount)
+          else if (orig?.size && orig?.price) origAmt = parseFloat(orig.size) * parseFloat(orig.price)
+          betAmount = Math.min((mcPercentage / 100) * origAmt, budget)
         }
-        
-        // Check if we have enough budget
-        if (budget < betAmount) {
-          bankrupt = true
-          break
-        }
-        
-        // Copy the trade
+
+        if (budget < betAmount || betAmount <= 0) { bankrupt = true; break }
+
+        // Apply slippage: buy at a slightly worse price
+        const effectivePrice = Math.min(0.999, trade.price * (1 + slip))
         budget -= betAmount
         tradesCopied++
-        
-        // Resolve the trade using ACTUAL Polymarket payout formula
+
         if (trade.status === 'won') {
-          // Polymarket payout: (bet amount / price bought at)
-          // Example: Bet $1 at 0.5 price → Win = $1 / 0.5 = $2
-          // Example: Bet $1 at 0.7 price → Win = $1 / 0.7 = $1.43
-          const payout = betAmount / trade.price
-          budget += payout
+          const grossPayout = betAmount / effectivePrice
+          const netPayout = grossPayout * (1 - fee)
+          budget += netPayout
           wins++
         }
-        // If lost, we already deducted the bet
-      }
-      
-      const finalBudget = budget
-      const pnl = finalBudget - mcBudget
-      const winRate = tradesCopied > 0 ? (wins / tradesCopied) * 100 : 0
-      
+
+        // Track peak and trajectory
+        const currentPnl = budget - mcBudget
+        pnlCurve.push(currentPnl)
+        if (budget > peakBudget) {
+          peakBudget = budget
+          peakTradeIndex = tradesCopied
+        }
+        // Accumulate trajectory
+        const step = tradesCopied - 1
+        if (step < MAX_TRAJ_STEPS) {
+          trajectorySum[step] += currentPnl
+          trajectoryCount[step]++
+        }
+      } // end inner trade loop
+
+      const simPeakPnl = peakBudget - mcBudget
+      const simFinalPnl = budget - mcBudget
+      const drawdown = simPeakPnl - simFinalPnl // how much given back after peak
+
+      peakPnls.push(simPeakPnl)
+      peakTradeIndices.push(peakTradeIndex)
+      if (simPeakPnl > 0) drawdownsPostPeak.push(drawdown)
+
       simulations.push({
         startIndex,
-        finalBudget,
-        pnl,
+        finalBudget: budget,
+        pnl: simFinalPnl,
         trades: tradesCopied,
         bankrupt,
-        winRate
+        winRate: tradesCopied > 0 ? (wins / tradesCopied) * 100 : 0,
       })
-      
-      setMcProgress(`Running simulation ${i + 1}/${mcNumSimulations}...`)
-    }
-    
-    // Aggregate results
+
+      if (i % 50 === 0) setMcProgress(`Running ${i + 1} / ${mcNumSimulations}...`)
+    } // end outer sim loop
+
     const survived = simulations.filter(s => !s.bankrupt).length
     const bankrupt = simulations.filter(s => s.bankrupt).length
-    const avgPnl = simulations.reduce((sum, s) => sum + s.pnl, 0) / simulations.length
-    const bestPnl = Math.max(...simulations.map(s => s.pnl))
-    const worstPnl = Math.min(...simulations.map(s => s.pnl))
-    const avgWinRate = simulations.reduce((sum, s) => sum + s.winRate, 0) / simulations.length
-    
-    console.log(`\n✅ SIMULATION COMPLETE`)
-    console.log(`Survived: ${survived}/${mcNumSimulations} (${(survived/mcNumSimulations*100).toFixed(1)}%)`)
-    console.log(`Bankrupt: ${bankrupt}/${mcNumSimulations} (${(bankrupt/mcNumSimulations*100).toFixed(1)}%)`)
-    console.log(`Avg P&L: $${avgPnl.toFixed(2)}`)
-    console.log(`Best: $${bestPnl.toFixed(2)}, Worst: $${worstPnl.toFixed(2)}`)
-    console.log(`Avg Win Rate: ${avgWinRate.toFixed(1)}%`)
-    
-    setMcResults({
-      survived,
-      bankrupt,
-      avgPnl,
-      bestPnl,
-      worstPnl,
-      avgWinRate,
-      simulations
-    })
-    
+    const pnls = simulations.map(s => s.pnl).sort((a, b) => a - b)
+    const avgPnl = pnls.reduce((a, b) => a + b, 0) / pnls.length
+    const medianPnl = pnls[Math.floor(pnls.length / 2)]
+    const p25Pnl = pnls[Math.floor(pnls.length * 0.25)]
+    const p75Pnl = pnls[Math.floor(pnls.length * 0.75)]
+    const bestPnl = pnls[pnls.length - 1]
+    const worstPnl = pnls[0]
+    const avgWinRate = simulations.reduce((s, x) => s + x.winRate, 0) / simulations.length
+    const avgTrades = simulations.reduce((s, x) => s + x.trades, 0) / simulations.length
+    const consistency = (simulations.filter(s => s.pnl > 0).length / simulations.length) * 100
+    const variance = pnls.reduce((s, p) => s + Math.pow(p - avgPnl, 2), 0) / pnls.length
+    const stdDev = Math.sqrt(variance)
+    const sharpe = stdDev > 0 ? avgPnl / stdDev : 0
+
+    // Exit advice calculations
+    const sortedPeakPnls = [...peakPnls].sort((a, b) => a - b)
+    const avgPeakPnl = peakPnls.reduce((a, b) => a + b, 0) / peakPnls.length
+    const medianPeakPnl = sortedPeakPnls[Math.floor(sortedPeakPnls.length / 2)]
+    const p25PeakPnl = sortedPeakPnls[Math.floor(sortedPeakPnls.length * 0.25)]
+    const avgTradesAtPeak = peakTradeIndices.reduce((a, b) => a + b, 0) / peakTradeIndices.length
+    const avgDrawdownPostPeak = drawdownsPostPeak.length > 0
+      ? drawdownsPostPeak.reduce((a, b) => a + b, 0) / drawdownsPostPeak.length
+      : 0
+    // % of sims where more than 25% of peak PnL was given back
+    const regretSims = peakPnls.filter((peak, i) => {
+      if (peak <= 0) return false
+      const drawn = peak - simulations[i].pnl
+      return drawn > peak * 0.25
+    }).length
+    const pctRegretSims = (regretSims / mcNumSimulations) * 100
+    // Recommended exit: p25 of peak PnLs (conservative — 75% of sims reached this)
+    // but only if it's positive
+    const recommendedExitPnl = Math.max(p25PeakPnl, medianPnl * 0.5, 0)
+
+    // Build average trajectory
+    const avgTrajectory: number[] = []
+    for (let s = 0; s < MAX_TRAJ_STEPS; s++) {
+      if (trajectoryCount[s] > 0) avgTrajectory.push(trajectorySum[s] / trajectoryCount[s])
+      else break
+    }
+
+    const exitAdvice = { avgPeakPnl, medianPeakPnl, p25PeakPnl, avgTradesAtPeak, avgDrawdownPostPeak, pctRegretSims, recommendedExitPnl, avgTrajectory }
+
+    setMcResults({ survived, bankrupt, avgPnl, medianPnl, p25Pnl, p75Pnl, bestPnl, worstPnl, avgWinRate, sharpe, consistency, avgTrades, exitAdvice, simulations })
     setIsRunningMC(false)
     setMcProgress('')
-    
-    setNotification({ type: 'success', message: `Simulation complete! ${survived}/${mcNumSimulations} survived` })
+    setNotification({ type: 'success', message: `✅ ${mcNumSimulations} simulations done — survival rate: ${((survived / mcNumSimulations) * 100).toFixed(0)}%` })
     setTimeout(() => setNotification(null), 4000)
   }
 
@@ -3524,6 +3630,20 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
           </div>
           <div className="flex items-center gap-3">
             <a
+              href="/strategy-center"
+              className="px-4 py-2 bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/30 hover:border-indigo-500/50 text-indigo-400 font-medium rounded-lg transition-all"
+              title="View and manage your saved MC strategies"
+            >
+              🗂️ Strategy Center
+            </a>
+            <a
+              href="/trader-finder"
+              className="px-4 py-2 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 hover:border-cyan-500/50 text-cyan-400 font-medium rounded-lg transition-all"
+              title="Find high-frequency short-market traders to copy"
+            >
+              🎯 Trader Finder
+            </a>
+            <a
               href="/historical-analysis"
               className="px-4 py-2 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 hover:border-purple-500/50 text-purple-400 font-medium rounded-lg transition-all"
               title="Analyze historical trades from any trader"
@@ -3822,12 +3942,94 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
                     >
                       {checkingResolutionsId === copyTrade.id ? '⏳ Checking...' : '✓ Check Resolutions'}
                     </button>
-                    <button
+    <button
                       onClick={() => showRunChart(copyTrade.id)}
                       className="px-4 py-2 bg-blue-500/20 text-blue-400 border border-blue-500/40 rounded-lg hover:bg-blue-500/30 transition-all text-sm"
                     >
                       📈 View Chart
                     </button>
+                    {/* Assign to Strategy */}
+                    <div className="relative">
+                      {assigningRunId === copyTrade.id ? (
+                        <div className="absolute bottom-full right-0 mb-1 z-50 bg-slate-900 border border-indigo-500/40 rounded-xl shadow-xl p-3 min-w-[240px]">
+                          <p className="text-xs font-semibold text-indigo-300 mb-2">📌 Assign to Strategy</p>
+                          {savedStrategiesForAssign.length === 0 ? (
+                            <p className="text-xs text-slate-500">No saved strategies yet — run a Monte Carlo and save one first.</p>
+                          ) : (
+                            <div className="space-y-1 max-h-48 overflow-y-auto">
+                              {savedStrategiesForAssign.map(strat => {
+                                const isLinked = runStrategyMap[copyTrade.id] === strat.id
+                                return (
+                                  <button
+                                    key={strat.id}
+                                    onClick={() => {
+                                      const closedTrades = copyTrade.trades.filter(t => t.status === 'won' || t.status === 'lost')
+                                      const wonTrades = copyTrade.trades.filter(t => t.status === 'won')
+                                      const totalPnl = closedTrades.reduce((s, t) => s + (t.pnl || 0), 0)
+                                      const winRate = closedTrades.length > 0 ? (wonTrades.length / closedTrades.length) * 100 : 0
+                                      if (isLinked) {
+                                        // Unlink
+                                        unlinkRunFromStrategy(strat.id, copyTrade.id)
+                                      } else {
+                                        // Unlink from any old strategy first
+                                        const oldStratId = runStrategyMap[copyTrade.id]
+                                        if (oldStratId) unlinkRunFromStrategy(oldStratId, copyTrade.id)
+                                        const linkedRun: LinkedRun = {
+                                          runId: copyTrade.id,
+                                          runName: copyTrade.name,
+                                          traderAddress: copyTrade.traderAddress,
+                                          linkedAt: new Date().toISOString(),
+                                          snapshot: {
+                                            totalTrades: copyTrade.trades.length,
+                                            closedTrades: closedTrades.length,
+                                            winRate,
+                                            pnl: totalPnl,
+                                            isActive: copyTrade.isActive,
+                                            snapshotAt: new Date().toISOString(),
+                                          },
+                                        }
+                                        linkRunToStrategy(strat.id, linkedRun)
+                                      }
+                                      setRunStrategyMap(buildRunStrategyMap())
+                                      setAssigningRunId(null)
+                                    }}
+                                    className={`w-full text-left px-3 py-2 rounded-lg text-xs transition-all ${
+                                      isLinked
+                                        ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/40'
+                                        : 'text-slate-300 hover:bg-slate-800 border border-transparent'
+                                    }`}
+                                  >
+                                    <span className="font-semibold">{isLinked ? '✅ ' : ''}{strat.name}</span>
+                                    <span className="text-slate-500 ml-1">({strat.mcResults.survivalRate.toFixed(0)}% survival)</span>
+                                    {isLinked && <span className="block text-[10px] text-slate-500 mt-0.5">Click to unlink</span>}
+                                  </button>
+                                )
+                              })}
+                            </div>
+                          )}
+                          <button onClick={() => setAssigningRunId(null)} className="mt-2 w-full text-xs text-slate-500 hover:text-slate-300 transition-colors">✕ Cancel</button>
+                        </div>
+                      ) : null}
+                      <button
+                        onClick={() => {
+                          if (assigningRunId === copyTrade.id) {
+                            setAssigningRunId(null)
+                          } else {
+                            setSavedStrategiesForAssign(loadStrategies())
+                            setRunStrategyMap(buildRunStrategyMap())
+                            setAssigningRunId(copyTrade.id)
+                          }
+                        }}
+                        className={`px-4 py-2 rounded-lg transition-all text-sm border ${
+                          runStrategyMap[copyTrade.id]
+                            ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40 hover:bg-indigo-500/30'
+                            : 'bg-slate-700/30 text-slate-400 border-slate-600/40 hover:bg-slate-700/50'
+                        }`}
+                        title={runStrategyMap[copyTrade.id] ? 'Reassign or unlink strategy' : 'Assign this run to a saved strategy'}
+                      >
+                        {runStrategyMap[copyTrade.id] ? '🗂️ Assigned' : '🗂️ Assign'}
+                      </button>
+                    </div>
                     <button
                       onClick={() => toggleActive(copyTrade.id)}
                       className="px-4 py-2 bg-slate-800/50 text-slate-300 border border-slate-700/50 rounded-lg hover:bg-slate-700/50 transition-all text-sm"
@@ -4444,7 +4646,14 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
         {showCreateModal && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
             <div className="bg-slate-900 border border-slate-800 rounded-xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
-              <h2 className="text-2xl font-bold text-slate-200 mb-6">Create Copy Trade</h2>
+              <h2 className="text-2xl font-bold text-slate-200 mb-4">Create Copy Trade</h2>
+              
+              {/* Pre-fill banner shown when arriving from Live Run */}
+              {searchParams?.get('bet') && (
+                <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-3 mb-4 text-sm text-emerald-300">
+                  🚀 Strategy pre-filled from Historical Analysis — just enter a <span className="font-bold text-white">name</span> and hit Create!
+                </div>
+              )}
               
               <div className="space-y-4">
                 <div>
@@ -4726,6 +4935,96 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
                         <p className="text-xs text-slate-400">
                           across all trades
                         </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Manual Price Range Tester */}
+              <div className="mb-6 pb-6 border-b border-slate-800/50">
+                <h3 className="text-lg font-semibold text-purple-400 mb-3">
+                  🎯 Test Custom Price Range
+                </h3>
+                <p className="text-sm text-slate-400 mb-4">
+                  Instantly see win rate &amp; avg P&amp;L for any price window — no re-simulation needed
+                </p>
+
+                <div className="flex items-end gap-3">
+                  <div className="flex-1">
+                    <label className="block text-slate-300 text-sm font-medium mb-2">Min Price</label>
+                    <input
+                      type="number"
+                      value={manualPriceTestMin}
+                      onChange={e => setManualPriceTestMin(e.target.value)}
+                      min="0.01" max="0.99" step="0.01"
+                      placeholder="e.g. 0.30"
+                      className="w-full bg-slate-800/50 border border-slate-700/50 text-slate-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <label className="block text-slate-300 text-sm font-medium mb-2">Max Price</label>
+                    <input
+                      type="number"
+                      value={manualPriceTestMax}
+                      onChange={e => setManualPriceTestMax(e.target.value)}
+                      min="0.01" max="0.99" step="0.01"
+                      placeholder="e.g. 0.70"
+                      className="w-full bg-slate-800/50 border border-slate-700/50 text-slate-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    />
+                  </div>
+                  <button
+                    onClick={() => {
+                      const group = strategyGroups.find(g => g.configKey === optimizationResults.configKey)
+                      if (group) testManualPriceRange(group)
+                    }}
+                    disabled={!manualPriceTestMin || !manualPriceTestMax}
+                    className="px-6 py-2 bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/40 hover:border-purple-500/50 text-purple-400 font-medium rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Test
+                  </button>
+                  {manualPriceTestResults && (
+                    <button
+                      onClick={() => setManualPriceTestResults(null)}
+                      className="px-4 py-2 bg-slate-700/50 hover:bg-slate-600/50 text-slate-300 rounded-lg transition-all"
+                      title="Clear results"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+
+                {manualPriceTestResults && (
+                  <div className="mt-4 bg-purple-500/10 border border-purple-500/30 rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="text-sm font-semibold text-purple-300">
+                        Results for price range {parseFloat(manualPriceTestMin).toFixed(2)}–{parseFloat(manualPriceTestMax).toFixed(2)}
+                      </h4>
+                      <span className="text-xs text-slate-400">{manualPriceTestResults.trades} trades</span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-3">
+                      <div className="bg-slate-900/50 rounded-lg p-3">
+                        <p className="text-xs text-slate-500 mb-1">Win Rate</p>
+                        <p className="text-lg font-bold text-purple-400">{manualPriceTestResults.winRate.toFixed(1)}%</p>
+                        <p className={`text-xs ${manualPriceTestResults.deltaWinRate >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                          {manualPriceTestResults.deltaWinRate >= 0 ? '+' : ''}{manualPriceTestResults.deltaWinRate.toFixed(1)}% vs current
+                        </p>
+                      </div>
+                      <div className="bg-slate-900/50 rounded-lg p-3">
+                        <p className="text-xs text-slate-500 mb-1">Avg P&L</p>
+                        <p className={`text-lg font-bold ${manualPriceTestResults.avgPnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                          {manualPriceTestResults.avgPnl >= 0 ? '+' : ''}${manualPriceTestResults.avgPnl.toFixed(3)}
+                        </p>
+                        <p className={`text-xs ${manualPriceTestResults.deltaAvgPnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                          {manualPriceTestResults.deltaAvgPnl >= 0 ? '+' : ''}${manualPriceTestResults.deltaAvgPnl.toFixed(3)} vs current
+                        </p>
+                      </div>
+                      <div className="bg-slate-900/50 rounded-lg p-3">
+                        <p className="text-xs text-slate-500 mb-1">Total P&L</p>
+                        <p className={`text-lg font-bold ${manualPriceTestResults.totalPnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                          {manualPriceTestResults.totalPnl >= 0 ? '+' : ''}${manualPriceTestResults.totalPnl.toFixed(2)}
+                        </p>
+                        <p className="text-xs text-slate-400">across all trades in range</p>
                       </div>
                     </div>
                   </div>
@@ -5207,29 +5506,18 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
                   🎲 Monte Carlo Simulation
                 </h3>
                 <p className="text-sm text-slate-400 mb-4">
-                  Test your strategy with different random starting points to measure bankruptcy risk and profit potential
+                  Runs {mcNumSimulations} random-start simulations to measure bankruptcy risk, median return and consistency
                 </p>
 
                 {/* Configuration */}
                 <div className="grid grid-cols-2 gap-4 mb-4">
                   <div>
                     <label className="block text-sm text-slate-400 mb-2">Your Budget ($)</label>
-                    <input
-                      type="number"
-                      value={mcBudget}
-                      onChange={(e) => setMcBudget(parseFloat(e.target.value) || 10)}
-                      className="w-full px-4 py-2 bg-slate-900/50 border border-slate-700/50 rounded-lg text-slate-200 focus:outline-none focus:border-purple-500/50"
-                      step="1"
-                      min="1"
-                    />
+                    <input type="number" value={mcBudget} onChange={e => setMcBudget(parseFloat(e.target.value) || 10)} className="w-full px-4 py-2 bg-slate-900/50 border border-slate-700/50 rounded-lg text-slate-200 focus:outline-none focus:border-purple-500/50" step="1" min="1" />
                   </div>
                   <div>
                     <label className="block text-sm text-slate-400 mb-2">Betting Mode</label>
-                    <select
-                      value={mcBettingMode}
-                      onChange={(e) => setMcBettingMode(e.target.value as 'fixed' | 'percentage')}
-                      className="w-full px-4 py-2 bg-slate-900/50 border border-slate-700/50 rounded-lg text-slate-200 focus:outline-none focus:border-purple-500/50"
-                    >
+                    <select value={mcBettingMode} onChange={e => setMcBettingMode(e.target.value as 'fixed' | 'percentage')} className="w-full px-4 py-2 bg-slate-900/50 border border-slate-700/50 rounded-lg text-slate-200 focus:outline-none focus:border-purple-500/50">
                       <option value="fixed">💵 Fixed Bet Amount</option>
                       <option value="percentage">📊 % of Original Trade</option>
                     </select>
@@ -5237,76 +5525,64 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
                   {mcBettingMode === 'fixed' ? (
                     <div>
                       <label className="block text-sm text-slate-400 mb-2">Fixed Bet ($)</label>
-                      <input
-                        type="number"
-                        value={mcFixedBet}
-                        onChange={(e) => setMcFixedBet(parseFloat(e.target.value) || 1)}
-                        className="w-full px-4 py-2 bg-slate-900/50 border border-slate-700/50 rounded-lg text-slate-200 focus:outline-none focus:border-purple-500/50"
-                        step="0.5"
-                        min="0.5"
-                      />
+                      <input type="number" value={mcFixedBet} onChange={e => setMcFixedBet(parseFloat(e.target.value) || 1)} className="w-full px-4 py-2 bg-slate-900/50 border border-slate-700/50 rounded-lg text-slate-200 focus:outline-none focus:border-purple-500/50" step="0.25" min="0.25" />
                     </div>
                   ) : (
                     <div>
                       <label className="block text-sm text-slate-400 mb-2">Percentage (%)</label>
-                      <input
-                        type="number"
-                        value={mcPercentage}
-                        onChange={(e) => setMcPercentage(parseFloat(e.target.value) || 1)}
-                        className="w-full px-4 py-2 bg-slate-900/50 border border-slate-700/50 rounded-lg text-slate-200 focus:outline-none focus:border-purple-500/50"
-                        step="0.5"
-                        min="0.1"
-                        max="100"
-                      />
+                      <input type="number" value={mcPercentage} onChange={e => setMcPercentage(parseFloat(e.target.value) || 1)} className="w-full px-4 py-2 bg-slate-900/50 border border-slate-700/50 rounded-lg text-slate-200 focus:outline-none focus:border-purple-500/50" step="0.5" min="0.1" max="100" />
                     </div>
                   )}
-                  <div></div>
+                  <div>
+                    <label className="block text-sm text-slate-400 mb-2">Simulations</label>
+                    <input type="number" value={mcNumSimulations} onChange={e => setMcNumSimulations(parseInt(e.target.value) || 500)} className="w-full px-4 py-2 bg-slate-900/50 border border-slate-700/50 rounded-lg text-slate-200 focus:outline-none focus:border-purple-500/50" step="100" min="50" max="2000" />
+                  </div>
                   <div>
                     <label className="block text-sm text-slate-400 mb-2">Min Price</label>
-                    <input
-                      type="number"
-                      value={mcMinPrice}
-                      onChange={(e) => setMcMinPrice(parseFloat(e.target.value) || 0.5)}
-                      className="w-full px-4 py-2 bg-slate-900/50 border border-slate-700/50 rounded-lg text-slate-200 focus:outline-none focus:border-purple-500/50"
-                      step="0.01"
-                      min="0.01"
-                      max="0.99"
-                    />
+                    <input type="number" value={mcMinPrice} onChange={e => setMcMinPrice(parseFloat(e.target.value) || 0.3)} className="w-full px-4 py-2 bg-slate-900/50 border border-slate-700/50 rounded-lg text-slate-200 focus:outline-none focus:border-purple-500/50" step="0.01" min="0.01" max="0.99" />
                   </div>
                   <div>
                     <label className="block text-sm text-slate-400 mb-2">Max Price</label>
-                    <input
-                      type="number"
-                      value={mcMaxPrice}
-                      onChange={(e) => setMcMaxPrice(parseFloat(e.target.value) || 0.66)}
-                      className="w-full px-4 py-2 bg-slate-900/50 border border-slate-700/50 rounded-lg text-slate-200 focus:outline-none focus:border-purple-500/50"
-                      step="0.01"
-                      min="0.01"
-                      max="0.99"
-                    />
+                    <input type="number" value={mcMaxPrice} onChange={e => setMcMaxPrice(parseFloat(e.target.value) || 0.7)} className="w-full px-4 py-2 bg-slate-900/50 border border-slate-700/50 rounded-lg text-slate-200 focus:outline-none focus:border-purple-500/50" step="0.01" min="0.01" max="0.99" />
                   </div>
                   <div>
                     <label className="block text-sm text-slate-400 mb-2">Min Trigger ($)</label>
-                    <input
-                      type="number"
-                      value={mcMinTrigger}
-                      onChange={(e) => setMcMinTrigger(parseFloat(e.target.value) || 10)}
-                      className="w-full px-4 py-2 bg-slate-900/50 border border-slate-700/50 rounded-lg text-slate-200 focus:outline-none focus:border-purple-500/50"
-                      step="1"
-                      min="0"
-                    />
+                    <input type="number" value={mcMinTrigger} onChange={e => setMcMinTrigger(parseFloat(e.target.value) || 0)} className="w-full px-4 py-2 bg-slate-900/50 border border-slate-700/50 rounded-lg text-slate-200 focus:outline-none focus:border-purple-500/50" step="1" min="0" />
                   </div>
-                  <div>
-                    <label className="block text-sm text-slate-400 mb-2">Simulations</label>
-                    <input
-                      type="number"
-                      value={mcNumSimulations}
-                      onChange={(e) => setMcNumSimulations(parseInt(e.target.value) || 100)}
-                      className="w-full px-4 py-2 bg-slate-900/50 border border-slate-700/50 rounded-lg text-slate-200 focus:outline-none focus:border-purple-500/50"
-                      step="10"
-                      min="10"
-                      max="1000"
-                    />
+                </div>
+
+                {/* Realism Settings */}
+                <div className="bg-slate-800/50 border border-amber-500/20 rounded-lg p-4 mb-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-sm font-semibold text-amber-300">⚡ Realism Settings</span>
+                    <div className="flex gap-1">
+                      {(['optimistic', 'realistic', 'conservative'] as const).map(preset => (
+                        <button key={preset} onClick={() => {
+                          setMcRealismPreset(preset)
+                          if (preset === 'optimistic') { setMcSlippagePercent(0); setMcFeePercent(0) }
+                          if (preset === 'realistic') { setMcSlippagePercent(2); setMcFeePercent(0) }
+                          if (preset === 'conservative') { setMcSlippagePercent(5); setMcFeePercent(2) }
+                        }} className={`px-3 py-1 text-xs rounded-md transition-all ${mcRealismPreset === preset
+                          ? preset === 'optimistic' ? 'bg-green-500/20 text-green-300 border border-green-500/40'
+                          : preset === 'realistic' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+                          : 'bg-red-500/20 text-red-300 border border-red-500/40'
+                          : 'bg-slate-700/50 text-slate-400 border border-slate-600 hover:border-slate-500'}`}>
+                          {preset === 'optimistic' ? '🟢 Optimistic' : preset === 'realistic' ? '🟡 Realistic' : '🔴 Conservative'}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs text-slate-400 mb-1">Price Slippage (%)</label>
+                      <input type="number" value={mcSlippagePercent} onChange={e => { setMcSlippagePercent(parseFloat(e.target.value) || 0); setMcRealismPreset('realistic') }} min="0" max="20" step="0.5" className="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg text-sm text-slate-200 focus:outline-none focus:border-amber-500" />
+                      <p className="text-xs text-slate-500 mt-1">{mcSlippagePercent === 0 ? 'No slippage — unrealistic' : `You buy ${mcSlippagePercent}% higher than trader`}</p>
+                    </div>
+                    <div>
+                      <label className="block text-xs text-slate-400 mb-1">Fee on Winnings (%)</label>
+                      <input type="number" value={mcFeePercent} onChange={e => { setMcFeePercent(parseFloat(e.target.value) || 0); setMcRealismPreset('realistic') }} min="0" max="10" step="0.5" className="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg text-sm text-slate-200 focus:outline-none focus:border-amber-500" />
+                      <p className="text-xs text-slate-500 mt-1">{mcFeePercent === 0 ? 'No fees' : `${mcFeePercent}% deducted from gross payout`}</p>
+                    </div>
                   </div>
                 </div>
 
@@ -5337,75 +5613,275 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
                 {/* Progress */}
                 {(mcProgress || strategyFinderProgress) && (
                   <div className="mt-4 bg-purple-500/10 border border-purple-500/30 rounded-lg p-3">
-                    <p className="text-sm text-purple-300">
-                      {mcProgress || strategyFinderProgress}
-                    </p>
+                    <p className="text-sm text-purple-300">{mcProgress || strategyFinderProgress}</p>
                   </div>
                 )}
 
                 {/* Monte Carlo Results */}
-                {mcResults && (
-                  <div className="mt-4 bg-gradient-to-br from-purple-900/30 to-pink-900/20 border-2 border-purple-500/50 rounded-xl p-6">
-                    <h4 className="text-lg font-semibold text-purple-300 mb-4">📊 Simulation Results</h4>
-                    
-                    <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4">
-                      <div className="bg-slate-900/50 rounded-lg p-4">
-                        <p className="text-xs text-slate-500 mb-1">Survival Rate</p>
-                        <p className="text-2xl font-bold text-emerald-400">
-                          {((mcResults.survived / (mcResults.survived + mcResults.bankrupt)) * 100).toFixed(1)}%
-                        </p>
-                        <p className="text-xs text-emerald-400">{mcResults.survived}/{mcNumSimulations}</p>
+                {mcResults && (() => {
+                  const survivalRate = (mcResults.survived / mcNumSimulations) * 100
+                  return (
+                    <div className="mt-4 bg-gradient-to-br from-purple-900/30 to-pink-900/20 border-2 border-purple-500/50 rounded-xl p-6 space-y-4">
+                      {/* Header + verdict */}
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-lg font-semibold text-purple-300">📊 Results — {mcNumSimulations} simulations</h4>
+                        <div className={`px-3 py-1 rounded-full text-sm font-bold ${
+                          survivalRate >= 90 ? 'bg-emerald-500/20 text-emerald-300' :
+                          survivalRate >= 70 ? 'bg-yellow-500/20 text-yellow-300' :
+                          'bg-red-500/20 text-red-300'
+                        }`}>
+                          {survivalRate >= 90 ? '✅ Safe' : survivalRate >= 70 ? '⚠️ Moderate risk' : '❌ High risk'}
+                        </div>
                       </div>
-                      
-                      <div className="bg-slate-900/50 rounded-lg p-4">
-                        <p className="text-xs text-slate-500 mb-1">Bankruptcy Risk</p>
-                        <p className="text-2xl font-bold text-red-400">
-                          {((mcResults.bankrupt / (mcResults.survived + mcResults.bankrupt)) * 100).toFixed(1)}%
-                        </p>
-                        <p className="text-xs text-red-400">{mcResults.bankrupt}/{mcNumSimulations}</p>
-                      </div>
-                      
-                      <div className="bg-slate-900/50 rounded-lg p-4">
-                        <p className="text-xs text-slate-500 mb-1">Avg P&L</p>
-                        <p className={`text-2xl font-bold ${mcResults.avgPnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                          {mcResults.avgPnl >= 0 ? '+' : ''}${mcResults.avgPnl.toFixed(2)}
-                        </p>
-                        <p className="text-xs text-slate-400">{mcResults.avgWinRate.toFixed(1)}% WR</p>
-                      </div>
-                      
-                      <div className="bg-slate-900/50 rounded-lg p-4">
-                        <p className="text-xs text-slate-500 mb-1">Best Case</p>
-                        <p className="text-2xl font-bold text-emerald-400">
-                          +${mcResults.bestPnl.toFixed(2)}
-                        </p>
-                      </div>
-                      
-                      <div className="bg-slate-900/50 rounded-lg p-4">
-                        <p className="text-xs text-slate-500 mb-1">Worst Case</p>
-                        <p className="text-2xl font-bold text-red-400">
-                          ${mcResults.worstPnl.toFixed(2)}
-                        </p>
-                      </div>
-                    </div>
 
-                    <div className="bg-slate-900/30 rounded-lg p-4 border border-slate-700/30">
-                      <p className="text-sm text-slate-300 mb-2">
-                        {mcResults.survived === mcNumSimulations && (
-                          <span className="text-emerald-400">✅ <strong>Very Safe Strategy:</strong> All simulations survived! Low bankruptcy risk.</span>
-                        )}
-                        {mcResults.survived > mcNumSimulations * 0.8 && mcResults.survived < mcNumSimulations && (
-                          <span className="text-emerald-400">✅ <strong>Safe Strategy:</strong> High survival rate ({((mcResults.survived / mcNumSimulations) * 100).toFixed(0)}%). Good risk/reward.</span>
-                        )}
-                        {mcResults.survived >= mcNumSimulations * 0.5 && mcResults.survived <= mcNumSimulations * 0.8 && (
-                          <span className="text-amber-400">⚠️ <strong>Moderate Risk:</strong> {((mcResults.bankrupt / mcNumSimulations) * 100).toFixed(0)}% bankruptcy rate. Consider reducing bet size or tightening filters.</span>
-                        )}
-                        {mcResults.survived < mcNumSimulations * 0.5 && (
-                          <span className="text-red-400">❌ <strong>High Risk:</strong> {((mcResults.bankrupt / mcNumSimulations) * 100).toFixed(0)}% bankruptcy rate. This strategy is too risky!</span>
-                        )}
-                      </p>
+                      {/* Primary metrics */}
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <div className="bg-slate-900/60 rounded-lg p-3">
+                          <p className="text-xs text-slate-500 mb-1">Survival Rate</p>
+                          <p className={`text-2xl font-bold ${survivalRate >= 90 ? 'text-emerald-400' : survivalRate >= 70 ? 'text-yellow-400' : 'text-red-400'}`}>{survivalRate.toFixed(0)}%</p>
+                          <p className="text-xs text-slate-500">{mcResults.survived}/{mcNumSimulations} survived</p>
+                        </div>
+                        <div className="bg-slate-900/60 rounded-lg p-3">
+                          <p className="text-xs text-slate-500 mb-1">Median P&L</p>
+                          <p className={`text-2xl font-bold ${mcResults.medianPnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>{mcResults.medianPnl >= 0 ? '+' : ''}${mcResults.medianPnl.toFixed(2)}</p>
+                          <p className="text-xs text-slate-500">avg {mcResults.avgWinRate.toFixed(1)}% WR</p>
+                        </div>
+                        <div className="bg-slate-900/60 rounded-lg p-3">
+                          <p className="text-xs text-slate-500 mb-1">Consistency</p>
+                          <p className={`text-2xl font-bold ${mcResults.consistency >= 70 ? 'text-emerald-400' : mcResults.consistency >= 50 ? 'text-yellow-400' : 'text-red-400'}`}>{mcResults.consistency.toFixed(0)}%</p>
+                          <p className="text-xs text-slate-500">profitable runs</p>
+                        </div>
+                        <div className="bg-slate-900/60 rounded-lg p-3">
+                          <p className="text-xs text-slate-500 mb-1">Sharpe Ratio</p>
+                          <p className={`text-2xl font-bold ${mcResults.sharpe >= 0.5 ? 'text-emerald-400' : mcResults.sharpe >= 0 ? 'text-yellow-400' : 'text-red-400'}`}>{mcResults.sharpe.toFixed(2)}</p>
+                          <p className="text-xs text-slate-500">~{Math.round(mcResults.avgTrades)} avg trades</p>
+                        </div>
+                      </div>
+
+                      {/* P&L distribution */}
+                      <div className="bg-slate-900/40 rounded-lg p-3">
+                        <p className="text-xs text-slate-400 mb-2 font-semibold">P&L Distribution (across all simulations)</p>
+                        <div className="grid grid-cols-4 gap-2 text-center text-xs">
+                          <div>
+                            <div className="text-slate-500 mb-1">Worst</div>
+                            <div className={`font-bold ${mcResults.worstPnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>{mcResults.worstPnl >= 0 ? '+' : ''}${mcResults.worstPnl.toFixed(2)}</div>
+                          </div>
+                          <div>
+                            <div className="text-slate-500 mb-1">P25</div>
+                            <div className={`font-bold ${mcResults.p25Pnl >= 0 ? 'text-emerald-400' : 'text-orange-400'}`}>{mcResults.p25Pnl >= 0 ? '+' : ''}${mcResults.p25Pnl.toFixed(2)}</div>
+                          </div>
+                          <div>
+                            <div className="text-slate-500 mb-1">P75</div>
+                            <div className={`font-bold ${mcResults.p75Pnl >= 0 ? 'text-emerald-400' : 'text-orange-400'}`}>{mcResults.p75Pnl >= 0 ? '+' : ''}${mcResults.p75Pnl.toFixed(2)}</div>
+                          </div>
+                          <div>
+                            <div className="text-slate-500 mb-1">Best</div>
+                            <div className="font-bold text-emerald-400">+${mcResults.bestPnl.toFixed(2)}</div>
+                          </div>
+                        </div>
+                        {/* Visual bar */}
+                        <div className="mt-2 h-2 rounded-full bg-slate-700 relative overflow-hidden">
+                          <div className="absolute inset-y-0 left-0 right-0 bg-gradient-to-r from-red-500/40 via-yellow-500/40 to-emerald-500/40 rounded-full" />
+                        </div>
+                        <div className="flex justify-between text-[10px] text-slate-600 mt-0.5">
+                          <span>worst</span><span>median</span><span>best</span>
+                        </div>
+                      </div>
+
+                      {/* ── When to Exit ─────────────────────────────────── */}
+                      {(() => {
+                        const ea = mcResults.exitAdvice
+                        if (ea.recommendedExitPnl <= 0) return null
+                        const traj = ea.avgTrajectory
+                        // Sparkline SVG
+                        const W = 300, H = 60
+                        const minV = Math.min(...traj, 0)
+                        const maxV = Math.max(...traj, 0.01)
+                        const scaleX = (i: number) => (i / (traj.length - 1 || 1)) * W
+                        const scaleY = (v: number) => H - ((v - minV) / (maxV - minV)) * H
+                        const pathD = traj.map((v, i) => `${i === 0 ? 'M' : 'L'}${scaleX(i).toFixed(1)},${scaleY(v).toFixed(1)}`).join(' ')
+                        const zeroY = scaleY(0)
+                        // peak marker
+                        const peakStep = Math.min(Math.round(ea.avgTradesAtPeak) - 1, traj.length - 1)
+                        const peakX = peakStep >= 0 ? scaleX(peakStep) : null
+                        return (
+                          <div className="bg-gradient-to-br from-amber-900/20 to-orange-900/10 border border-amber-500/30 rounded-xl p-4">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="text-base">💡</span>
+                              <p className="text-sm font-bold text-amber-300">When to Pull Your Money Out</p>
+                            </div>
+
+                            {/* Big recommendation */}
+                            <div className="flex items-baseline gap-2 mb-3">
+                              <span className="text-3xl font-black text-amber-400">+${ea.recommendedExitPnl.toFixed(2)}</span>
+                              <span className="text-sm text-slate-400">recommended exit target</span>
+                            </div>
+
+                            {/* Explanation */}
+                            <p className="text-xs text-slate-400 mb-3 leading-relaxed">
+                              75% of simulations reached <span className="text-amber-300 font-semibold">+${ea.p25PeakPnl.toFixed(2)}</span> before declining.
+                              The median peak was <span className="text-amber-300 font-semibold">+${ea.medianPeakPnl.toFixed(2)}</span> reached around trade&nbsp;<span className="text-white font-semibold">#{Math.round(ea.avgTradesAtPeak)}</span>.
+                              After the peak, sims gave back an average of <span className="text-red-400 font-semibold">${ea.avgDrawdownPostPeak.toFixed(2)}</span>.
+                              {ea.pctRegretSims > 30 && <span className="text-orange-400"> ⚠️ {ea.pctRegretSims.toFixed(0)}% of runs lost &gt;25% of their peak — take profits early.</span>}
+                            </p>
+
+                            {/* Stats row */}
+                            <div className="grid grid-cols-3 gap-2 text-xs mb-3 text-center">
+                              <div className="bg-slate-900/50 rounded-lg py-2">
+                                <p className="text-amber-400 font-bold">+${ea.medianPeakPnl.toFixed(2)}</p>
+                                <p className="text-slate-500 mt-0.5">Median peak</p>
+                              </div>
+                              <div className="bg-slate-900/50 rounded-lg py-2">
+                                <p className="text-slate-300 font-bold">~{Math.round(ea.avgTradesAtPeak)} trades</p>
+                                <p className="text-slate-500 mt-0.5">Avg trades to peak</p>
+                              </div>
+                              <div className="bg-slate-900/50 rounded-lg py-2">
+                                <p className="text-red-400 font-bold">${ea.avgDrawdownPostPeak.toFixed(2)}</p>
+                                <p className="text-slate-500 mt-0.5">Avg post-peak drop</p>
+                              </div>
+                            </div>
+
+                            {/* Sparkline */}
+                            {traj.length > 3 && (
+                              <div>
+                                <p className="text-[10px] text-slate-500 mb-1">Average P&L trajectory across all simulations</p>
+                                <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-14 rounded-lg bg-slate-900/50" preserveAspectRatio="none">
+                                  {/* zero line */}
+                                  <line x1="0" y1={zeroY} x2={W} y2={zeroY} stroke="#475569" strokeWidth="0.5" strokeDasharray="3,3" />
+                                  {/* fill under curve */}
+                                  <path
+                                    d={`${pathD} L${scaleX(traj.length - 1).toFixed(1)},${zeroY} L0,${zeroY} Z`}
+                                    fill={traj[traj.length - 1] >= 0 ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)'}
+                                  />
+                                  {/* main line */}
+                                  <path d={pathD} fill="none" stroke={traj[traj.length - 1] >= 0 ? '#10b981' : '#ef4444'} strokeWidth="1.5" strokeLinejoin="round" />
+                                  {/* peak marker */}
+                                  {peakX !== null && peakStep >= 0 && peakStep < traj.length && (
+                                    <>
+                                      <line x1={peakX} y1="0" x2={peakX} y2={H} stroke="#f59e0b" strokeWidth="1" strokeDasharray="2,2" />
+                                      <circle cx={peakX} cy={scaleY(traj[peakStep])} r="3" fill="#f59e0b" />
+                                    </>
+                                  )}
+                                </svg>
+                                <div className="flex justify-between text-[10px] text-slate-600 mt-0.5">
+                                  <span>Trade 1</span>
+                                  {peakX !== null && <span className="text-amber-600">▲ peak ~#{Math.round(ea.avgTradesAtPeak)}</span>}
+                                  <span>Trade {traj.length}</span>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )
+                      })()}
+
+                      {/* Realism note */}
+                      {(mcSlippagePercent > 0 || mcFeePercent > 0) && (
+                        <p className="text-xs text-amber-500/70">
+                          ⚡ Includes {mcSlippagePercent}% slippage{mcFeePercent > 0 ? ` + ${mcFeePercent}% fee on winnings` : ''} — results are more realistic than zero-cost simulations
+                        </p>
+                      )}
+
+                      {/* Save to Strategy Center */}
+                      {!strategySaved ? (
+                        !showSaveStrategyForm ? (
+                          <button
+                            onClick={() => {
+                              const group = strategyGroups.find(g => g.configKey === optimizationResults?.configKey)
+                              const name = optimizationResults?.configName ?? configNames[group?.configKey ?? ''] ?? 'Strategy'
+                              setStrategyNameInput(`${name} — ${new Date().toLocaleDateString()}`)
+                              setShowSaveStrategyForm(true)
+                            }}
+                            className="w-full mt-2 py-2 px-4 bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/30 hover:border-indigo-500/50 text-indigo-300 text-sm font-semibold rounded-lg transition-all"
+                          >
+                            💾 Save to Strategy Center
+                          </button>
+                        ) : (
+                          <div className="mt-2 bg-indigo-900/20 border border-indigo-500/30 rounded-lg p-3 space-y-2">
+                            <p className="text-xs text-indigo-300 font-semibold">Name this strategy</p>
+                            <input
+                              type="text"
+                              value={strategyNameInput}
+                              onChange={e => setStrategyNameInput(e.target.value)}
+                              placeholder="e.g. Low-price scalper, Realistic 2% slip"
+                              className="w-full px-3 py-2 bg-slate-900 border border-indigo-500/40 rounded-lg text-sm text-slate-200 focus:outline-none focus:border-indigo-400"
+                            />
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => {
+                                  if (!mcResults) return
+                                  const group = strategyGroups.find(g => g.configKey === optimizationResults?.configKey)
+                                  const survivalRate = (mcResults.survived / mcNumSimulations) * 100
+                                  const strategy: SavedStrategy = {
+                                    id: generateId(),
+                                    name: strategyNameInput.trim() || 'Unnamed Strategy',
+                                    createdAt: new Date().toISOString(),
+                                    trader: group?.traderAddress ?? '',
+                                    settings: {
+                                      budget: mcBudget,
+                                      bettingMode: mcBettingMode,
+                                      fixedBet: mcBettingMode === 'fixed' ? mcFixedBet : undefined,
+                                      percentage: mcBettingMode === 'percentage' ? mcPercentage : undefined,
+                                      minPrice: mcMinPrice,
+                                      maxPrice: mcMaxPrice,
+                                      minTrigger: mcMinTrigger,
+                                      slippagePercent: mcSlippagePercent,
+                                      feePercent: mcFeePercent,
+                                      numSimulations: mcNumSimulations,
+                                    },
+                                    mcResults: {
+                                      survived: mcResults.survived,
+                                      bankrupt: mcResults.bankrupt,
+                                      survivalRate,
+                                      avgPnl: mcResults.avgPnl,
+                                      medianPnl: mcResults.medianPnl,
+                                      p25Pnl: mcResults.p25Pnl,
+                                      p75Pnl: mcResults.p75Pnl,
+                                      bestPnl: mcResults.bestPnl,
+                                      worstPnl: mcResults.worstPnl,
+                                      sharpe: mcResults.sharpe,
+                                      consistency: mcResults.consistency,
+                                      avgTrades: mcResults.avgTrades,
+                                      avgWinRate: mcResults.avgWinRate,
+                                      numSimulations: mcNumSimulations,
+                                    },
+                                    liveSessions: [],
+                                    linkedRuns: [],
+                                    exitAdvice: mcResults.exitAdvice.recommendedExitPnl > 0 ? {
+                                      recommendedExitPnl: mcResults.exitAdvice.recommendedExitPnl,
+                                      medianPeakPnl: mcResults.exitAdvice.medianPeakPnl,
+                                      p25PeakPnl: mcResults.exitAdvice.p25PeakPnl,
+                                      avgTradesAtPeak: mcResults.exitAdvice.avgTradesAtPeak,
+                                      avgDrawdownPostPeak: mcResults.exitAdvice.avgDrawdownPostPeak,
+                                      pctRegretSims: mcResults.exitAdvice.pctRegretSims,
+                                      avgTrajectory: mcResults.exitAdvice.avgTrajectory,
+                                    } : null,
+                                  }
+                                  saveStrategy(strategy)
+                                  setShowSaveStrategyForm(false)
+                                  setStrategySaved(true)
+                                }}
+                                className="flex-1 py-1.5 bg-indigo-500/20 hover:bg-indigo-500/30 border border-indigo-500/40 text-indigo-300 text-sm rounded-lg transition-all"
+                              >
+                                ✅ Save
+                              </button>
+                              <button
+                                onClick={() => setShowSaveStrategyForm(false)}
+                                className="px-3 py-1.5 bg-slate-700/50 text-slate-400 text-sm rounded-lg hover:bg-slate-700 transition-all"
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          </div>
+                        )
+                      ) : (
+                        <div className="mt-2 flex items-center justify-between bg-emerald-900/20 border border-emerald-500/30 rounded-lg px-4 py-2">
+                          <span className="text-sm text-emerald-300">✅ Saved to Strategy Center</span>
+                          <a href="/strategy-center" className="text-xs text-indigo-400 hover:text-indigo-300 underline">View →</a>
+                        </div>
+                      )}
                     </div>
-                  </div>
-                )}
+                  )
+                })()}
 
                 {/* Best Strategies Results */}
                 {bestStrategies && bestStrategies.length > 0 && (
