@@ -78,22 +78,25 @@ export function loadCopyTrades(): CopyTradeRun[] {
 
 export function saveCopyTrades(runs: CopyTradeRun[], maxTradesPerRun?: number): void {
   try {
-    // 🛡️ AUTOMATIC DATA PRUNING - Prevent memory overflow
-    // Use maxGlobalTrades or default to 50000 (way more than the old 2000 limit)
-    const MAX_TRADES_PER_RUN = maxTradesPerRun || 50000
+    // 🛡️ AUTOMATIC DATA PRUNING - hard cap to prevent JSON.stringify OOM crash
+    // 512MB Railway limit → keep data small; 500 trades per run is plenty
+    const MAX_TRADES_PER_RUN = maxTradesPerRun || 500
     
     const prunedRuns = runs.map(run => {
-      if (run.trades.length > MAX_TRADES_PER_RUN) {
-        const originalCount = run.trades.length
-        // Keep most recent trades
-        const sortedTrades = [...run.trades].sort((a, b) => b.timestamp - a.timestamp)
-        run.trades = sortedTrades.slice(0, MAX_TRADES_PER_RUN)
-        console.log(`✂️  Auto-pruned run ${run.name}: ${originalCount} → ${run.trades.length} trades (limit: ${MAX_TRADES_PER_RUN})`)
+      // Prune to limit
+      let trades = run.trades
+      if (trades.length > MAX_TRADES_PER_RUN) {
+        const originalCount = trades.length
+        trades = [...trades].sort((a, b) => b.timestamp - a.timestamp).slice(0, MAX_TRADES_PER_RUN)
+        console.log(`✂️  Auto-pruned ${run.name}: ${originalCount} → ${trades.length} trades`)
       }
-      return run
+      // Strip heavy optional fields not needed for resolution or display
+      const slimTrades = trades.map(({ icon: _icon, originalTrade: _orig, ...t }) => t)
+      return { ...run, trades: slimTrades }
     })
     
-    fs.writeFileSync(STORAGE_FILE, JSON.stringify(prunedRuns, null, 2), 'utf-8')
+    // No pretty-print: saves ~40% memory during serialization
+    fs.writeFileSync(STORAGE_FILE, JSON.stringify(prunedRuns), 'utf-8')
   } catch (error) {
     console.error('Error saving copy trades:', error)
   }
