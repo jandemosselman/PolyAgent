@@ -79,8 +79,8 @@ export function loadCopyTrades(): CopyTradeRun[] {
 export function saveCopyTrades(runs: CopyTradeRun[], maxTradesPerRun?: number): void {
   try {
     // 🛡️ AUTOMATIC DATA PRUNING - hard cap to prevent JSON.stringify OOM crash
-    // 512MB Railway limit → keep data small; 500 trades per run is plenty
-    const MAX_TRADES_PER_RUN = maxTradesPerRun || 500
+    // Compact JSON + stripped fields keep each trade ~200 bytes, so 50k trades ≈ 10MB
+    const MAX_TRADES_PER_RUN = maxTradesPerRun || 50000
     
     const prunedRuns = runs.map(run => {
       // Prune to limit
