@@ -12,7 +12,7 @@ const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID || ''
 let bot: TelegramBot | null = null
 let currentCronJob: cron.ScheduledTask | null = null
 let currentInterval = 10 // minutes
-let maxGlobalTrades = 10000 // Stop when any run reaches this
+let maxGlobalTrades = 999999 // Stop when any run reaches this (effectively unlimited by default)
 let isPaused = false
 
 if (TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID) {
