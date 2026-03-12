@@ -98,8 +98,8 @@ app.get('/health', (req, res) => {
 const PORT = process.env.PORT || 3000
 
 export function startApiServer() {
-  app.listen(PORT, () => {
-    console.log(`🌐 API server running on port ${PORT}`)
+  app.listen(Number(PORT), '0.0.0.0', () => {
+    console.log(`🌐 API server running on port ${PORT} (0.0.0.0)`)
     console.log(`📡 Endpoints:`)
     console.log(`   GET  /api/copy-trades - Fetch all runs`)
     console.log(`   POST /api/copy-trades - Sync from localhost`)
