@@ -69,6 +69,8 @@ interface CopyTrade {
   initialBudget: number
   currentBudget: number
   fixedBetAmount: number
+  bettingMode?: 'fixed' | 'percentage'
+  betPercentage?: number
   minTriggerAmount: number
   minPrice: number
   maxPrice: number
@@ -97,6 +99,7 @@ interface SimulatedTrade {
   status: 'open' | 'won' | 'lost'
   pnl?: number
   roi?: number
+  legacyPhantom?: boolean // true = pre-fix phantom trade with no recoverable amount/pnl
 }
 
 export default function CopySimulatorPage() {
@@ -215,6 +218,27 @@ export default function CopySimulatorPage() {
   const [assigningRunId, setAssigningRunId] = useState<string | null>(null)
   const [savedStrategiesForAssign, setSavedStrategiesForAssign] = useState<SavedStrategy[]>([])
   const [runStrategyMap, setRunStrategyMap] = useState<Record<string, string>>({})
+
+  // Trade Milestone Analysis
+  const [showMilestoneModal, setShowMilestoneModal] = useState(false)
+  const [milestoneGroup, setMilestoneGroup] = useState<any>(null)
+  const [milestoneCustomN, setMilestoneCustomN] = useState<string>('50')
+  const [milestoneData, setMilestoneData] = useState<{
+    configName: string
+    milestones: Array<{
+      n: number
+      avgPnl: number
+      avgPnlPerTrade: number
+      runsWithData: number
+      totalRuns: number
+    }>
+    exitSuggestion: {
+      peakAvgPnl: number
+      peakTrade: number
+      dropAfterPeak: number
+      suggestion: string
+    } | null
+  } | null>(null)
   
   // Brute Force Strategy Finder States
   const [isFindingBestStrategy, setIsFindingBestStrategy] = useState(false)
@@ -381,6 +405,8 @@ export default function CopySimulatorPage() {
   const [traderAddress, setTraderAddress] = useState('')
   const [initialBudget, setInitialBudget] = useState(100)
   const [fixedBetAmount, setFixedBetAmount] = useState(10)
+  const [bettingMode, setBettingMode] = useState<'fixed' | 'percentage'>('fixed')
+  const [betPercentage, setBetPercentage] = useState(1)
   const [minTriggerAmount, setMinTriggerAmount] = useState(10)
   const [minPrice, setMinPrice] = useState(0.5)
   const [maxPrice, setMaxPrice] = useState(0.66)
@@ -409,6 +435,27 @@ export default function CopySimulatorPage() {
     setShowCreateModal(true)
   }, [])
 
+  // Patch percentage-mode trades whose amount was never stored (pre-fix phantom trades)
+  // We CANNOT reconstruct the true bet amount (budget enforcement was also broken then),
+  // so we just flag them as legacy so they're excluded from P&L stats and shown with a warning.
+  const patchPercentageTrades = (trades: CopyTrade[]): CopyTrade[] => {
+    return trades.map(ct => {
+      if (ct.bettingMode !== 'percentage' || !ct.betPercentage) return ct
+      const patchedTrades = ct.trades.map(t => {
+        if (t.status === 'open') return t
+        // If amount is 0, this is a phantom trade from before the fix — flag it
+        if (!t.amount || t.amount === 0) {
+          return { ...t, legacyPhantom: true }
+        }
+        return t
+      })
+      return { ...ct, trades: patchedTrades }
+    })
+  }
+
+  // Safe P&L for a trade — returns 0 for phantom trades whose amount was never stored
+  const tradePnl = (t: SimulatedTrade): number => (t as any).legacyPhantom ? 0 : (t.pnl || 0)
+
   // Load copy trades from IndexedDB (with localStorage fallback for migration)
   useEffect(() => {
     const loadData = async () => {
@@ -417,7 +464,10 @@ export default function CopySimulatorPage() {
         const indexedData = await loadFromIndexedDB('copyTrades')
         if (indexedData) {
           console.log('✅ Loaded data from IndexedDB')
-          setCopyTrades(indexedData)
+          const patched = patchPercentageTrades(indexedData)
+          setCopyTrades(patched)
+          // Persist fixed pnl/amount values back so they survive future loads without re-patching
+          await saveToIndexedDB('copyTrades', patched)
           return
         }
         
@@ -467,7 +517,7 @@ export default function CopySimulatorPage() {
             console.warn(`⚠️ ${tradesWithoutMarket} trades have missing market data. Consider clearing old data.`)
           }
           
-          setCopyTrades(cleaned)
+          setCopyTrades(patchPercentageTrades(cleaned))
           // Save to IndexedDB
           await saveToIndexedDB('copyTrades', cleaned)
           console.log('✅ Migration complete! Data saved to IndexedDB')
@@ -643,7 +693,7 @@ export default function CopySimulatorPage() {
     
     // Get all runs for this configuration
     const runs = copyTrades.filter(ct => {
-      const key = `${ct.traderAddress}-${ct.initialBudget}-${ct.fixedBetAmount}-${ct.minPrice}-${ct.maxPrice}-${ct.minTriggerAmount}`
+      const key = `${ct.traderAddress}-${ct.initialBudget}-${ct.fixedBetAmount}-${ct.minPrice}-${ct.maxPrice}-${ct.minTriggerAmount}-${ct.bettingMode||'fixed'}-${ct.betPercentage||0}`
       return key === group.configKey
     })
 
@@ -749,7 +799,9 @@ export default function CopySimulatorPage() {
       traderAddress: traderAddress.toLowerCase(),
       initialBudget,
       currentBudget: initialBudget,
-      fixedBetAmount,
+      fixedBetAmount: bettingMode === 'fixed' ? fixedBetAmount : 0,
+      bettingMode,
+      betPercentage: bettingMode === 'percentage' ? betPercentage : undefined,
       minTriggerAmount,
       minPrice,
       maxPrice,
@@ -768,6 +820,8 @@ export default function CopySimulatorPage() {
     setTraderAddress('')
     setInitialBudget(100)
     setFixedBetAmount(10)
+    setBettingMode('fixed')
+    setBetPercentage(1)
     setMinTriggerAmount(10)
     setMinPrice(0.5)
     setMaxPrice(0.66)
@@ -784,11 +838,13 @@ export default function CopySimulatorPage() {
           minPrice: ct.minPrice,
           maxPrice: ct.maxPrice,
           initialBudget: ct.initialBudget,
-          fixedBetAmount: ct.fixedBetAmount
+          fixedBetAmount: ct.fixedBetAmount,
+          bettingMode: ct.bettingMode || 'fixed',
+          betPercentage: ct.betPercentage || 0
         }))
 
         console.log('🤖 Auto-syncing new configuration to Railway bot...')
-        const response = await fetch(`${railwayUrl}/api/configurations`, {
+        const response = await fetch(`/api/bot-proxy?path=/api/configurations&botUrl=${encodeURIComponent(railwayUrl)}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ configurations: botConfigs })
@@ -893,8 +949,9 @@ export default function CopySimulatorPage() {
       const synced = botRuns.length
       const localOnly = localOnlyRuns.length
       
-      setCopyTrades(merged)
-      await saveToIndexedDB('copyTrades', merged)
+      const patchedMerged = patchPercentageTrades(merged)
+      setCopyTrades(patchedMerged)
+      await saveToIndexedDB('copyTrades', patchedMerged)
       
       const message = localOnly > 0
         ? `✅ Synced ${synced} run(s) from bot, kept ${localOnly} local-only run(s)`
@@ -954,12 +1011,14 @@ export default function CopySimulatorPage() {
           minPrice: ct.minPrice,
           maxPrice: ct.maxPrice,
           initialBudget: ct.initialBudget,
-          fixedBetAmount: ct.fixedBetAmount
+          fixedBetAmount: ct.fixedBetAmount,
+          bettingMode: ct.bettingMode || 'fixed',
+          betPercentage: ct.betPercentage || 0
         }))
       
       console.log(`📤 Pushing ${botConfigs.length} configuration(s) to bot...`)
       
-      const response = await fetch(`${railwayUrl}/api/configurations`, {
+      const response = await fetch(`/api/bot-proxy?path=/api/configurations&botUrl=${encodeURIComponent(railwayUrl)}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ configurations: botConfigs })
@@ -1023,6 +1082,8 @@ export default function CopySimulatorPage() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             traderAddress: copyTrade.traderAddress,
+            bettingMode: copyTrade.bettingMode || 'fixed',
+            betPercentage: copyTrade.betPercentage || 0,
             openTrades: openTrades.map(t => ({
               id: t.id,
               asset: t.asset,
@@ -1030,6 +1091,7 @@ export default function CopySimulatorPage() {
               slug: t.originalTrade.slug, // Include slug for matching
               amount: t.amount,
               price: t.price,
+              originalAmount: (t as any).originalAmount,
               // PRESERVE ALL DISPLAY DATA
               market: t.market,
               outcome: t.outcome,
@@ -1072,11 +1134,12 @@ export default function CopySimulatorPage() {
       const closedTrades = copyTrade.trades.filter(t => t.status !== 'open')
       const stillOpenTrades = copyTrade.trades.filter(t => t.status === 'open')
       const totalPnl = closedTrades.reduce((sum, t) => sum + (t.pnl || 0), 0)
-      const openTradesCost = stillOpenTrades.length * copyTrade.fixedBetAmount
+      const openTradesCost = stillOpenTrades.reduce((sum, t) => sum + (t.amount || 0), 0)
+      const minBetRequired = copyTrade.bettingMode === 'percentage' ? 0.01 : copyTrade.fixedBetAmount
       let actualRemainingBudget = copyTrade.initialBudget + totalPnl - openTradesCost
       
       // CRITICAL: If budget is negative or zero, don't allow any new trades
-      if (actualRemainingBudget < copyTrade.fixedBetAmount) {
+      if (actualRemainingBudget < minBetRequired) {
         actualRemainingBudget = 0
       }
       
@@ -1087,8 +1150,10 @@ export default function CopySimulatorPage() {
         openTradesCost,
         actualRemainingBudget,
         currentBudget: copyTrade.currentBudget,
+        bettingMode: copyTrade.bettingMode || 'fixed',
         fixedBetAmount: copyTrade.fixedBetAmount,
-        canAffordTrade: actualRemainingBudget >= copyTrade.fixedBetAmount,
+        betPercentage: copyTrade.betPercentage,
+        canAffordTrade: actualRemainingBudget > 0,
         totalTradesCount: copyTrade.trades.length
       })
       
@@ -1104,6 +1169,8 @@ export default function CopySimulatorPage() {
           maxPrice: copyTrade.maxPrice,
           currentBudget: actualRemainingBudget, // Use actual remaining budget
           fixedBetAmount: copyTrade.fixedBetAmount,
+          bettingMode: copyTrade.bettingMode || 'fixed',
+          betPercentage: copyTrade.betPercentage || 1,
           existingTradeIds: copyTrade.trades.map(t => t.transactionHash) // Pass existing trades
         })
       })
@@ -1231,6 +1298,8 @@ Total Trades: ${copyTrade.trades.length}
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           traderAddress: copyTrade.traderAddress,
+          bettingMode: copyTrade.bettingMode || 'fixed',
+          betPercentage: copyTrade.betPercentage || 0,
           openTrades: openTrades.map(t => ({
             id: t.id,
             asset: t.asset,
@@ -1238,6 +1307,7 @@ Total Trades: ${copyTrade.trades.length}
             slug: t.originalTrade.slug,
             amount: t.amount,
             price: t.price,
+            originalAmount: (t as any).originalAmount,
             market: t.market,
             outcome: t.outcome,
             timestamp: t.timestamp,
@@ -1359,7 +1429,7 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
     
     // Get all runs for this configuration
     const runs = copyTrades.filter(ct => {
-      const key = `${ct.traderAddress}-${ct.initialBudget}-${ct.fixedBetAmount}-${ct.minPrice}-${ct.maxPrice}-${ct.minTriggerAmount}`
+      const key = `${ct.traderAddress}-${ct.initialBudget}-${ct.fixedBetAmount}-${ct.minPrice}-${ct.maxPrice}-${ct.minTriggerAmount}-${ct.bettingMode||'fixed'}-${ct.betPercentage||0}`
       return key === group.configKey
     })
 
@@ -1418,11 +1488,96 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
     setShowPriceAnalysisModal(true)
   }
 
+  const openMilestoneModal = (group: any) => {
+    const configName = configNames[group.configKey] || `Configuration #${strategyGroups.indexOf(group) + 1}`
+
+    const runs = copyTrades.filter(ct => {
+      const key = `${ct.traderAddress}-${ct.initialBudget}-${ct.fixedBetAmount}-${ct.minPrice}-${ct.maxPrice}-${ct.minTriggerAmount}-${ct.bettingMode||'fixed'}-${ct.betPercentage||0}`
+      return key === group.configKey
+    })
+
+    const computeAtN = (n: number) => {
+      let totalPnl = 0
+      let totalPnlPerTrade = 0
+      let runsWithData = 0
+      runs.forEach(run => {
+        const closed = run.trades
+          .filter(t => t.status !== 'open')
+          .sort((a, b) => a.timestamp - b.timestamp)
+        if (closed.length >= n) {
+          const slice = closed.slice(0, n)
+          const pnl = slice.reduce((s, t) => s + (t.pnl || 0), 0)
+          totalPnl += pnl
+          totalPnlPerTrade += pnl / n
+          runsWithData++
+        }
+      })
+      return {
+        n,
+        avgPnl: runsWithData > 0 ? totalPnl / runsWithData : 0,
+        avgPnlPerTrade: runsWithData > 0 ? totalPnlPerTrade / runsWithData : 0,
+        runsWithData,
+        totalRuns: runs.length
+      }
+    }
+
+    const milestoneNs = [10, 50, 100, 500, 1000, 5000]
+    const milestones = milestoneNs.map(computeAtN).filter(m => m.runsWithData > 0)
+
+    // Exit suggestion: sample avg PnL at every 25 trades, find peak, check post-peak drop
+    const maxClosed = Math.max(...runs.map(r => r.trades.filter(t => t.status !== 'open').length), 0)
+    let exitSuggestion: typeof milestoneData extends null ? null : NonNullable<typeof milestoneData>['exitSuggestion'] = null
+    if (maxClosed >= 25) {
+      const step = 25
+      const trajectory: Array<{ n: number; avgPnl: number; runsWithData: number }> = []
+      for (let n = step; n <= maxClosed; n += step) {
+        const m = computeAtN(n)
+        if (m.runsWithData >= Math.max(1, Math.floor(runs.length * 0.3))) {
+          trajectory.push({ n, avgPnl: m.avgPnl, runsWithData: m.runsWithData })
+        }
+      }
+      if (trajectory.length >= 2) {
+        const peakPoint = trajectory.reduce((best, pt) => pt.avgPnl > best.avgPnl ? pt : best, trajectory[0])
+        const peakIdx = trajectory.indexOf(peakPoint)
+        const postPeak = trajectory.slice(peakIdx + 1)
+        const finalPnl = postPeak.length > 0 ? postPeak[postPeak.length - 1].avgPnl : peakPoint.avgPnl
+        const dropAfterPeak = peakPoint.avgPnl > 0
+          ? ((peakPoint.avgPnl - finalPnl) / peakPoint.avgPnl) * 100
+          : 0
+        
+        let suggestion = ''
+        if (postPeak.length === 0) {
+          suggestion = `Avg PnL is still climbing at trade ${peakPoint.n}. No pullback detected yet — keep monitoring.`
+        } else if (dropAfterPeak >= 30) {
+          suggestion = `Avg PnL peaked at +$${peakPoint.avgPnl.toFixed(2)} around trade ${peakPoint.n}, then dropped ${dropAfterPeak.toFixed(0)}% by trade ${trajectory[trajectory.length - 1].n}. Consider pulling out profits around trade ${peakPoint.n}.`
+        } else if (dropAfterPeak >= 10) {
+          suggestion = `Avg PnL peaked near trade ${peakPoint.n} (+$${peakPoint.avgPnl.toFixed(2)}), with a moderate ${dropAfterPeak.toFixed(0)}% pullback afterward. Consider locking in profits around that milestone.`
+        } else {
+          suggestion = `Returns remain relatively stable after trade ${peakPoint.n}. No urgent exit signal — strategy looks consistent across runs.`
+        }
+
+        exitSuggestion = {
+          peakAvgPnl: peakPoint.avgPnl,
+          peakTrade: peakPoint.n,
+          dropAfterPeak,
+          suggestion
+        }
+      }
+    }
+
+    setMilestoneGroup(group)
+    setMilestoneData({ configName, milestones, exitSuggestion })
+    setMilestoneCustomN('50')
+    setShowMilestoneModal(true)
+  }
+
   const quickAddRunFromConfig = (group: any) => {
     // Pre-fill form with configuration settings
     setTraderAddress(group.traderAddress)
     setInitialBudget(group.initialBudget)
     setFixedBetAmount(group.fixedBetAmount)
+    setBettingMode(group.bettingMode || (group.runs?.[0]?.bettingMode) || 'fixed')
+    setBetPercentage(group.betPercentage || (group.runs?.[0]?.betPercentage) || 1)
     setMinTriggerAmount(group.minTriggerAmount)
     setMinPrice(group.minPrice)
     setMaxPrice(group.maxPrice)
@@ -1588,7 +1743,7 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
     
     // Group ALL runs (active + archived) for accurate analysis
     copyTrades.forEach(ct => {
-      const key = `${ct.traderAddress}-${ct.initialBudget}-${ct.fixedBetAmount}-${ct.minPrice}-${ct.maxPrice}-${ct.minTriggerAmount}`
+      const key = `${ct.traderAddress}-${ct.initialBudget}-${ct.fixedBetAmount}-${ct.minPrice}-${ct.maxPrice}-${ct.minTriggerAmount}-${ct.bettingMode||'fixed'}-${ct.betPercentage||0}`
       if (!groups.has(key)) {
         groups.set(key, [])
       }
@@ -1598,20 +1753,29 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
     // Calculate statistics for each group
     return Array.from(groups.entries()).map(([key, runs]) => {
       const allClosedTrades = runs.flatMap(r => r.trades.filter(t => t.status !== 'open'))
-      const totalPnl = allClosedTrades.reduce((sum, t) => sum + (t.pnl || 0), 0)
-      const wonTrades = allClosedTrades.filter(t => t.status === 'won').length
-      // Average buy price when won / lost
-      const wonPrices = allClosedTrades
+      // Exclude legacy phantom trades (amount never stored) from real P&L/win stats
+      const realClosed = allClosedTrades.filter(t => !(t as any).legacyPhantom)
+      const phantomCount = allClosedTrades.length - realClosed.length
+      const totalPnl = realClosed.reduce((sum, t) => sum + (t.pnl || 0), 0)
+      const wonTrades = realClosed.filter(t => t.status === 'won').length
+      // Average buy price when won / lost (real trades only)
+      const wonPrices = realClosed
         .filter(t => t.status === 'won' && typeof t.price === 'number')
         .map(t => t.price)
-      const lostPrices = allClosedTrades
+      const lostPrices = realClosed
         .filter(t => t.status === 'lost' && typeof t.price === 'number')
         .map(t => t.price)
       const avgBuyPriceWhenWon = wonPrices.length > 0 ? (wonPrices.reduce((s, p) => s + p, 0) / wonPrices.length) : 0
       const avgBuyPriceWhenLost = lostPrices.length > 0 ? (lostPrices.reduce((s, p) => s + p, 0) / lostPrices.length) : 0
-      // A run is bankrupt if remaining budget (initial + P&L) < fixed bet amount
+      // Average actual bet amount from real closed trades
+      const closedTradesWithAmount = realClosed.filter(t => t.amount > 0)
+      const avgBetAmount = closedTradesWithAmount.length > 0
+        ? closedTradesWithAmount.reduce((s, t) => s + t.amount, 0) / closedTradesWithAmount.length
+        : runs[0].fixedBetAmount
+
+      // A run is bankrupt if remaining budget (initial + real P&L) < fixed bet amount
       const bankruptcyCount = runs.filter(r => {
-        const closedTrades = r.trades.filter(t => t.status !== 'open')
+        const closedTrades = r.trades.filter(t => t.status !== 'open' && !(t as any).legacyPhantom)
         const runPnl = closedTrades.reduce((sum, t) => sum + (t.pnl || 0), 0)
         const remainingBudget = r.initialBudget + runPnl
         return remainingBudget < r.fixedBetAmount
@@ -1622,15 +1786,20 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
         traderAddress: runs[0].traderAddress,
         initialBudget: runs[0].initialBudget,
         fixedBetAmount: runs[0].fixedBetAmount,
+        bettingMode: (runs[0].bettingMode || 'fixed') as 'fixed' | 'percentage',
+        betPercentage: runs[0].betPercentage || 1,
         minPrice: runs[0].minPrice,
         maxPrice: runs[0].maxPrice,
         minTriggerAmount: runs[0].minTriggerAmount,
         numberOfRuns: runs.length,
         bankruptcyCount,
-        overallWinRate: allClosedTrades.length > 0 ? (wonTrades / allClosedTrades.length) * 100 : 0,
+        overallWinRate: realClosed.length > 0 ? (wonTrades / realClosed.length) * 100 : 0,
         totalPnl,
         avgPnlPerRun: runs.length > 0 ? totalPnl / runs.length : 0,
-        totalClosedTrades: allClosedTrades.length,
+        totalClosedTrades: realClosed.length,
+        phantomCount,
+        allClosedTradesCount: allClosedTrades.length,
+        avgBetAmount,
         avgBuyPriceWhenWon,
         avgBuyPriceWhenLost,
         runs // Keep reference to individual runs
@@ -1644,7 +1813,7 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
       
       // Get all runs for this configuration
       const configRuns = copyTrades.filter(ct => {
-        const key = `${ct.traderAddress}-${ct.initialBudget}-${ct.fixedBetAmount}-${ct.minPrice}-${ct.maxPrice}-${ct.minTriggerAmount}`
+        const key = `${ct.traderAddress}-${ct.initialBudget}-${ct.fixedBetAmount}-${ct.minPrice}-${ct.maxPrice}-${ct.minTriggerAmount}-${ct.bettingMode||'fixed'}-${ct.betPercentage||0}`
         return key === group.configKey
       })
 
@@ -1712,7 +1881,7 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
     try {
       // Filter out all runs that belong to this configuration
       const updatedCopyTrades = copyTrades.filter(ct => {
-        const key = `${ct.traderAddress}-${ct.initialBudget}-${ct.fixedBetAmount}-${ct.minPrice}-${ct.maxPrice}-${ct.minTriggerAmount}`
+        const key = `${ct.traderAddress}-${ct.initialBudget}-${ct.fixedBetAmount}-${ct.minPrice}-${ct.maxPrice}-${ct.minTriggerAmount}-${ct.bettingMode||'fixed'}-${ct.betPercentage||0}`
         return key !== group.configKey
       })
 
@@ -1746,11 +1915,13 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
             minPrice: ct.minPrice,
             maxPrice: ct.maxPrice,
             initialBudget: ct.initialBudget,
-            fixedBetAmount: ct.fixedBetAmount
+            fixedBetAmount: ct.fixedBetAmount,
+            bettingMode: ct.bettingMode || 'fixed',
+            betPercentage: ct.betPercentage || 0
           }))
 
           console.log(`📤 Syncing ${botConfigs.length} configuration(s) to bot...`)
-          const response = await fetch(`${railwayUrl}/api/configurations`, {
+          const response = await fetch(`/api/bot-proxy?path=/api/configurations&botUrl=${encodeURIComponent(railwayUrl)}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ configurations: botConfigs })
@@ -1804,7 +1975,9 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
         minPrice: ct.minPrice,
         maxPrice: ct.maxPrice,
         initialBudget: ct.initialBudget,
-        fixedBetAmount: ct.fixedBetAmount
+        fixedBetAmount: ct.fixedBetAmount,
+        bettingMode: ct.bettingMode || 'fixed',
+        betPercentage: ct.betPercentage || 0
       }))
 
       // Try to sync with Railway bot first
@@ -1817,7 +1990,7 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
         try {
           console.log('📡 Attempting to sync to:', `${railwayUrl}/api/configurations`)
           
-          const response = await fetch(`${railwayUrl}/api/configurations`, {
+          const response = await fetch(`/api/bot-proxy?path=/api/configurations&botUrl=${encodeURIComponent(railwayUrl)}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ configurations: botConfigs })
@@ -2057,7 +2230,7 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
     
     // RECALCULATE FRESH: Find all runs with this exact configuration NOW
     const freshRuns = copyTrades.filter(ct => {
-      const key = `${ct.traderAddress}-${ct.initialBudget}-${ct.fixedBetAmount}-${ct.minPrice}-${ct.maxPrice}-${ct.minTriggerAmount}`
+      const key = `${ct.traderAddress}-${ct.initialBudget}-${ct.fixedBetAmount}-${ct.minPrice}-${ct.maxPrice}-${ct.minTriggerAmount}-${ct.bettingMode||'fixed'}-${ct.betPercentage||0}`
       return key === group.configKey
     })
     
@@ -2177,26 +2350,17 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
     minTriggers.forEach(trigger => {
       // Filter trades based on the original trader's bet amount
       const filteredTrades = allTrades.filter((t: SimulatedTrade) => {
-        // Get the original trade amount from the trader
-        const originalTrade = t.originalTrade
-        if (!originalTrade) {
-          console.log(`    ⚠️ Trade missing originalTrade:`, t.market)
-          return false
+        if (typeof (t as any).originalAmount === 'number') {
+          return (t as any).originalAmount >= trigger
         }
-        
-        // Calculate the original trader's bet amount
-        // The original trade has 'size' (shares) and 'price'
-        // Amount = size * price
+        const originalTrade = (t as any).originalTrade
+        if (!originalTrade) return true
         let tradeAmount = 0
         if (originalTrade.amount) {
           tradeAmount = parseFloat(originalTrade.amount)
         } else if (originalTrade.size && originalTrade.price) {
           tradeAmount = originalTrade.size * originalTrade.price
-        } else {
-          console.log(`    ⚠️ Trade missing size/price data:`, t.market, originalTrade)
-          return false
         }
-        
         return tradeAmount >= trigger
       })
       
@@ -2271,7 +2435,7 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
       return
     }
     const configRuns = copyTrades.filter(ct => {
-      const key = `${ct.traderAddress}-${ct.initialBudget}-${ct.fixedBetAmount}-${ct.minPrice}-${ct.maxPrice}-${ct.minTriggerAmount}`
+      const key = `${ct.traderAddress}-${ct.initialBudget}-${ct.fixedBetAmount}-${ct.minPrice}-${ct.maxPrice}-${ct.minTriggerAmount}-${ct.bettingMode||'fixed'}-${ct.betPercentage||0}`
       return key === group.configKey
     })
     const allTrades = configRuns.flatMap(run => run.trades.filter(t => t.status !== 'open'))
@@ -2309,7 +2473,7 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
     
     // Get all trades from all runs in this configuration
     const configRuns = copyTrades.filter(ct => {
-      const key = `${ct.traderAddress}-${ct.initialBudget}-${ct.fixedBetAmount}-${ct.minPrice}-${ct.maxPrice}-${ct.minTriggerAmount}`
+      const key = `${ct.traderAddress}-${ct.initialBudget}-${ct.fixedBetAmount}-${ct.minPrice}-${ct.maxPrice}-${ct.minTriggerAmount}-${ct.bettingMode||'fixed'}-${ct.betPercentage||0}`
       return key === group.configKey
     })
 
@@ -2319,19 +2483,23 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
 
     // Filter trades by the manual trigger amount (same logic as optimizer)
     const filteredTrades = allTrades.filter(trade => {
-      const originalTrade = trade.originalTrade
-      
-      // Calculate the original trader's bet amount
-      let tradeAmount = 0
-      if (originalTrade.amount) {
-        tradeAmount = parseFloat(originalTrade.amount)
-      } else if (originalTrade.size && originalTrade.price) {
-        tradeAmount = originalTrade.size * originalTrade.price
-      } else {
-        return false
+      // Use originalAmount (top-level scalar set by trade-scanner post-OOM fix)
+      if (typeof (trade as any).originalAmount === 'number') {
+        return (trade as any).originalAmount >= triggerAmount
       }
-      
-      return tradeAmount >= triggerAmount
+      // Fallback: older trades that still have embedded originalTrade
+      const originalTrade = (trade as any).originalTrade
+      if (originalTrade) {
+        let tradeAmount = 0
+        if (originalTrade.amount) {
+          tradeAmount = parseFloat(originalTrade.amount)
+        } else if (originalTrade.size && originalTrade.price) {
+          tradeAmount = originalTrade.size * originalTrade.price
+        }
+        return tradeAmount >= triggerAmount
+      }
+      // Pre-dates both fields — no amount info, include by default
+      return true
     })
     
     if (filteredTrades.length === 0) {
@@ -2363,7 +2531,7 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
     
     // Get all trades from all runs in this configuration
     const configRuns = copyTrades.filter(ct => {
-      const key = `${ct.traderAddress}-${ct.initialBudget}-${ct.fixedBetAmount}-${ct.minPrice}-${ct.maxPrice}-${ct.minTriggerAmount}`
+      const key = `${ct.traderAddress}-${ct.initialBudget}-${ct.fixedBetAmount}-${ct.minPrice}-${ct.maxPrice}-${ct.minTriggerAmount}-${ct.bettingMode||'fixed'}-${ct.betPercentage||0}`
       return key === group.configKey
     })
 
@@ -2399,19 +2567,23 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
     triggerAmountsToTest.forEach(triggerAmount => {
       // Filter trades by this trigger amount
       const filteredTrades = allTrades.filter(trade => {
-        const originalTrade = trade.originalTrade
-        
-        // Calculate the original trader's bet amount
-        let tradeAmount = 0
-        if (originalTrade.amount) {
-          tradeAmount = parseFloat(originalTrade.amount)
-        } else if (originalTrade.size && originalTrade.price) {
-          tradeAmount = originalTrade.size * originalTrade.price
-        } else {
-          return false
+        // Use originalAmount (top-level scalar set by trade-scanner post-OOM fix)
+        if (typeof (trade as any).originalAmount === 'number') {
+          return (trade as any).originalAmount >= triggerAmount
         }
-        
-        return tradeAmount >= triggerAmount
+        // Fallback: older trades that still have embedded originalTrade
+        const originalTrade = (trade as any).originalTrade
+        if (originalTrade) {
+          let tradeAmount = 0
+          if (originalTrade.amount) {
+            tradeAmount = parseFloat(originalTrade.amount)
+          } else if (originalTrade.size && originalTrade.price) {
+            tradeAmount = originalTrade.size * originalTrade.price
+          }
+          return tradeAmount >= triggerAmount
+        }
+        // Pre-dates both fields — no amount info, include by default
+        return true
       })
       
       // Only include if meets minimum trades requirement
@@ -2472,7 +2644,7 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
     
     // Get all trades from all runs in this configuration
     const configRuns = copyTrades.filter(ct => {
-      const key = `${ct.traderAddress}-${ct.initialBudget}-${ct.fixedBetAmount}-${ct.minPrice}-${ct.maxPrice}-${ct.minTriggerAmount}`
+      const key = `${ct.traderAddress}-${ct.initialBudget}-${ct.fixedBetAmount}-${ct.minPrice}-${ct.maxPrice}-${ct.minTriggerAmount}-${ct.bettingMode||'fixed'}-${ct.betPercentage||0}`
       return key === group.configKey
     })
 
@@ -2603,7 +2775,7 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
 
     // Get all trades from all runs in this configuration
     const configRuns = copyTrades.filter(ct => {
-      const key = `${ct.traderAddress}-${ct.initialBudget}-${ct.fixedBetAmount}-${ct.minPrice}-${ct.maxPrice}-${ct.minTriggerAmount}`
+      const key = `${ct.traderAddress}-${ct.initialBudget}-${ct.fixedBetAmount}-${ct.minPrice}-${ct.maxPrice}-${ct.minTriggerAmount}-${ct.bettingMode||'fixed'}-${ct.betPercentage||0}`
       return key === group.configKey
     })
 
@@ -2619,17 +2791,18 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
       }
 
       // Check trigger amount
-      const originalTrade = trade.originalTrade
-      let tradeAmount = 0
-      if (originalTrade.amount) {
-        tradeAmount = parseFloat(originalTrade.amount)
-      } else if (originalTrade.size && originalTrade.price) {
-        tradeAmount = originalTrade.size * originalTrade.price
-      } else {
-        return false
-      }
-      
-      return tradeAmount >= bestTrigger
+      const tradeOriginalAmount = typeof (trade as any).originalAmount === 'number'
+        ? (trade as any).originalAmount
+        : (() => {
+            const ot = (trade as any).originalTrade
+            if (!ot) return null
+            if (ot.amount) return parseFloat(ot.amount)
+            if (ot.size && ot.price) return ot.size * ot.price
+            return null
+          })()
+      if (tradeOriginalAmount !== null && tradeOriginalAmount < bestTrigger) return false
+
+      return true
     })
 
     if (filteredTrades.length === 0) {
@@ -2773,16 +2946,17 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
     
     minTriggerOptions.forEach(trigger => {
       const filtered = allTradesFromTrader.filter(t => {
-        const originalTrade = t.originalTrade
-        if (!originalTrade) return false
-        
+        if (typeof (t as any).originalAmount === 'number') {
+          return (t as any).originalAmount >= trigger
+        }
+        const originalTrade = (t as any).originalTrade
+        if (!originalTrade) return true
         let tradeAmount = 0
         if (originalTrade.amount) {
           tradeAmount = parseFloat(originalTrade.amount)
         } else if (originalTrade.size && originalTrade.price) {
           tradeAmount = originalTrade.size * originalTrade.price
         }
-        
         return tradeAmount >= trigger
       })
       
@@ -3057,7 +3231,7 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
 
     // Get all resolved trades for this configuration
     const configRuns = copyTrades.filter(ct => {
-      const key = `${ct.traderAddress}-${ct.initialBudget}-${ct.fixedBetAmount}-${ct.minPrice}-${ct.maxPrice}-${ct.minTriggerAmount}`
+      const key = `${ct.traderAddress}-${ct.initialBudget}-${ct.fixedBetAmount}-${ct.minPrice}-${ct.maxPrice}-${ct.minTriggerAmount}-${ct.bettingMode||'fixed'}-${ct.betPercentage||0}`
       return key === group.configKey
     })
 
@@ -3235,7 +3409,7 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
     
     // Get all resolved trades
     const configRuns = copyTrades.filter(ct => {
-      const key = `${ct.traderAddress}-${ct.initialBudget}-${ct.fixedBetAmount}-${ct.minPrice}-${ct.maxPrice}-${ct.minTriggerAmount}`
+      const key = `${ct.traderAddress}-${ct.initialBudget}-${ct.fixedBetAmount}-${ct.minPrice}-${ct.maxPrice}-${ct.minTriggerAmount}-${ct.bettingMode||'fixed'}-${ct.betPercentage||0}`
       return key === group.configKey
     })
     
@@ -3364,17 +3538,17 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
           // Filter trades for this combination
           const filteredTrades = allTrades.filter(t => {
             if (t.price < priceRange.min || t.price > priceRange.max) return false
-            
-            const originalTrade = t.originalTrade
-            if (!originalTrade) return false
-            
+            if (typeof (t as any).originalAmount === 'number') {
+              return (t as any).originalAmount >= minTrigger
+            }
+            const originalTrade = (t as any).originalTrade
+            if (!originalTrade) return true
             let tradeAmount = 0
             if (originalTrade.amount) {
               tradeAmount = parseFloat(originalTrade.amount)
             } else if (originalTrade.size && originalTrade.price) {
               tradeAmount = parseFloat(originalTrade.size) * parseFloat(originalTrade.price)
             }
-            
             return tradeAmount >= minTrigger
           })
           
@@ -3408,12 +3582,16 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
                 betAmount = betValue
               } else {
                 // Percentage mode
-                const originalTrade = trade.originalTrade
-                let originalAmount = 0
-                if (originalTrade.amount) {
-                  originalAmount = parseFloat(originalTrade.amount)
-                } else if (originalTrade.size && originalTrade.price) {
-                  originalAmount = parseFloat(originalTrade.size) * parseFloat(originalTrade.price)
+                let originalAmount = typeof (trade as any).originalAmount === 'number'
+                  ? (trade as any).originalAmount
+                  : 0
+                if (originalAmount === 0) {
+                  const origTrade = (trade as any).originalTrade
+                  if (origTrade?.amount) {
+                    originalAmount = parseFloat(origTrade.amount)
+                  } else if (origTrade?.size && origTrade?.price) {
+                    originalAmount = parseFloat(origTrade.size) * parseFloat(origTrade.price)
+                  }
                 }
                 betAmount = (betValue / 100) * originalAmount
                 
@@ -4068,18 +4246,21 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
 
                 {/* Performance Metrics */}
                 {(() => {
-                  const wonTrades = copyTrade.trades.filter(t => t.status === 'won')
-                  const lostTrades = copyTrade.trades.filter(t => t.status === 'lost')
-                  const closedTrades = [...wonTrades, ...lostTrades]
+                  const allClosed = copyTrade.trades.filter(t => t.status !== 'open')
+                  const phantomTrades = allClosed.filter(t => (t as any).legacyPhantom)
+                  const realWon = allClosed.filter(t => t.status === 'won' && !(t as any).legacyPhantom)
+                  const realLost = allClosed.filter(t => t.status === 'lost' && !(t as any).legacyPhantom)
+                  const closedTrades = [...realWon, ...realLost]
                   const openTrades = copyTrade.trades.filter(t => t.status === 'open')
                   
                   const totalPnl = closedTrades.reduce((sum, t) => sum + (t.pnl || 0), 0)
                   const totalInvested = closedTrades.reduce((sum, t) => sum + t.amount, 0)
                   const overallRoi = totalInvested > 0 ? (totalPnl / totalInvested) * 100 : 0
-                  const winRate = closedTrades.length > 0 ? (wonTrades.length / closedTrades.length) * 100 : 0
+                  const winRate = closedTrades.length > 0 ? (realWon.length / closedTrades.length) * 100 : 0
                   const budgetChange = copyTrade.currentBudget - copyTrade.initialBudget
                   const budgetChangePercent = (budgetChange / copyTrade.initialBudget) * 100
-                  
+                  const wonTrades = realWon
+                  const lostTrades = realLost
                   // NEW METRICS
                   const avgPnlPerTrade = closedTrades.length > 0 ? totalPnl / closedTrades.length : 0
                   const expectedPnlAfter100 = avgPnlPerTrade * 100
@@ -4165,9 +4346,15 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
                 {/* Trades */}
                 {copyTrade.trades.length > 0 && (
                   <div className="mt-4">
-                    <h4 className="text-sm font-semibold text-slate-300 mb-2">
-                      Simulated Trades ({copyTrade.trades.length})
-                    </h4>
+                    {(() => {
+                      const phantomCount = copyTrade.trades.filter(t => (t as any).legacyPhantom).length
+                      return (
+                        <h4 className="text-sm font-semibold text-slate-300 mb-2">
+                          Simulated Trades ({copyTrade.trades.length}{phantomCount > 0 ? `, ${phantomCount} legacy` : ''})
+                          {phantomCount > 0 && <span className="ml-2 text-xs font-normal text-amber-600/70">⚠️ {phantomCount} pre-fix trades excluded from P&L stats</span>}
+                        </h4>
+                      )
+                    })()}
                     <div className="space-y-2 max-h-96 overflow-y-auto">
                       {(() => {
                         const visibleCount = getVisibleTradesCount(copyTrade.id)
@@ -4180,7 +4367,9 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
                         <div
                           key={trade.id}
                           className={`p-3 rounded-lg border ${
-                            trade.status === 'won'
+                            (trade as any).legacyPhantom
+                              ? 'bg-slate-800/10 border-slate-700/20 opacity-50'
+                              : trade.status === 'won'
                               ? 'bg-emerald-500/5 border-emerald-500/30'
                               : trade.status === 'lost'
                               ? 'bg-red-500/5 border-red-500/30'
@@ -4243,18 +4432,27 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
                               </p>
                             </div>
                             <div className="text-right">
-                              <p className="text-sm text-slate-400">
-                                ${trade.amount} @ ${trade.price.toFixed(3)}
-                              </p>
-                              <p className={`text-sm font-bold mt-1 ${
-                                trade.status === 'won' ? 'text-emerald-400' :
-                                trade.status === 'lost' ? 'text-red-400' :
-                                'text-slate-400'
-                              }`}>
-                                {trade.status === 'open' ? 'OPEN' :
-                                 trade.status === 'won' ? `+$${trade.pnl?.toFixed(2)}` :
-                                 `-$${Math.abs(trade.pnl || 0).toFixed(2)}`}
-                              </p>
+                              {(trade as any).legacyPhantom ? (
+                                <>
+                                  <p className="text-sm text-slate-600">amount unknown</p>
+                                  <p className="text-sm text-amber-600/70 mt-1">⚠️ legacy</p>
+                                </>
+                              ) : (
+                                <>
+                                  <p className="text-sm text-slate-400">
+                                    ${trade.amount} @ ${trade.price.toFixed(3)}
+                                  </p>
+                                  <p className={`text-sm font-bold mt-1 ${
+                                    trade.status === 'won' ? 'text-emerald-400' :
+                                    trade.status === 'lost' ? 'text-red-400' :
+                                    'text-slate-400'
+                                  }`}>
+                                    {trade.status === 'open' ? 'OPEN' :
+                                     trade.status === 'won' ? `+$${(trade.pnl || 0).toFixed(2)}` :
+                                     `-$${Math.abs(trade.pnl || 0).toFixed(2)}`}
+                                  </p>
+                                </>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -4446,8 +4644,11 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
                       <span className="text-emerald-400 font-medium">${group.initialBudget}</span>
                     </div>
                     <div>
-                      <span className="text-slate-500">Fixed Bet: </span>
-                      <span className="text-indigo-400 font-medium">${group.fixedBetAmount}</span>
+                      <span className="text-slate-500">Bet: </span>
+                      {group.bettingMode === 'percentage'
+                        ? <span className="text-indigo-400 font-medium">{group.betPercentage}% of trade</span>
+                        : <span className="text-indigo-400 font-medium">${group.fixedBetAmount} fixed</span>
+                      }
                     </div>
                     <div>
                       <span className="text-slate-500">Price Range: </span>
@@ -4528,13 +4729,18 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
                   <div className="bg-slate-800/30 rounded-lg p-4 border border-slate-700/50">
                     <p className="text-slate-400 text-xs mb-1">Avg P&L per Trade</p>
                     <p className={`text-2xl font-bold ${
-                      group.totalPnl / group.totalClosedTrades >= 0 ? 'text-emerald-400' : 'text-red-400'
+                      group.totalClosedTrades > 0 && group.totalPnl / group.totalClosedTrades >= 0 ? 'text-emerald-400' : 'text-red-400'
                     }`}>
-                      {group.totalPnl / group.totalClosedTrades >= 0 ? '+' : ''}
-                      ${(group.totalPnl / group.totalClosedTrades).toFixed(2)}
+                      {group.totalClosedTrades > 0 && group.totalPnl / group.totalClosedTrades >= 0 ? '+' : ''}
+                      ${group.totalClosedTrades > 0 ? (group.totalPnl / group.totalClosedTrades).toFixed(2) : '0.00'}
                     </p>
                     <p className="text-xs text-slate-500 mt-1">
-                      ({((group.totalPnl / group.totalClosedTrades / group.fixedBetAmount) * 100).toFixed(1)}% ROI)
+                      {(() => {
+                        const avgPnl = group.totalClosedTrades > 0 ? group.totalPnl / group.totalClosedTrades : 0
+                        const denom = group.avgBetAmount > 0 ? group.avgBetAmount : group.fixedBetAmount
+                        const roi = denom > 0 ? (avgPnl / denom) * 100 : 0
+                        return `(${roi.toFixed(1)}% ROI)`
+                      })()}
                     </p>
                   </div>
 
@@ -4555,12 +4761,17 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
                     </p>
                   </div>
 
-                  <div className="bg-slate-800/30 rounded-lg p-4 border border-slate-700/50">
+                  <button
+                    onClick={() => openMilestoneModal(group)}
+                    className="bg-slate-800/30 rounded-lg p-4 border border-slate-700/50 hover:border-purple-500/50 hover:bg-slate-800/50 transition-all cursor-pointer w-full text-left"
+                    title="Click to view avg P&L and ROI at trade milestones"
+                  >
                     <p className="text-slate-400 text-xs mb-1">Total Trades</p>
                     <p className="text-2xl font-bold text-purple-400">
                       {group.totalClosedTrades}
                     </p>
-                  </div>
+                    <p className="text-xs text-slate-500 mt-1">📊 click for milestones</p>
+                  </button>
                   
                   <button
                     onClick={() => showPriceAnalysis(group)}
@@ -4591,10 +4802,12 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
                   </summary>
                   <div className="mt-4 space-y-2 pl-6">
                     {group.runs.map(run => {
-                      const closedTrades = run.trades.filter(t => t.status !== 'open')
-                      const wonTrades = closedTrades.filter(t => t.status === 'won').length
-                      const runPnl = closedTrades.reduce((sum, t) => sum + (t.pnl || 0), 0)
-                      const winRate = closedTrades.length > 0 ? (wonTrades / closedTrades.length) * 100 : 0
+                      const allClosed = run.trades.filter(t => t.status !== 'open')
+                      const realClosed = allClosed.filter(t => !(t as any).legacyPhantom)
+                      const phantomCnt = allClosed.length - realClosed.length
+                      const wonTrades = realClosed.filter(t => t.status === 'won').length
+                      const runPnl = realClosed.reduce((sum, t) => sum + (t.pnl || 0), 0)
+                      const winRate = realClosed.length > 0 ? (wonTrades / realClosed.length) * 100 : 0
                       const remainingBudget = run.initialBudget + runPnl
                       const isBankrupt = remainingBudget < run.fixedBetAmount
 
@@ -4613,13 +4826,16 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
                                   </span>
                                 )}
                               </div>
-                              <div className="flex gap-4 text-xs text-slate-400">
+                              <div className="flex gap-4 text-xs text-slate-400 flex-wrap">
                                 <span>Remaining: ${remainingBudget.toFixed(2)}</span>
-                                <span>Trades: {closedTrades.length}</span>
+                                <span>Trades: {realClosed.length}{phantomCnt > 0 ? ` (+${phantomCnt} legacy)` : ''}</span>
                                 <span>Win Rate: {winRate.toFixed(1)}%</span>
                                 <span className={runPnl >= 0 ? 'text-emerald-400' : 'text-red-400'}>
                                   P&L: {runPnl >= 0 ? '+' : ''}{runPnl >= 0 ? '$' : '-$'}{Math.abs(runPnl).toFixed(2)}
                                 </span>
+                                {phantomCnt > 0 && (
+                                  <span className="text-amber-500/70">⚠️ {phantomCnt} pre-fix trades excluded from P&L</span>
+                                )}
                               </div>
                             </div>
                             <button
@@ -4699,15 +4915,55 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
 
                   <div>
                     <label className="block text-slate-300 text-sm font-medium mb-2">
-                      Fixed Bet Amount ($)
+                      Bet Sizing Mode
                     </label>
-                    <input
-                      type="number"
-                      value={fixedBetAmount}
-                      onChange={(e) => setFixedBetAmount(Number(e.target.value))}
-                      min="1"
-                      className="w-full bg-slate-800/50 border border-slate-700/50 text-slate-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    />
+                    <div className="flex rounded-lg overflow-hidden border border-slate-700/50 mb-3">
+                      <button
+                        type="button"
+                        onClick={() => setBettingMode('fixed')}
+                        className={`flex-1 py-2 text-sm font-medium transition-all ${bettingMode === 'fixed' ? 'bg-indigo-600 text-white' : 'bg-slate-800/50 text-slate-400 hover:text-slate-200'}`}
+                      >
+                        💵 Fixed Amount
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setBettingMode('percentage')}
+                        className={`flex-1 py-2 text-sm font-medium transition-all ${bettingMode === 'percentage' ? 'bg-indigo-600 text-white' : 'bg-slate-800/50 text-slate-400 hover:text-slate-200'}`}
+                      >
+                        📊 % of Trade
+                      </button>
+                    </div>
+                    {bettingMode === 'fixed' ? (
+                      <>
+                        <input
+                          type="number"
+                          value={fixedBetAmount}
+                          onChange={(e) => setFixedBetAmount(Number(e.target.value))}
+                          min="0.01"
+                          step="0.01"
+                          className="w-full bg-slate-800/50 border border-slate-700/50 text-slate-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        />
+                        <p className="text-slate-500 text-xs mt-1">Always bet this fixed amount per copied trade</p>
+                      </>
+                    ) : (
+                      <>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="number"
+                            value={betPercentage}
+                            onChange={(e) => setBetPercentage(Number(e.target.value))}
+                            min="0.01"
+                            max="100"
+                            step="0.01"
+                            className="w-full bg-slate-800/50 border border-slate-700/50 text-slate-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                          />
+                          <span className="text-slate-400 font-bold text-lg">%</span>
+                        </div>
+                        <p className="text-slate-500 text-xs mt-1">
+                          e.g. {betPercentage}% → trader bets $100 → you bet ${(100 * (betPercentage / 100)).toFixed(2)}
+                        </p>
+                      </>
+                    )}
                   </div>
                 </div>
 
@@ -5972,7 +6228,7 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
                                         fixedBetAmount: ct.fixedBetAmount
                                       }))
                                       
-                                      await fetch(`${railwayUrl}/api/configurations`, {
+                                      await fetch(`/api/bot-proxy?path=/api/configurations&botUrl=${encodeURIComponent(railwayUrl)}`, {
                                         method: 'POST',
                                         headers: { 'Content-Type': 'application/json' },
                                         body: JSON.stringify(botConfigs)
@@ -6906,6 +7162,131 @@ Resolved: *${resolvedTrades.length} trade${resolvedTrades.length > 1 ? 's' : ''}
                 <button
                   onClick={() => setShowChartModal(false)}
                   className="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg transition-all"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Trade Milestone Analysis Modal */}
+        {showMilestoneModal && milestoneData && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-slate-900 border border-purple-500/50 rounded-xl max-w-3xl w-full p-6 max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-purple-400">
+                  📊 Trade Milestone Analysis
+                </h2>
+                <button
+                  onClick={() => setShowMilestoneModal(false)}
+                  className="text-slate-400 hover:text-white transition-colors text-2xl"
+                >
+                  ✕
+                </button>
+              </div>
+              <p className="text-slate-400 text-sm mb-6">
+                <span className="text-purple-300 font-medium">{milestoneData.configName}</span>
+                {' '}— avg P&amp;L and ROI at key trade milestones across all {milestoneGroup?.runs?.length || 0} runs
+              </p>
+
+              {/* Milestone cards */}
+              {milestoneData.milestones.length === 0 ? (
+                <p className="text-slate-500 text-sm">Not enough closed trades yet to compute milestones.</p>
+              ) : (
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+                  {milestoneData.milestones.map(m => (
+                    <div
+                      key={m.n}
+                      className="bg-slate-800/50 border border-slate-700/50 rounded-lg p-4"
+                    >
+                      <p className="text-slate-400 text-xs mb-2 font-medium">After {m.n} trades</p>
+                      <p className={`text-xl font-bold ${m.avgPnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                        {m.avgPnl >= 0 ? '+' : ''}${m.avgPnl.toFixed(2)}
+                      </p>
+                      <p className="text-xs text-slate-500">total P&L</p>
+                      <p className={`text-sm font-semibold mt-1 ${m.avgPnlPerTrade >= 0 ? 'text-emerald-300' : 'text-red-300'}`}>
+                        {m.avgPnlPerTrade >= 0 ? '+' : ''}${m.avgPnlPerTrade.toFixed(3)}<span className="text-xs font-normal text-slate-400"> /trade</span>
+                      </p>
+                      <p className="text-xs text-slate-500 mt-2">
+                        {m.runsWithData}/{m.totalRuns} runs
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Custom N input */}
+              <div className="bg-slate-800/30 border border-slate-700/50 rounded-lg p-4 mb-6">
+                <p className="text-slate-300 text-sm font-medium mb-3">Custom milestone</p>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="number"
+                    min={1}
+                    value={milestoneCustomN}
+                    onChange={e => setMilestoneCustomN(e.target.value)}
+                    className="w-28 px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    placeholder="e.g. 75"
+                  />
+                  <span className="text-slate-400 text-sm">trades</span>
+                  {(() => {
+                    const n = parseInt(milestoneCustomN)
+                    if (!n || n < 1) return null
+                    const runs = copyTrades.filter(ct => {
+                      const key = `${ct.traderAddress}-${ct.initialBudget}-${ct.fixedBetAmount}-${ct.minPrice}-${ct.maxPrice}-${ct.minTriggerAmount}-${ct.bettingMode||'fixed'}-${ct.betPercentage||0}`
+                      return milestoneGroup && key === milestoneGroup.configKey
+                    })
+                    let totalPnl = 0, totalPnlPerTrade = 0, runsWithData = 0
+                    runs.forEach(run => {
+                      const closed = run.trades.filter((t: any) => t.status !== 'open').sort((a: any, b: any) => a.timestamp - b.timestamp)
+                      if (closed.length >= n) {
+                        const slice = closed.slice(0, n)
+                        const pnl = slice.reduce((s: number, t: any) => s + (t.pnl || 0), 0)
+                        totalPnl += pnl
+                        totalPnlPerTrade += pnl / n
+                        runsWithData++
+                      }
+                    })
+                    if (runsWithData === 0) return <span className="text-slate-500 text-sm">Not enough runs with {n} closed trades</span>
+                    const avgPnl = totalPnl / runsWithData
+                    const avgPnlPerTrade = totalPnlPerTrade / runsWithData
+                    return (
+                      <div className="flex items-center gap-4">
+                        <span className={`text-lg font-bold ${avgPnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                          {avgPnl >= 0 ? '+' : ''}${avgPnl.toFixed(2)} total
+                        </span>
+                        <span className={`text-sm font-medium ${avgPnlPerTrade >= 0 ? 'text-emerald-300' : 'text-red-300'}`}>
+                          {avgPnlPerTrade >= 0 ? '+' : ''}${avgPnlPerTrade.toFixed(3)}/trade
+                        </span>
+                        <span className="text-xs text-slate-500">({runsWithData}/{runs.length} runs)</span>
+                      </div>
+                    )
+                  })()}
+                </div>
+              </div>
+
+              {/* Exit suggestion */}
+              {milestoneData.exitSuggestion && (
+                <div className="bg-amber-900/20 border border-amber-500/40 rounded-lg p-4 mb-6">
+                  <p className="text-amber-400 font-semibold text-sm mb-2">💡 Pull-Out Suggestion (live data)</p>
+                  <p className="text-amber-200 text-sm leading-relaxed">
+                    {milestoneData.exitSuggestion.suggestion}
+                  </p>
+                  <div className="flex gap-6 mt-3 text-xs text-amber-400/70">
+                    <span>Peak avg P&L: <strong className="text-amber-300">+${milestoneData.exitSuggestion.peakAvgPnl.toFixed(2)}</strong></span>
+                    <span>@ trade <strong className="text-amber-300">#{milestoneData.exitSuggestion.peakTrade}</strong></span>
+                    {milestoneData.exitSuggestion.dropAfterPeak > 0 && (
+                      <span>Post-peak drop: <strong className="text-amber-300">{milestoneData.exitSuggestion.dropAfterPeak.toFixed(0)}%</strong></span>
+                    )}
+                  </div>
+                  <p className="text-slate-500 text-xs mt-2">Based on live copy-trading data — sampled every 25 trades across all runs.</p>
+                </div>
+              )}
+
+              <div className="flex justify-end">
+                <button
+                  onClick={() => setShowMilestoneModal(false)}
+                  className="px-6 py-2 bg-purple-500 hover:bg-purple-600 text-white font-medium rounded-lg transition-all"
                 >
                   Close
                 </button>
