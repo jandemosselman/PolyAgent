@@ -85,7 +85,11 @@ app.post('/api/configurations', (req, res) => {
   }
 })
 
-// Health check endpoint
+// Root + health check endpoints (Railway probes these)
+app.get('/', (req, res) => {
+  res.json({ status: 'ok', service: 'polyagent-bot', timestamp: new Date().toISOString() })
+})
+
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() })
 })
