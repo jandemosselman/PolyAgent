@@ -5,6 +5,9 @@ import { performFullCheckCycle, getMonitoredConfigurations, initializeCopyTrades
 import { notifyBotStarted } from './telegram-notifier.js'
 import { startApiServer } from './api-server.js'
 
+// Start API server FIRST so Railway health checks pass immediately
+startApiServer()
+
 // Initialize Telegram Bot
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || ''
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID || ''
@@ -44,11 +47,12 @@ if (TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID) {
       
       const runStats = runs.map(run => {
         // Single pass through trades - no filter copies
-        let open = 0, closed = 0, won = 0, lost = 0, pnl = 0
+        let open = 0, closed = 0, won = 0, lost = 0, pnl = 0, openBudgetUsed = 0
         
         for (const t of run.trades) {
           if (t.status === 'open') {
             open++
+            openBudgetUsed += t.amount || 0
           } else {
             closed++
             pnl += t.pnl || 0
@@ -58,7 +62,7 @@ if (TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID) {
         }
         
         const winRate = closed > 0 ? (won / closed * 100) : 0
-        const budgetUsed = open * run.fixedBetAmount
+        const budgetUsed = openBudgetUsed
         const budgetAvailable = run.initialBudget + pnl - budgetUsed
         
         totalTrades += run.trades.length
@@ -689,9 +693,6 @@ Trades: *${maxTradeRun.trades.length.toLocaleString()}* / ${maxGlobalTrades.toLo
   
   console.log('✅ Finished checking all configurations\n')
 }
-
-// Start API server (MUST start first so we can receive configs)
-startApiServer()
 
 // Notify bot started
 const initialConfigs = getMonitoredConfigurations()
