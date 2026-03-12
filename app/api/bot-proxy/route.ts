@@ -15,10 +15,21 @@ async function proxyRequest(request: Request, method: string) {
     }
 
     const targetUrl = `${botUrl.replace(/\/$/, '')}${path}`
+    console.log(`[bot-proxy] ${method} ${targetUrl}`)
+
+    // First test health endpoint to diagnose connectivity
+    try {
+      const healthUrl = `${botUrl.replace(/\/$/, '')}/health`
+      const healthRes = await fetch(healthUrl, { method: 'GET', signal: AbortSignal.timeout(5000) })
+      console.log(`[bot-proxy] Health check: ${healthRes.status}`)
+    } catch (healthErr: any) {
+      console.log(`[bot-proxy] Health check failed: ${healthErr.message}`)
+    }
 
     const init: RequestInit = {
       method,
       headers: { 'Content-Type': 'application/json' },
+      signal: AbortSignal.timeout(15000),
     }
 
     if (method !== 'GET' && method !== 'HEAD') {
@@ -26,11 +37,19 @@ async function proxyRequest(request: Request, method: string) {
     }
 
     const response = await fetch(targetUrl, init)
-    const data = await response.json()
+    const rawText = await response.text()
+    console.log(`[bot-proxy] Response ${response.status}: ${rawText.slice(0, 300)}`)
+
+    let data: any
+    try {
+      data = JSON.parse(rawText)
+    } catch {
+      data = { raw: rawText }
+    }
 
     return NextResponse.json(data, { status: response.status })
   } catch (error: any) {
-    console.error('Bot proxy error:', error)
+    console.error('[bot-proxy] Fetch error:', error.message)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }
