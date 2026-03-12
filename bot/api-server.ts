@@ -5,17 +5,15 @@ import { saveConfigurations, loadConfigurationsFromFile } from './copy-trade-man
 const app = express()
 app.use(express.json())
 
-// Enable CORS for localhost — must be before all routes
+// Enable CORS — intercept OPTIONS preflight immediately before any routing
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*')
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200)
+  }
   next()
-})
-
-// Handle preflight OPTIONS requests for all routes
-app.options('*', (req, res) => {
-  res.sendStatus(200)
 })
 
 // GET /api/copy-trades - Fetch all copy trade runs
