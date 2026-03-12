@@ -6,7 +6,8 @@
     "node": ">=18.0.0"
   },
   "scripts": {
-    "start": "tsx index.ts",
+    "build": "npx tsc --skipLibCheck",
+    "start": "NODE_OPTIONS='--max-old-space-size=380' node dist/index.js",
     "dev": "tsx watch index.ts",
     "setup": "node setup-from-browser.js"
   },
