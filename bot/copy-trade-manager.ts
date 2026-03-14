@@ -14,6 +14,8 @@ interface Configuration {
   maxPrice: number
   initialBudget: number
   fixedBetAmount: number
+  bettingMode?: 'fixed' | 'percentage'
+  betPercentage?: number
 }
 
 // Get configuration file path (use persistent volume if on Railway)
@@ -112,6 +114,8 @@ export async function performFullCheckCycle(config: Configuration) {
         initialBudget: config.initialBudget,
         currentBudget: config.initialBudget,
         fixedBetAmount: config.fixedBetAmount,
+        bettingMode: config.bettingMode,
+        betPercentage: config.betPercentage,
         minTriggerAmount: config.minTriggerAmount,
         minPrice: config.minPrice,
         maxPrice: config.maxPrice,
@@ -142,7 +146,7 @@ export async function performFullCheckCycle(config: Configuration) {
     const { newTrades, totalMatching } = await scanForNewTrades(run)
     
     if (newTrades.length > 0) {
-      const budgetUsed = newTrades.length * run.fixedBetAmount
+      const budgetUsed = newTrades.reduce((sum, t) => sum + t.amount, 0)
       run.trades = [...newTrades, ...run.trades]
       run.currentBudget -= budgetUsed
     }
@@ -199,8 +203,16 @@ export async function performFullCheckCycle(config: Configuration) {
     console.log(`✅ ${run.name}: ${winRate.toFixed(1)}% WR | ${run.trades.length} trades | $${run.currentBudget.toFixed(2)} budget`)
     
   } catch (error: any) {
-    console.error(`❌ Error in full check cycle for ${config.name}:`, error.message)
-    await sendTelegramUpdate(`❌ *Error: ${config.name}*\n\n${error.message}`)
+    const message = error?.message || 'Unknown error'
+    const isRateLimit = /429|too many requests|rate limit/i.test(message)
+
+    if (isRateLimit) {
+      console.warn(`⚠️ Rate-limited for ${config.name}; will retry next cycle`)
+      return
+    }
+
+    console.error(`❌ Error in full check cycle for ${config.name}:`, message)
+    await sendTelegramUpdate(`❌ *Error: ${config.name}*\n\n${message}`)
   }
 }
 
