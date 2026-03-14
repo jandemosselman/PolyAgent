@@ -1,4 +1,5 @@
 import { CopyTradeRun, StoredTrade } from './trade-storage.js'
+import { fetchJsonWithRetry } from './http-client.js'
 
 interface Market {
   conditionId: string
@@ -25,13 +26,11 @@ export async function checkResolutionsForStoredTrades(
   const conditionIdsParam = conditionIds.map(id => `condition_ids=${id}`).join('&')
   const marketsUrl = `https://gamma-api.polymarket.com/markets?${conditionIdsParam}`
   
-  const response = await fetch(marketsUrl)
-  
-  if (!response.ok) {
-    throw new Error(`Failed to fetch markets: ${response.statusText}`)
-  }
-  
-  const markets: Market[] = await response.json()
+  const markets = await fetchJsonWithRetry<Market[]>({
+    url: marketsUrl,
+    context: `Market resolution fetch for ${run.name}`,
+    maxRetries: 4
+  })
   const marketsMap = new Map(markets.map(m => [m.conditionId, m]))
   
   // Check each trade for resolution
@@ -62,19 +61,32 @@ export async function checkResolutionsForStoredTrades(
       // Check if our trade won
       const won = trade.outcome === winningOutcome
       
+      // Determine effective bet amount — percentage-mode trades created before the fix
+      // may have amount: 0. Fall back to originalAmount * betPercentage/100.
+      let effectiveAmount = trade.amount
+      if ((!effectiveAmount || effectiveAmount === 0) && run.bettingMode === 'percentage' && (run.betPercentage || 0) > 0) {
+        const originalUSDC = trade.originalAmount
+          ?? (trade.originalTrade?.size != null && trade.originalTrade?.price != null
+              ? parseFloat(trade.originalTrade.size) * parseFloat(trade.originalTrade.price)
+              : 0)
+        effectiveAmount = originalUSDC * ((run.betPercentage || 0) / 100)
+      }
+      
       if (won) {
         // Calculate profit
-        const shares = trade.amount / trade.price
+        const shares = effectiveAmount / trade.price
         const payout = shares * 1.0
-        const profit = payout - trade.amount
+        const profit = payout - effectiveAmount
         trade.pnl = profit
+        trade.amount = effectiveAmount
         trade.status = 'won'
         budgetReturned += payout // Return original bet + profit
         console.log(`  ✅ Won: ${trade.market} | P&L: +$${profit.toFixed(2)}`)
       } else {
-        trade.pnl = -trade.amount
+        trade.pnl = -effectiveAmount
+        trade.amount = effectiveAmount
         trade.status = 'lost'
-        console.log(`  ❌ Lost: ${trade.market} | P&L: -$${trade.amount.toFixed(2)}`)
+        console.log(`  ❌ Lost: ${trade.market} | P&L: -$${effectiveAmount.toFixed(2)}`)
       }
       
       resolvedTrades.push(trade)

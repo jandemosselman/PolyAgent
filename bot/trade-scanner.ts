@@ -1,4 +1,5 @@
 import { CopyTradeRun, StoredTrade } from './trade-storage.js'
+import { fetchJsonWithRetry } from './http-client.js'
 
 interface Activity {
   id: string
@@ -32,12 +33,11 @@ export async function scanForNewTrades(
   // Use 5000 to handle very active traders (Polymarket API max is likely 10000)
   const activityUrl = `https://data-api.polymarket.com/activity?user=${run.traderAddress}&limit=5000&sortBy=TIMESTAMP&sortDirection=DESC`
   
-  const response = await fetch(activityUrl)
-  if (!response.ok) {
-    throw new Error(`Failed to fetch activity: ${response.statusText}`)
-  }
-  
-  const activities: Activity[] = await response.json()
+  const activities = await fetchJsonWithRetry<Activity[]>({
+    url: activityUrl,
+    context: `Activity fetch for ${run.name}`,
+    maxRetries: 4
+  })
   
   // Filter activities
   const existingTradeIds = new Set(run.trades.map(t => t.transactionHash))
@@ -76,20 +76,31 @@ export async function scanForNewTrades(
     return true
   })
   
-  // Calculate available budget like localhost does
+  // Calculate available budget
   // Formula: Initial Budget + Closed Trades P&L - Open Trades Cost
+  // Open trades cost = sum of actual amounts (works for both fixed and percentage mode)
   const openTrades = run.trades.filter(t => t.status === 'open')
   const closedTrades = run.trades.filter(t => t.status !== 'open')
   const totalPnL = closedTrades.reduce((sum, t) => sum + (t.pnl || 0), 0)
-  const openTradesCost = openTrades.length * run.fixedBetAmount
+  const openTradesCost = openTrades.reduce((sum, t) => sum + (t.amount || 0), 0)
   const actualAvailableBudget = run.initialBudget + totalPnL - openTradesCost
-  
-  // Use the calculated available budget, but ensure it's not negative
   const budgetToUse = Math.max(0, actualAvailableBudget)
-  
-  // Calculate how many we can afford
-  const affordableCount = Math.floor(budgetToUse / run.fixedBetAmount)
-  const tradesToCopy = matchingTrades.slice(0, affordableCount)
+
+  // Greedy selection: compute bet amount per trade and include while budget allows
+  const tradesToCopy: typeof matchingTrades = []
+  let remainingBudget = budgetToUse
+  for (const activity of matchingTrades) {
+    let betAmount: number
+    if (run.bettingMode === 'percentage') {
+      const traderUSDC = parseFloat(activity.size) * parseFloat(activity.price)
+      betAmount = traderUSDC * ((run.betPercentage || 1) / 100)
+    } else {
+      betAmount = run.fixedBetAmount
+    }
+    if (betAmount <= 0 || betAmount > remainingBudget) break
+    tradesToCopy.push(activity)
+    remainingBudget -= betAmount
+  }
 
   // Create simulated trades
   const newTrades: StoredTrade[] = tradesToCopy.map((activity, index) => {
@@ -97,6 +108,15 @@ export async function scanForNewTrades(
     const timestampMs = activity.timestamp > 10000000000 
       ? activity.timestamp  // Already in milliseconds
       : activity.timestamp * 1000  // Convert from seconds
+    
+    // Compute the actual bet amount for this trade
+    let betAmount: number
+    if (run.bettingMode === 'percentage') {
+      const traderUSDC = parseFloat(activity.size) * parseFloat(activity.price)
+      betAmount = traderUSDC * ((run.betPercentage || 1) / 100)
+    } else {
+      betAmount = run.fixedBetAmount
+    }
     
     // Get best available market name
     const marketName = activity.title || activity.market || activity.slug || `Market ${activity.asset.substring(0, 8)}...`
@@ -118,7 +138,7 @@ export async function scanForNewTrades(
       market: marketName,
       outcome: activity.outcome || activity.outcomeName || 'Unknown',
       price: parseFloat(activity.price),
-      amount: run.fixedBetAmount,
+      amount: betAmount,
       asset: activity.asset,
       conditionId: activity.conditionId || '',
       slug: activity.slug || '',

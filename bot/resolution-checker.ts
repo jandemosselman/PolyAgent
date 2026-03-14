@@ -2,6 +2,7 @@ import { sendTelegramUpdate, notifyWinRateChange, notifyNewTrades, notifyError }
 import { loadCopyTrades, saveCopyTrades, CopyTradeRun, updateCopyTrade } from './trade-storage.js'
 import { scanForNewTrades } from './trade-scanner.js'
 import { checkResolutionsForStoredTrades } from './trade-resolver.js'
+import { fetchJsonWithRetry } from './http-client.js'
 import fs from 'fs'
 import path from 'path'
 
@@ -281,40 +282,28 @@ Total P&L: $${totalPnL.toFixed(2)}
 
 async function fetchActivity(address: string, limit: number): Promise<Activity[]> {
   const url = `https://data-api.polymarket.com/activity?user=${address}&limit=${limit}&offset=0`
-  
-  const response = await fetch(url, {
+
+  return fetchJsonWithRetry<Activity[]>({
+    url,
+    context: `Resolution activity fetch for ${address.slice(0, 8)}`,
+    maxRetries: 4,
     headers: {
       'User-Agent': 'Mozilla/5.0'
     }
   })
-  
-  if (!response.ok) {
-    const text = await response.text()
-    console.error(`  Activity API response: ${response.status} ${response.statusText}`)
-    console.error(`  Response body: ${text.slice(0, 200)}`)
-    throw new Error(`Activity fetch failed: ${response.statusText}`)
-  }
-  
-  return response.json()
 }
 
 async function fetchClosedPositions(address: string, limit: number): Promise<ClosedPosition[]> {
   const url = `https://data-api.polymarket.com/positions?user=${address}&limit=${limit}&offset=0&closed=true`
-  
-  const response = await fetch(url, {
+
+  return fetchJsonWithRetry<ClosedPosition[]>({
+    url,
+    context: `Resolution closed positions fetch for ${address.slice(0, 8)}`,
+    maxRetries: 4,
     headers: {
       'User-Agent': 'Mozilla/5.0'
     }
   })
-  
-  if (!response.ok) {
-    const text = await response.text()
-    console.error(`  Positions API response: ${response.status} ${response.statusText}`)
-    console.error(`  Response body: ${text.slice(0, 200)}`)
-    throw new Error(`Closed positions fetch failed: ${response.statusText}`)
-  }
-  
-  return response.json()
 }
 
 function matchResolvedBuysWithFilters(
