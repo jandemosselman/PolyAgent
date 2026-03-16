@@ -11,7 +11,11 @@ startApiServer()
 // Initialize Telegram Bot
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || ''
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID || ''
-const TELEGRAM_ENABLE_POLLING = process.env.TELEGRAM_ENABLE_POLLING === 'true'
+const pollingRaw = (process.env.TELEGRAM_ENABLE_POLLING || '').trim().toLowerCase()
+const TELEGRAM_ENABLE_POLLING = pollingRaw === 'true' || pollingRaw === '1' || pollingRaw === 'yes'
+
+console.log(`📨 Telegram notifications: ${TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID ? 'enabled' : 'disabled'}`)
+console.log(`🎛️ Telegram command polling: ${TELEGRAM_ENABLE_POLLING ? 'enabled' : 'disabled'} (TELEGRAM_ENABLE_POLLING='${process.env.TELEGRAM_ENABLE_POLLING || ''}')`)
 
 let bot: TelegramBot | null = null
 let currentCronJob: cron.ScheduledTask | null = null
@@ -594,7 +598,7 @@ Set start command to: \`node --expose-gc dist/index.js\`
   
   console.log('✅ Telegram bot commands initialized (/refresh, /setinterval, /setmaxglobal, /pause, /resume, /cleardata, /cleanup, /status)')
 } else if (TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID && !TELEGRAM_ENABLE_POLLING) {
-  console.log('📵 Telegram command polling disabled (set TELEGRAM_ENABLE_POLLING=true to enable /commands)')
+  console.log('📵 Telegram command polling disabled (set TELEGRAM_ENABLE_POLLING=true/1/yes to enable /commands)')
 } else {
   console.log('⚠️  Telegram bot commands disabled (missing credentials)')
 }
