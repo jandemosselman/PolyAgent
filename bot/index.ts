@@ -11,6 +11,7 @@ startApiServer()
 // Initialize Telegram Bot
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || ''
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID || ''
+const TELEGRAM_ENABLE_POLLING = process.env.TELEGRAM_ENABLE_POLLING === 'true'
 
 let bot: TelegramBot | null = null
 let currentCronJob: cron.ScheduledTask | null = null
@@ -18,7 +19,7 @@ let currentInterval = 10 // minutes
 let maxGlobalTrades = 999999 // Stop when any run reaches this (effectively unlimited by default)
 let isPaused = false
 
-if (TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID) {
+if (TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID && TELEGRAM_ENABLE_POLLING) {
   bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true })
   
   // Handle /home command - Detailed dashboard
@@ -592,6 +593,8 @@ Set start command to: \`node --expose-gc dist/index.js\`
   })
   
   console.log('✅ Telegram bot commands initialized (/refresh, /setinterval, /setmaxglobal, /pause, /resume, /cleardata, /cleanup, /status)')
+} else if (TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID && !TELEGRAM_ENABLE_POLLING) {
+  console.log('📵 Telegram command polling disabled (set TELEGRAM_ENABLE_POLLING=true to enable /commands)')
 } else {
   console.log('⚠️  Telegram bot commands disabled (missing credentials)')
 }
