@@ -13,6 +13,8 @@ const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || ''
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID || ''
 const pollingRaw = (process.env.TELEGRAM_ENABLE_POLLING || '').trim().toLowerCase()
 const TELEGRAM_ENABLE_POLLING = pollingRaw === 'true' || pollingRaw === '1' || pollingRaw === 'yes'
+const TELEGRAM_POLLING_LIMIT = Math.min(20, Math.max(1, Number(process.env.TELEGRAM_POLLING_LIMIT || 5)))
+const TELEGRAM_POLLING_TIMEOUT = Math.min(30, Math.max(1, Number(process.env.TELEGRAM_POLLING_TIMEOUT || 10)))
 
 console.log(`📨 Telegram notifications: ${TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID ? 'enabled' : 'disabled'}`)
 console.log(`🎛️ Telegram command polling: ${TELEGRAM_ENABLE_POLLING ? 'enabled' : 'disabled'} (TELEGRAM_ENABLE_POLLING='${process.env.TELEGRAM_ENABLE_POLLING || ''}')`)
@@ -24,7 +26,37 @@ let maxGlobalTrades = 999999 // Stop when any run reaches this (effectively unli
 let isPaused = false
 
 if (TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID && TELEGRAM_ENABLE_POLLING) {
-  bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true })
+  try {
+    const cleanupUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/deleteWebhook`
+    await fetch(cleanupUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ drop_pending_updates: true })
+    })
+    console.log('🧹 Dropped pending Telegram updates before polling start')
+  } catch (error: any) {
+    console.error('⚠️ Could not clear pending Telegram updates:', error?.message || error)
+  }
+
+  bot = new TelegramBot(TELEGRAM_BOT_TOKEN, {
+    polling: {
+      interval: 2000,
+      autoStart: true,
+      params: {
+        timeout: TELEGRAM_POLLING_TIMEOUT,
+        limit: TELEGRAM_POLLING_LIMIT,
+        allowed_updates: ['message']
+      }
+    }
+  })
+
+  bot.on('polling_error', (error: any) => {
+    console.error('❌ Telegram polling error:', error?.message || error)
+  })
+
+  bot.on('webhook_error', (error: any) => {
+    console.error('❌ Telegram webhook error:', error?.message || error)
+  })
   
   // Handle /home command - Detailed dashboard
   bot.onText(/\/home/, async (msg) => {
