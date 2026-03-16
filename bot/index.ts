@@ -3,7 +3,7 @@ import cron from 'node-cron'
 import TelegramBot from 'node-telegram-bot-api'
 import { performFullCheckCycle, getMonitoredConfigurations, initializeCopyTrades } from './copy-trade-manager.js'
 import { notifyBotStarted } from './telegram-notifier.js'
-import { startApiServer } from './api-server.js'
+import { startApiServer, setTelegramUpdateHandler } from './api-server.js'
 
 // Start API server FIRST so Railway health checks pass immediately
 startApiServer()
@@ -13,11 +13,16 @@ const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || ''
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID || ''
 const pollingRaw = (process.env.TELEGRAM_ENABLE_POLLING || '').trim().toLowerCase()
 const TELEGRAM_ENABLE_POLLING = pollingRaw === 'true' || pollingRaw === '1' || pollingRaw === 'yes'
+const webhookRaw = (process.env.TELEGRAM_ENABLE_WEBHOOK || 'true').trim().toLowerCase()
+const TELEGRAM_ENABLE_WEBHOOK = webhookRaw === 'true' || webhookRaw === '1' || webhookRaw === 'yes'
+const TELEGRAM_WEBHOOK_BASE_URL = (process.env.TELEGRAM_WEBHOOK_BASE_URL || '').trim().replace(/\/$/, '')
+const TELEGRAM_USE_WEBHOOK = TELEGRAM_ENABLE_WEBHOOK && !!TELEGRAM_WEBHOOK_BASE_URL
 const TELEGRAM_POLLING_LIMIT = Math.min(20, Math.max(1, Number(process.env.TELEGRAM_POLLING_LIMIT || 5)))
 const TELEGRAM_POLLING_TIMEOUT = Math.min(30, Math.max(1, Number(process.env.TELEGRAM_POLLING_TIMEOUT || 10)))
 
 console.log(`📨 Telegram notifications: ${TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID ? 'enabled' : 'disabled'}`)
 console.log(`🎛️ Telegram command polling: ${TELEGRAM_ENABLE_POLLING ? 'enabled' : 'disabled'} (TELEGRAM_ENABLE_POLLING='${process.env.TELEGRAM_ENABLE_POLLING || ''}')`)
+console.log(`🪝 Telegram webhook mode: ${TELEGRAM_USE_WEBHOOK ? 'enabled' : 'disabled'} (TELEGRAM_WEBHOOK_BASE_URL='${TELEGRAM_WEBHOOK_BASE_URL || ''}')`)
 
 let bot: TelegramBot | null = null
 let currentCronJob: cron.ScheduledTask | null = null
@@ -25,30 +30,49 @@ let currentInterval = 10 // minutes
 let maxGlobalTrades = 999999 // Stop when any run reaches this (effectively unlimited by default)
 let isPaused = false
 
-if (TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID && TELEGRAM_ENABLE_POLLING) {
-  try {
-    const cleanupUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/deleteWebhook`
-    await fetch(cleanupUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ drop_pending_updates: true })
-    })
-    console.log('🧹 Dropped pending Telegram updates before polling start')
-  } catch (error: any) {
-    console.error('⚠️ Could not clear pending Telegram updates:', error?.message || error)
-  }
+if (TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID && (TELEGRAM_USE_WEBHOOK || TELEGRAM_ENABLE_POLLING)) {
+  if (TELEGRAM_USE_WEBHOOK) {
+    bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: false })
 
-  bot = new TelegramBot(TELEGRAM_BOT_TOKEN, {
-    polling: {
-      interval: 2000,
-      autoStart: true,
-      params: {
-        timeout: TELEGRAM_POLLING_TIMEOUT,
-        limit: TELEGRAM_POLLING_LIMIT,
+    setTelegramUpdateHandler(async (update: any) => {
+      bot?.processUpdate(update)
+    })
+
+    try {
+      const webhookUrl = `${TELEGRAM_WEBHOOK_BASE_URL}/telegram/webhook`
+      await bot.setWebHook(webhookUrl, {
+        drop_pending_updates: true,
         allowed_updates: ['message']
-      }
+      } as any)
+      console.log(`✅ Telegram webhook configured: ${webhookUrl}`)
+    } catch (error: any) {
+      console.error('❌ Failed to configure Telegram webhook:', error?.message || error)
     }
-  })
+  } else {
+    try {
+      const cleanupUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/deleteWebhook`
+      await fetch(cleanupUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ drop_pending_updates: true })
+      })
+      console.log('🧹 Dropped pending Telegram updates before polling start')
+    } catch (error: any) {
+      console.error('⚠️ Could not clear pending Telegram updates:', error?.message || error)
+    }
+
+    bot = new TelegramBot(TELEGRAM_BOT_TOKEN, {
+      polling: {
+        interval: 2000,
+        autoStart: true,
+        params: {
+          timeout: TELEGRAM_POLLING_TIMEOUT,
+          limit: TELEGRAM_POLLING_LIMIT,
+          allowed_updates: ['message']
+        }
+      }
+    })
+  }
 
   bot.on('polling_error', (error: any) => {
     console.error('❌ Telegram polling error:', error?.message || error)
@@ -629,8 +653,8 @@ Set start command to: \`node --expose-gc dist/index.js\`
   })
   
   console.log('✅ Telegram bot commands initialized (/refresh, /setinterval, /setmaxglobal, /pause, /resume, /cleardata, /cleanup, /status)')
-} else if (TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID && !TELEGRAM_ENABLE_POLLING) {
-  console.log('📵 Telegram command polling disabled (set TELEGRAM_ENABLE_POLLING=true/1/yes to enable /commands)')
+} else if (TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID && !TELEGRAM_ENABLE_POLLING && !TELEGRAM_USE_WEBHOOK) {
+  console.log('📵 Telegram commands disabled (set TELEGRAM_ENABLE_WEBHOOK=true with TELEGRAM_WEBHOOK_BASE_URL, or TELEGRAM_ENABLE_POLLING=true)')
 } else {
   console.log('⚠️  Telegram bot commands disabled (missing credentials)')
 }

@@ -5,6 +5,12 @@ import { saveConfigurations, loadConfigurationsFromFile } from './copy-trade-man
 const app = express()
 app.use(express.json())
 
+let telegramUpdateHandler: ((update: any) => Promise<void> | void) | null = null
+
+export function setTelegramUpdateHandler(handler: (update: any) => Promise<void> | void) {
+  telegramUpdateHandler = handler
+}
+
 // Enable CORS — intercept OPTIONS preflight immediately before any routing
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*')
@@ -82,6 +88,21 @@ app.post('/api/configurations', (req, res) => {
   } catch (error: any) {
     console.error('Error syncing configurations:', error)
     res.status(500).json({ success: false, error: error.message })
+  }
+})
+
+// Telegram webhook endpoint
+app.post('/telegram/webhook', async (req, res) => {
+  try {
+    if (!telegramUpdateHandler) {
+      return res.status(503).json({ success: false, error: 'Telegram webhook handler not initialized' })
+    }
+
+    await telegramUpdateHandler(req.body)
+    res.json({ success: true })
+  } catch (error: any) {
+    console.error('Error processing Telegram webhook update:', error?.message || error)
+    res.status(500).json({ success: false, error: 'Failed to process Telegram webhook update' })
   }
 })
 
