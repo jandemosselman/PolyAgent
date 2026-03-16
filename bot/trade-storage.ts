@@ -15,6 +15,8 @@ export interface StoredTrade {
     side?: string
   }
   // All essential fields extracted:
+    bettingMode?: 'fixed' | 'percentage'
+    betPercentage?: number
   timestamp: number
   market: string
   outcome: string
@@ -36,6 +38,8 @@ export interface CopyTradeRun {
   initialBudget: number
   currentBudget: number
   fixedBetAmount: number
+  bettingMode?: 'fixed' | 'percentage'
+  betPercentage?: number
   minTriggerAmount: number
   minPrice: number
   maxPrice: number
@@ -172,6 +176,8 @@ export function initializeCopyTradesFromConfigurations(configurations: any[]): v
       initialBudget: config.initialBudget,
       currentBudget: config.initialBudget,
       fixedBetAmount: config.fixedBetAmount,
+      bettingMode: config.bettingMode as 'fixed' | 'percentage' | undefined,
+      betPercentage: config.betPercentage as number | undefined,
       minTriggerAmount: config.minTriggerAmount,
       minPrice: config.minPrice,
       maxPrice: config.maxPrice,
